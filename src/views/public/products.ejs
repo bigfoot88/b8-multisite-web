@@ -1,0 +1,18 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container card-grid card-grid--2">
+    <% products.forEach((product) => { %>
+      <article class="card">
+        <h2><a href="/products/<%= product.slug %>"><%= product.title %></a></h2>
+        <% if (product.summary) { %><p><%= product.summary %></p><% } %>
+        <div class="card__actions">
+          <a href="/products/<%= product.slug %>" class="text-link">查看详情</a>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

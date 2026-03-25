@@ -103,6 +103,21 @@ function deriveSlugFromPath(value) {
   return parts.at(-1) || 'home';
 }
 
+function normalizePagePath(value) {
+  if (value === undefined || value === null) {
+    return value;
+  }
+
+  const trimmed = String(value).trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const withLeadingSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const normalized = withLeadingSlash.replace(/\/{2,}/g, '/');
+  return normalized.length > 1 ? normalized.replace(/\/+$/, '') : normalized;
+}
+
 function normalizeRecord(type, input, existing = null) {
   const publishState = normalizePublishState(input.publishState, existing?.publishState || 'draft');
   const publishedAt = publishState === 'published'
@@ -110,7 +125,7 @@ function normalizeRecord(type, input, existing = null) {
     : null;
 
   if (type === 'pages') {
-    const pathValue = preferInputValue(input.path, existing?.path);
+    const pathValue = normalizePagePath(preferInputValue(input.path, existing?.path));
     return {
       siteKey: input.siteKey || existing?.siteKey,
       parentId: normalizeInteger(input.parentId, existing?.parentId ?? null),
@@ -458,8 +473,60 @@ function createCatalogRepository(db) {
     return getRecord(type, siteKey, id);
   }
 
+  function listPublishedRecords(type, siteKey, options = {}) {
+    assertValidSiteKey(siteKey);
+    const config = collections[type];
+    const clauses = [
+      'site_key = @siteKey',
+      'deleted_at IS NULL',
+      "publish_state = 'published'",
+    ];
+    const params = { siteKey };
+
+    if (options.slug) {
+      clauses.push('slug = @slug');
+      params.slug = options.slug;
+    }
+
+    if (type === 'pages' && options.path) {
+      clauses.push('path = @path');
+      params.path = normalizePagePath(options.path);
+    }
+
+    const limitClause = Number.isInteger(options.limit) && options.limit > 0
+      ? ` LIMIT ${options.limit}`
+      : '';
+    const statement = db.prepare(`
+      SELECT ${config.selectFields.join(', ')}
+      FROM ${config.table}
+      WHERE ${clauses.join(' AND ')}
+      ORDER BY ${config.orderBy.default}${limitClause}
+    `);
+
+    return statement.all(params).map(mapRow);
+  }
+
+  function findPublishedPageByHierarchicalPath(siteKey, pagePath) {
+    assertValidSiteKey(siteKey);
+    let currentPath = normalizePagePath(pagePath);
+
+    while (currentPath && currentPath !== '/') {
+      const page = listPublishedRecords('pages', siteKey, { path: currentPath, limit: 1 })[0] || null;
+      if (page) {
+        return page;
+      }
+
+      const segments = currentPath.split('/').filter(Boolean);
+      segments.pop();
+      currentPath = segments.length > 0 ? `/${segments.join('/')}` : '/';
+    }
+
+    return listPublishedRecords('pages', siteKey, { path: '/', limit: 1 })[0] || null;
+  }
+
   return {
     deriveSlugFromPath,
+    normalizePagePath,
     createRecord,
     getRecord,
     updateRecord,
@@ -477,6 +544,12 @@ function createCatalogRepository(db) {
     listProducts(siteKey, options = {}) {
       return listRecords('products', siteKey, options);
     },
+    listPublishedProducts(siteKey, options = {}) {
+      return listPublishedRecords('products', siteKey, options);
+    },
+    findPublishedProductBySlug(siteKey, slug) {
+      return listPublishedRecords('products', siteKey, { slug, limit: 1 })[0] || null;
+    },
     softDeleteProduct(siteKey, id) {
       return softDeleteRecord('products', siteKey, id);
     },
@@ -491,6 +564,12 @@ function createCatalogRepository(db) {
     },
     listSolutions(siteKey, options = {}) {
       return listRecords('solutions', siteKey, options);
+    },
+    listPublishedSolutions(siteKey, options = {}) {
+      return listPublishedRecords('solutions', siteKey, options);
+    },
+    findPublishedSolutionBySlug(siteKey, slug) {
+      return listPublishedRecords('solutions', siteKey, { slug, limit: 1 })[0] || null;
     },
     softDeleteSolution(siteKey, id) {
       return softDeleteRecord('solutions', siteKey, id);
@@ -507,6 +586,13 @@ function createCatalogRepository(db) {
     listPages(siteKey, options = {}) {
       return listRecords('pages', siteKey, options);
     },
+    listPublishedPages(siteKey, options = {}) {
+      return listPublishedRecords('pages', siteKey, options);
+    },
+    findPublishedPageByPath(siteKey, pagePath) {
+      return listPublishedRecords('pages', siteKey, { path: pagePath, limit: 1 })[0] || null;
+    },
+    findPublishedPageByHierarchicalPath,
     softDeletePage(siteKey, id) {
       return softDeleteRecord('pages', siteKey, id);
     },
@@ -522,6 +608,12 @@ function createCatalogRepository(db) {
     listNewsArticles(siteKey, options = {}) {
       return listRecords('news', siteKey, options);
     },
+    listPublishedNewsArticles(siteKey, options = {}) {
+      return listPublishedRecords('news', siteKey, options);
+    },
+    findPublishedNewsArticleBySlug(siteKey, slug) {
+      return listPublishedRecords('news', siteKey, { slug, limit: 1 })[0] || null;
+    },
     softDeleteNewsArticle(siteKey, id) {
       return softDeleteRecord('news', siteKey, id);
     },
@@ -536,6 +628,12 @@ function createCatalogRepository(db) {
     },
     listCaseStudies(siteKey, options = {}) {
       return listRecords('cases', siteKey, options);
+    },
+    listPublishedCaseStudies(siteKey, options = {}) {
+      return listPublishedRecords('cases', siteKey, options);
+    },
+    findPublishedCaseStudyBySlug(siteKey, slug) {
+      return listPublishedRecords('cases', siteKey, { slug, limit: 1 })[0] || null;
     },
     softDeleteCaseStudy(siteKey, id) {
       return softDeleteRecord('cases', siteKey, id);

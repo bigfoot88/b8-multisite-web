@@ -10,6 +10,9 @@ const { createAdminRepository } = require('./repositories/admin-repository');
 const { createSiteRepository } = require('./repositories/site-repository');
 const { createCatalogRepository } = require('./repositories/catalog-repository');
 const { createMediaRepository } = require('./repositories/media-repository');
+const { createRedirectRepository } = require('./repositories/redirect-repository');
+const { createPublicSiteService } = require('./services/public-site-service');
+const { createPublicRouter } = require('./routes/public');
 const { createAdminAuthRouter } = require('./routes/admin-auth');
 const { createAdminDashboardRouter } = require('./routes/admin-dashboard');
 const { createAdminSitesRouter } = require('./routes/admin-sites');
@@ -20,10 +23,6 @@ const { createAdminCatalogRouter } = require('./routes/admin-catalog');
 const { createAdminNewsRouter } = require('./routes/admin-news');
 const { createAdminCasesRouter } = require('./routes/admin-cases');
 const { createAdminMediaRouter } = require('./routes/admin-media');
-
-function resolveSiteByHost(siteRepository, hostname) {
-  return siteRepository.getSiteSettingsByDomain(hostname);
-}
 
 function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot } = {}) {
   const app = express();
@@ -41,11 +40,19 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   app.locals.siteRepository = createSiteRepository(db);
   app.locals.catalogRepository = createCatalogRepository(db);
   app.locals.mediaRepository = createMediaRepository(db);
+  app.locals.redirectRepository = createRedirectRepository(db);
+  app.locals.publicSiteService = createPublicSiteService({
+    siteRepository: app.locals.siteRepository,
+    catalogRepository: app.locals.catalogRepository,
+    mediaRepository: app.locals.mediaRepository,
+    redirectRepository: app.locals.redirectRepository,
+  });
   app.locals.uploadRoot = uploadRoot;
 
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser(cookieSecret));
   app.use('/css', express.static(path.join(publicRoot, 'css')));
+  app.use('/js', express.static(path.join(publicRoot, 'js')));
   app.use('/uploads', express.static(uploadRoot, {
     setHeaders(res) {
       res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -106,18 +113,10 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
     res.json({ ok: true, sites });
   });
 
-  app.get('/', (req, res) => {
-    const site = resolveSiteByHost(app.locals.siteRepository, req.hostname);
-    const publishedSections = site ? app.locals.siteRepository.listPublishedSections(site.siteKey) : [];
-    const heroSection = publishedSections.find((section) => section.sectionKey === 'hero' || section.sectionKey === 'hero-banner') || publishedSections[0] || null;
-
-    res.render('public/landing', {
-      title: site?.seoTitle || 'B8 Multisite Platform',
-      site,
-      heroSection,
-      publishedSections,
-    });
-  });
+  app.use('/', createPublicRouter({
+    siteRepository: app.locals.siteRepository,
+    publicSiteService: app.locals.publicSiteService,
+  }));
 
   return app;
 }

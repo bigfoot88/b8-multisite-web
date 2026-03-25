@@ -1,0 +1,20 @@
+html[data-site-theme='dma'] {
+  --theme-primary: #0d5aa7;
+  --theme-secondary: #1d77c6;
+  --theme-accent: #2aa0d7;
+  --theme-surface: #f4f8fc;
+}
+
+html[data-site-theme='bigfoot'] {
+  --theme-primary: #0a4f8f;
+  --theme-secondary: #0f6bb7;
+  --theme-accent: #2c8ccf;
+  --theme-surface: #f2f7fb;
+}
+
+html[data-site-theme='default'] {
+  --theme-primary: #0c4f88;
+  --theme-secondary: #1f6fb2;
+  --theme-accent: #3393cf;
+  --theme-surface: #f4f7fb;
+}

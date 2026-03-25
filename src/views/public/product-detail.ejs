@@ -1,0 +1,25 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container detail-layout">
+    <article class="prose-card">
+      <div class="rich-text"><%- product.bodyHtml || '' %></div>
+    </article>
+    <aside class="detail-aside">
+      <div class="panel">
+        <h2>资料下载</h2>
+        <div class="button-stack">
+          <% if (product.brochureAsset) { %>
+            <a href="<%= product.brochureAsset.publicUrl %>" class="button button--primary">下载宣传册</a>
+          <% } %>
+          <% if (product.attachmentAsset) { %>
+            <a href="<%= product.attachmentAsset.publicUrl %>" class="button button--secondary">下载产品资料</a>
+          <% } %>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

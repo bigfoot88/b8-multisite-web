@@ -1,0 +1,17 @@
+<section class="hero-panel">
+  <div class="container hero-panel__inner">
+    <div class="hero-copy">
+      <% if (hero?.eyebrow) { %><p class="eyebrow"><%= hero.eyebrow %></p><% } %>
+      <h1><%= hero?.title || site?.brandName || 'B8 Multisite' %></h1>
+      <% if (hero?.summary) { %><p class="lead"><%= hero.summary %></p><% } %>
+      <% if (hero?.body) { %><p class="hero-body"><%= hero.body %></p><% } %>
+      <% if (hero?.actions?.length) { %>
+        <div class="hero-actions">
+          <% hero.actions.forEach((action) => { %>
+            <a href="<%= action.href %>" class="button button--<%= action.variant || 'secondary' %>"><%= action.label %></a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>

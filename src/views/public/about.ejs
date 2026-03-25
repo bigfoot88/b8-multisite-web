@@ -1,0 +1,13 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container prose-shell">
+    <article class="prose-card">
+      <% if (page.summary) { %><p class="lead lead--compact"><%= page.summary %></p><% } %>
+      <div class="rich-text"><%- page.bodyHtml || '' %></div>
+    </article>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

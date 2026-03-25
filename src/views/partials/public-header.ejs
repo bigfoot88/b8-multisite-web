@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-site-theme="<%= theme?.name || 'default' %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <% if (pageDescription) { %>
+      <meta name="description" content="<%= pageDescription %>" />
+    <% } %>
+    <link rel="stylesheet" href="/css/public.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <script src="/js/site.js" defer></script>
+  </head>
+  <body class="site-body">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+    <div class="site-shell">
+      <header class="site-header">
+        <div class="container site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__mark"><%= theme?.label || 'B8' %></span>
+            <span>
+              <strong><%= site?.brandName || 'B8 Multisite' %></strong>
+              <small><%= theme?.accent || '多站点内容平台' %></small>
+            </span>
+          </a>
+
+          <button
+            type="button"
+            class="nav-toggle"
+            data-nav-toggle
+            aria-expanded="false"
+            aria-controls="site-navigation"
+          >
+            导航
+          </button>
+
+          <nav class="site-nav" id="site-navigation" data-nav-menu>
+            <ul>
+              <% (navigation || []).forEach((item) => { %>
+                <li>
+                  <a
+                    href="<%= item.href %>"
+                    class="<%= currentPath === item.href ? 'is-active' : '' %>"
+                  ><%= item.label %></a>
+                </li>
+              <% }) %>
+            </ul>
+          </nav>
+        </div>
+      </header>
+      <main id="main-content">

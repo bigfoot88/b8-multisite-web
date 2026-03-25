@@ -1,0 +1,16 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container card-grid card-grid--2">
+    <% solutions.forEach((solution) => { %>
+      <article class="card">
+        <h2><a href="/solutions/<%= solution.slug %>"><%= solution.title %></a></h2>
+        <p><%= solution.summary %></p>
+        <a href="/solutions/<%= solution.slug %>" class="text-link">查看方案</a>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

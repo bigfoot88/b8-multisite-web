@@ -130,6 +130,39 @@ test('media and redirect repositories support site-scoped queries with global fa
   assert.equal(redirects.listRules('dma')[0].targetPath, '/products/dma-lite');
 });
 
+test('media repository can batch load assets by id for public rendering', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const media = createMediaRepository(db);
+
+  const globalLogo = media.createAsset({
+    assetKey: 'global-logo',
+    siteKey: null,
+    sourceUrl: 'https://cdn.example.com/logo.png',
+    filename: 'logo.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/logo.png',
+  });
+  const dmaBrochure = media.createAsset({
+    assetKey: 'dma-brochure',
+    siteKey: 'dma',
+    filename: 'dma-lite.pdf',
+    mimeType: 'application/pdf',
+    storagePath: '/uploads/dma-lite.pdf',
+  });
+
+  assert.deepEqual(
+    media.findByIds([dmaBrochure.id, 9999, globalLogo.id]).map((asset) => ({
+      assetKey: asset.assetKey,
+      publicUrl: asset.publicUrl,
+    })),
+    [
+      { assetKey: 'global-logo', publicUrl: 'https://cdn.example.com/logo.png' },
+      { assetKey: 'dma-brochure', publicUrl: '/uploads/dma-lite.pdf' },
+    ],
+  );
+});
+
 test('catalog repository preserves news hero media ids', () => {
   const db = createTestDb();
   runMigrations(db);

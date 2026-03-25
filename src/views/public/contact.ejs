@@ -1,0 +1,26 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container split-grid">
+    <article class="panel">
+      <h2>商务咨询</h2>
+      <ul class="contact-list contact-list--large">
+        <% if (site.contactPhone) { %><li><strong>电话</strong><span><%= site.contactPhone %></span></li><% } %>
+        <% if (site.contactEmail) { %><li><strong>邮箱</strong><span><%= site.contactEmail %></span></li><% } %>
+        <% if (site.contactAddress) { %><li><strong>地址</strong><span><%= site.contactAddress %></span></li><% } %>
+      </ul>
+    </article>
+    <article class="panel">
+      <h2>合作方向</h2>
+      <ul class="stack-list">
+        <li>智慧水务营收管理与客服渠道建设</li>
+        <li>DMA 分区治理与漏损监测体系搭建</li>
+        <li>移动抄表、巡检与现场作业数字化</li>
+      </ul>
+      <% if (page?.bodyHtml) { %><div class="rich-text"><%- page.bodyHtml %></div><% } %>
+    </article>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

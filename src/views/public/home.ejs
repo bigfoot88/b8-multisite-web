@@ -1,0 +1,40 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container card-grid card-grid--3">
+    <% featuredProducts.forEach((product) => { %>
+      <article class="card">
+        <p class="card__eyebrow">核心产品</p>
+        <h2><a href="/products/<%= product.slug %>"><%= product.title %></a></h2>
+        <p><%= product.summary %></p>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<section class="section section--muted">
+  <div class="container split-grid">
+    <div class="panel">
+      <h2>方案能力</h2>
+      <ul class="stack-list">
+        <% featuredSolutions.forEach((solution) => { %>
+          <li><a href="/solutions/<%= solution.slug %>"><%= solution.title %></a> · <%= solution.summary %></li>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>项目与资讯</h2>
+      <ul class="stack-list">
+        <% latestNews.forEach((article) => { %>
+          <li><a href="/news/<%= article.slug %>"><%= article.title %></a></li>
+        <% }) %>
+        <% featuredCases.forEach((item) => { %>
+          <li><a href="/cases/<%= item.slug %>"><%= item.title %></a></li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

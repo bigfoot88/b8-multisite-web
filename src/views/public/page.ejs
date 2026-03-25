@@ -1,0 +1,20 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container detail-layout">
+    <article class="prose-card">
+      <div class="rich-text"><%- page.bodyHtml || '' %></div>
+    </article>
+    <aside class="detail-aside">
+      <% if (page.attachmentAsset) { %>
+        <div class="panel">
+          <h2>延伸资料</h2>
+          <a href="<%= page.attachmentAsset.publicUrl %>" class="button button--primary">下载相关资料</a>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

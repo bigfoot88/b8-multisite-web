@@ -1,0 +1,18 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container stack-cards">
+    <% articles.forEach((article) => { %>
+      <article class="card card--horizontal">
+        <div>
+          <p class="card__eyebrow">新闻资讯</p>
+          <h2><a href="/news/<%= article.slug %>"><%= article.title %></a></h2>
+          <p><%= article.summary %></p>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>

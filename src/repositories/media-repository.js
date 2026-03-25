@@ -22,7 +22,7 @@ function mapAsset(row) {
     storagePath: row.storage_path,
     altText: row.alt_text,
     metadata: parseMetadata(row.metadata_json),
-    publicUrl: row.source_url || `/uploads/${path.basename(row.storage_path)}`,
+    publicUrl: row.source_url || (row.storage_path ? `/uploads/${path.basename(row.storage_path)}` : null),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -138,6 +138,24 @@ function createMediaRepository(db) {
     },
     findById(id) {
       return mapAsset(selectById.get(id));
+    },
+    findByIds(ids = []) {
+      const normalizedIds = [...new Set(ids
+        .map((id) => Number.parseInt(id, 10))
+        .filter((id) => Number.isInteger(id) && id > 0))];
+
+      if (normalizedIds.length === 0) {
+        return [];
+      }
+
+      const placeholders = normalizedIds.map(() => '?').join(', ');
+      const statement = db.prepare(`
+        SELECT *
+        FROM media_assets
+        WHERE id IN (${placeholders})
+        ORDER BY id ASC
+      `);
+      return statement.all(...normalizedIds).map(mapAsset);
     },
     listAssets({ siteKey = null } = {}) {
       if (siteKey === '') {

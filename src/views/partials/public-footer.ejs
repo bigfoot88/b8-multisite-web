@@ -1,0 +1,29 @@
+      </main>
+      <footer class="site-footer">
+        <div class="container site-footer__grid">
+          <div>
+            <p class="footer-kicker">可信赖的水务数字化伙伴</p>
+            <h2><%= site?.brandName || 'B8 Multisite' %></h2>
+            <p><%= site?.seoDescription || '聚焦工业与城市供水场景的多站点内容平台。' %></p>
+          </div>
+          <div>
+            <h3>联系信息</h3>
+            <ul class="contact-list">
+              <% if (site?.contactPhone) { %><li>电话：<%= site.contactPhone %></li><% } %>
+              <% if (site?.contactEmail) { %><li>邮箱：<%= site.contactEmail %></li><% } %>
+              <% if (site?.contactAddress) { %><li>地址：<%= site.contactAddress %></li><% } %>
+            </ul>
+          </div>
+          <div>
+            <h3>快速入口</h3>
+            <ul class="footer-links">
+              <% (navigation || []).slice(0, 5).forEach((item) => { %>
+                <li><a href="<%= item.href %>"><%= item.label %></a></li>
+              <% }) %>
+            </ul>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

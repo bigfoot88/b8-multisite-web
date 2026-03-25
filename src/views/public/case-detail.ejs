@@ -1,0 +1,20 @@
+<%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
+<%- include('../partials/hero', { hero, site }) %>
+
+<section class="section">
+  <div class="container detail-layout">
+    <article class="prose-card">
+      <div class="rich-text"><%- caseStudy.bodyHtml || '' %></div>
+    </article>
+    <aside class="detail-aside">
+      <% if (caseStudy.attachmentAsset) { %>
+        <div class="panel">
+          <h2>项目资料</h2>
+          <a href="<%= caseStudy.attachmentAsset.publicUrl %>" class="button button--secondary">下载案例资料</a>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</section>
+
+<%- include('../partials/public-footer', { site, navigation }) %>
