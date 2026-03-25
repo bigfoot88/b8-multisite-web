@@ -1,0 +1,23 @@
+<div class="admin-panel admin-panel--narrow">
+  <div class="admin-login__intro">
+    <span class="admin-pill">仅限管理员</span>
+    <h2>登录中文后台</h2>
+    <p>使用后台账号进入 B8 多站点管理台。</p>
+  </div>
+
+  <% if (errorMessage) { %>
+    <div class="admin-alert" role="alert"><%= errorMessage %></div>
+  <% } %>
+
+  <form method="post" action="/admin/login" class="admin-form">
+    <label class="admin-field">
+      <span>用户名</span>
+      <input type="text" name="username" value="<%= username %>" autocomplete="username" required />
+    </label>
+    <label class="admin-field">
+      <span>密码</span>
+      <input type="password" name="password" autocomplete="current-password" required />
+    </label>
+    <button type="submit" class="admin-button">登录</button>
+  </form>
+</div>

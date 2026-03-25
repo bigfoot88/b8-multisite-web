@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/admin.css" />
+  </head>
+  <body class="admin-shell">
+    <div class="admin-shell__frame">
+      <% if (navLinks.length) { %>
+        <aside class="admin-sidebar">
+          <div class="admin-sidebar__brand">
+            <span class="admin-sidebar__eyebrow">B8 多站点</span>
+            <strong>中文后台</strong>
+          </div>
+          <nav class="admin-sidebar__nav" aria-label="后台导航">
+            <% navLinks.forEach((link) => { %>
+              <a class="admin-sidebar__link <%= currentPath === link.href ? 'is-active' : '' %>" href="<%= link.href %>">
+                <span><%= link.label %></span>
+                <small><%= link.description %></small>
+              </a>
+            <% }) %>
+          </nav>
+        </aside>
+      <% } %>
+
+      <main class="admin-main">
+        <header class="admin-header">
+          <div>
+            <h1><%= pageTitle %></h1>
+            <p><%= pageDescription %></p>
+          </div>
+          <% if (adminSession) { %>
+            <form method="post" action="/admin/logout" class="admin-header__logout">
+              <span><%= adminSession.displayName %></span>
+              <button type="submit">退出登录</button>
+            </form>
+          <% } %>
+        </header>
+
+        <section class="admin-content">
+          <%- include(bodyView) %>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
