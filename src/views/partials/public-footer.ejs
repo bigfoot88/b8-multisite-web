@@ -5,6 +5,9 @@
             <p class="footer-kicker">可信赖的水务数字化伙伴</p>
             <h2><%= site?.brandName || 'B8 Multisite' %></h2>
             <p><%= site?.seoDescription || '聚焦工业与城市供水场景的多站点内容平台。' %></p>
+            <div class="footer-cta">
+              <a href="<%= site ? '/contact' : '/' %>" class="button button--secondary"><%= site ? '预约方案交流' : '返回首页' %></a>
+            </div>
           </div>
           <div>
             <h3>联系信息</h3>

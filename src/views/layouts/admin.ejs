@@ -6,13 +6,14 @@
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/admin.css" />
   </head>
-  <body class="admin-shell">
+  <body class="admin-shell <%= navLinks.length ? 'admin-shell--app' : 'admin-shell--auth' %>">
     <div class="admin-shell__frame">
       <% if (navLinks.length) { %>
         <aside class="admin-sidebar">
           <div class="admin-sidebar__brand">
             <span class="admin-sidebar__eyebrow">B8 多站点</span>
             <strong>中文后台</strong>
+            <small>统一维护 DMA 与 Bigfoot 的站点内容、素材与发布状态</small>
           </div>
           <nav class="admin-sidebar__nav" aria-label="后台导航">
             <% navLinks.forEach((link) => { %>
@@ -33,8 +34,11 @@
           </div>
           <% if (adminSession) { %>
             <form method="post" action="/admin/logout" class="admin-header__logout">
-              <span><%= adminSession.displayName %></span>
-              <button type="submit">退出登录</button>
+              <span class="admin-user">
+                <strong><%= adminSession.displayName %></strong>
+                <small>已登录管理员</small>
+              </span>
+              <button type="submit" class="admin-button admin-button--ghost">退出登录</button>
             </form>
           <% } %>
         </header>

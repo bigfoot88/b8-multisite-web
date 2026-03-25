@@ -16,6 +16,8 @@
     <div class="site-shell">
       <header class="site-header">
         <div class="container site-header__inner">
+          <% const primaryCtaHref = site ? '/contact' : '/'; %>
+          <% const primaryCtaLabel = site ? '预约咨询' : '返回首页'; %>
           <a class="site-brand" href="/">
             <span class="site-brand__mark"><%= theme?.label || 'B8' %></span>
             <span>
@@ -46,6 +48,16 @@
               <% }) %>
             </ul>
           </nav>
+
+          <div class="site-header__actions">
+            <% if (site?.contactPhone) { %>
+              <a class="site-quick-contact" href="/contact">
+                <span>咨询热线</span>
+                <strong><%= site.contactPhone %></strong>
+              </a>
+            <% } %>
+            <a href="<%= primaryCtaHref %>" class="button button--primary site-header__cta"><%= primaryCtaLabel %></a>
+          </div>
         </div>
       </header>
       <main id="main-content">
