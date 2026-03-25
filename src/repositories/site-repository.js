@@ -65,7 +65,7 @@ function mapNavigation(row) {
 }
 
 function createSiteRepository(db) {
-  const { ensureSite } = createSiteBootstrap(db);
+  const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const upsertSiteSettings = db.prepare(`
     INSERT INTO site_settings (site_key, brand_name, domain, seo_title, seo_description, contact_email, contact_phone, contact_address)
     VALUES (@siteKey, @brandName, @domain, @seoTitle, @seoDescription, @contactEmail, @contactPhone, @contactAddress)
@@ -115,6 +115,7 @@ function createSiteRepository(db) {
 
   return {
     upsertSiteSettings({ siteKey, brandName, domain, seoTitle = null, seoDescription = null, contactEmail = null, contactPhone = null, contactAddress = null }) {
+      assertValidSiteKey(siteKey);
       upsertSiteSettings.run({
         siteKey,
         brandName,
@@ -131,6 +132,7 @@ function createSiteRepository(db) {
       return selectAllSettings.all().map(mapSiteSettings);
     },
     getSiteSettings(siteKey) {
+      assertValidSiteKey(siteKey);
       return mapSiteSettings(selectSettings.get(siteKey));
     },
     saveSection({ siteKey, sectionKey, heading = null, subheading = null, body = null, mediaAssetId = null, config = {}, isPublished = true, publishedAt = null, sortOrder = 0 }) {
@@ -150,12 +152,15 @@ function createSiteRepository(db) {
       return mapSection(selectSection.get(siteKey, sectionKey));
     },
     listSections(siteKey) {
+      assertValidSiteKey(siteKey);
       return selectSections.all(siteKey).map(mapSection);
     },
     listHomepageBanners(siteKey) {
+      assertValidSiteKey(siteKey);
       return selectHomepageBanners.all(siteKey).map(mapSection);
     },
     replaceNavigation(siteKey, items) {
+      assertValidSiteKey(siteKey);
       const transaction = db.transaction((rows) => {
         ensureSite(siteKey);
         clearNavigation.run(siteKey);
@@ -200,6 +205,7 @@ function createSiteRepository(db) {
       return this.listNavigation(siteKey);
     },
     listNavigation(siteKey) {
+      assertValidSiteKey(siteKey);
       return selectNavigation.all(siteKey).map(mapNavigation);
     },
   };

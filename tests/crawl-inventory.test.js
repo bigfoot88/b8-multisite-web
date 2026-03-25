@@ -16,4 +16,18 @@ test('crawler inventory extracts product/news links and asset urls from sample h
   assert.equal(inventory.pages.includes('/assets/site.css'), false);
   assert.equal(inventory.pages.includes('/assets/site.js'), false);
   assert.equal(redirects.some((item) => item.sourcePath === '/news'), false);
+  assert.equal(redirects.every((item) => item.statusCode === 301), true);
+});
+
+test('crawlSite fails when the required start page cannot be fetched', async () => {
+  const { crawlSite } = await import('../scripts/crawl-site.mjs');
+
+  await assert.rejects(
+    () => crawlSite({
+      siteKey: 'dma',
+      baseUrl: 'http://127.0.0.1:9',
+      maxPages: 1,
+    }),
+    /fetch|required page|curl|ECONNREFUSED/i,
+  );
 });

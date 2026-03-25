@@ -19,7 +19,7 @@ function mapRule(row) {
 }
 
 function createRedirectRepository(db) {
-  const { ensureSite } = createSiteBootstrap(db);
+  const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const insertRule = db.prepare(`
     INSERT INTO redirect_rules (site_key, source_path, source_query, target_path, status_code, is_active)
     VALUES (@siteKey, @sourcePath, @sourceQuery, @targetPath, @statusCode, @isActive)
@@ -40,6 +40,7 @@ function createRedirectRepository(db) {
       return mapRule(db.prepare('SELECT * FROM redirect_rules WHERE id = ?').get(info.lastInsertRowid));
     },
     listRules(siteKey) {
+      assertValidSiteKey(siteKey);
       return selectRules.all(siteKey).map(mapRule);
     },
   };

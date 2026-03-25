@@ -13,11 +13,16 @@ const projectRoot = path.resolve(__dirname, '..');
 
 const email = process.env.ADMIN_EMAIL || 'admin@b8.local';
 const username = process.env.ADMIN_USERNAME || 'admin';
-const password = process.env.ADMIN_PASSWORD || 'ChangeMe123!';
+const password = process.env.ADMIN_PASSWORD?.trim();
 const displayName = process.env.ADMIN_DISPLAY_NAME || 'Platform Admin';
 const targetDatabasePath = process.env.DATABASE_PATH
   ? (path.isAbsolute(process.env.DATABASE_PATH) ? process.env.DATABASE_PATH : path.join(projectRoot, process.env.DATABASE_PATH))
   : path.join(projectRoot, 'data', 'content.db');
+
+if (!password) {
+  console.error('ADMIN_PASSWORD must be provided to seed an admin account.');
+  process.exit(1);
+}
 
 const db = openDatabase(targetDatabasePath);
 runMigrations(db);
@@ -39,8 +44,4 @@ if (!adminRepository.findByUsername(username)) {
 }
 
 console.log(`Seeded admin and default site settings into ${path.relative(projectRoot, targetDatabasePath)}`);
-if (process.env.ADMIN_PASSWORD) {
-  console.log(`Seeded admin credentials username=${username} using ADMIN_PASSWORD`);
-} else {
-  console.log(`Seeded default admin credentials username=${username} password=${password}`);
-}
+console.log(`Seeded admin account username=${username} using ADMIN_PASSWORD`);

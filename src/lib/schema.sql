@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS admins (
 );
 
 CREATE TABLE IF NOT EXISTS site_settings (
-  site_key TEXT PRIMARY KEY,
+  site_key TEXT PRIMARY KEY CHECK (site_key IN ('dma', 'bigfoot')),
   brand_name TEXT NOT NULL,
   domain TEXT NOT NULL,
   seo_title TEXT,
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS redirect_rules (
   source_path TEXT NOT NULL,
   source_query TEXT NOT NULL DEFAULT '',
   target_path TEXT NOT NULL,
-  status_code INTEGER NOT NULL DEFAULT 302,
+  status_code INTEGER NOT NULL DEFAULT 301,
   is_active INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

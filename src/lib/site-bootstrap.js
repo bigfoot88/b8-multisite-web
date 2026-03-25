@@ -1,3 +1,5 @@
+const { assertValidSiteKey } = require('../config/sites');
+
 const defaultSites = {
   dma: {
     brandName: 'DMA',
@@ -24,7 +26,9 @@ function createSiteBootstrap(db) {
   `);
 
   return {
+    assertValidSiteKey,
     ensureSite(siteKey) {
+      assertValidSiteKey(siteKey);
       const defaults = defaultSiteFor(siteKey);
       insertSite.run({
         siteKey,
@@ -36,5 +40,6 @@ function createSiteBootstrap(db) {
 }
 
 module.exports = {
+  assertValidSiteKey,
   createSiteBootstrap,
 };

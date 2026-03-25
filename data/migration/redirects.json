@@ -4,363 +4,363 @@
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=101",
     "targetPath": "/pages/section-101",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=102",
     "targetPath": "/pages/section-102",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=103",
     "targetPath": "/pages/section-103",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=104",
     "targetPath": "/pages/section-104",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=105",
     "targetPath": "/pages/section-105",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=106",
     "targetPath": "/pages/section-106",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=112",
     "targetPath": "/pages/section-112",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=114",
     "targetPath": "/pages/section-114",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=115",
     "targetPath": "/pages/section-115",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=119",
     "targetPath": "/pages/section-119",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=147",
     "targetPath": "/news/147",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=148",
     "targetPath": "/news/148",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=149",
     "targetPath": "/news/149",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=78",
     "targetPath": "/news/78",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=79",
     "targetPath": "/news/79",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=80",
     "targetPath": "/news/80",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=81",
     "targetPath": "/news/81",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=91",
     "targetPath": "/news/91",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=92",
     "targetPath": "/news/92",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=93",
     "targetPath": "/news/93",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=94",
     "targetPath": "/news/94",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=95",
     "targetPath": "/news/95",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=96",
     "targetPath": "/news/96",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nr.jsp",
     "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22groupId%22%3A%221%22%2C%22mid%22%3A%2212%22%7D%2C%22type%22%3A15%7D&groupId=1&mid=12",
     "targetPath": "/search",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/nr.jsp",
     "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%7D%2C%22type%22%3A15%7D",
     "targetPath": "/search",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=16",
     "targetPath": "/products/16",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=17",
     "targetPath": "/products/17",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=18",
     "targetPath": "/products/18",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=19",
     "targetPath": "/products/19",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=20",
     "targetPath": "/products/20",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=21",
     "targetPath": "/products/21",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=22",
     "targetPath": "/products/22",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=23",
     "targetPath": "/products/23",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=24",
     "targetPath": "/products/24",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "bigfoot",
     "sourcePath": "/pd.jsp",
     "sourceQuery": "id=25",
     "targetPath": "/products/25",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=101",
     "targetPath": "/pages/section-101",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=102",
     "targetPath": "/pages/section-102",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=103",
     "targetPath": "/pages/section-103",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=105",
     "targetPath": "/pages/section-105",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=106",
     "targetPath": "/pages/section-106",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/col.jsp",
     "sourceQuery": "id=116",
     "targetPath": "/pages/section-116",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=104",
     "targetPath": "/news/104",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=106",
     "targetPath": "/news/106",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=107",
     "targetPath": "/news/107",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=108",
     "targetPath": "/news/108",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=109",
     "targetPath": "/news/109",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=110",
     "targetPath": "/news/110",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=111",
     "targetPath": "/news/111",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nd.jsp",
     "sourceQuery": "id=4",
     "targetPath": "/news/4",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nr.jsp",
     "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22_np%22%3A%220_31_1%22%7D%2C%22type%22%3A15%7D",
     "targetPath": "/search",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nr.jsp",
     "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22groupId%22%3A%221%22%2C%22mid%22%3A%2212%22%7D%2C%22type%22%3A15%7D&groupId=1&mid=12",
     "targetPath": "/search",
-    "statusCode": 302
+    "statusCode": 301
   },
   {
     "siteKey": "dma",
     "sourcePath": "/nr.jsp",
     "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%7D%2C%22type%22%3A15%7D",
     "targetPath": "/search",
-    "statusCode": 302
+    "statusCode": 301
   }
 ]

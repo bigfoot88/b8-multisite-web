@@ -186,3 +186,137 @@ test('pages derive slug from path when one is not supplied', () => {
 
   assert.equal(page.slug, 'dma-lite');
 });
+
+test('repository layer rejects unsupported site keys', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const catalog = createCatalogRepository(db);
+  const sites = createSiteRepository(db);
+
+  assert.throws(
+    () => catalog.createProduct({
+      siteKey: 'rogue',
+      slug: 'rogue-product',
+      title: 'Rogue Product',
+    }),
+    /siteKey/i,
+  );
+
+  assert.throws(
+    () => sites.upsertSiteSettings({
+      siteKey: 'rogue',
+      brandName: 'Rogue',
+      domain: 'rogue.example.com',
+    }),
+    /siteKey/i,
+  );
+});
+
+test('schema rejects unsupported site keys in site settings', () => {
+  const db = createTestDb();
+  runMigrations(db);
+
+  assert.throws(
+    () => db.prepare(`
+      INSERT INTO site_settings (site_key, brand_name, domain)
+      VALUES ('rogue', 'Rogue', 'rogue.example.com')
+    `).run(),
+    /siteKey|constraint failed/i,
+  );
+});
+
+test('redirect schema defaults to permanent redirects', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const sites = createSiteRepository(db);
+  sites.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.example.com',
+  });
+
+  const info = db.prepare(`
+    INSERT INTO redirect_rules (site_key, source_path, target_path)
+    VALUES ('dma', '/legacy', '/new-home')
+  `).run();
+  const row = db.prepare('SELECT status_code FROM redirect_rules WHERE id = ?').get(info.lastInsertRowid);
+
+  assert.equal(row.status_code, 301);
+});
+
+test('migrations upgrade legacy site and redirect schema constraints', () => {
+  const db = createTestDb();
+  db.exec(`
+    CREATE TABLE site_settings (
+      site_key TEXT PRIMARY KEY,
+      brand_name TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      seo_title TEXT,
+      seo_description TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      contact_address TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE redirect_rules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      site_key TEXT NOT NULL,
+      source_path TEXT NOT NULL,
+      source_query TEXT NOT NULL DEFAULT '',
+      target_path TEXT NOT NULL,
+      status_code INTEGER NOT NULL DEFAULT 302,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(site_key, source_path, source_query),
+      FOREIGN KEY(site_key) REFERENCES site_settings(site_key) ON DELETE CASCADE
+    );
+  `);
+
+  runMigrations(db);
+
+  assert.throws(
+    () => db.prepare(`
+      INSERT INTO site_settings (site_key, brand_name, domain)
+      VALUES ('rogue', 'Rogue', 'rogue.example.com')
+    `).run(),
+    /siteKey|constraint failed/i,
+  );
+
+  db.prepare(`
+    INSERT INTO site_settings (site_key, brand_name, domain)
+    VALUES ('dma', 'DMA', 'dma.example.com')
+  `).run();
+  const info = db.prepare(`
+    INSERT INTO redirect_rules (site_key, source_path, target_path)
+    VALUES ('dma', '/legacy-2', '/new-home-2')
+  `).run();
+
+  assert.equal(
+    db.prepare('SELECT status_code FROM redirect_rules WHERE id = ?').get(info.lastInsertRowid).status_code,
+    301,
+  );
+});
+
+test('media repository rejects empty-string site filters', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const media = createMediaRepository(db);
+
+  assert.throws(
+    () => media.createAsset({
+      assetKey: 'empty-site-key',
+      siteKey: '',
+      filename: 'logo.png',
+      mimeType: 'image/png',
+      storagePath: '/uploads/logo.png',
+    }),
+    /siteKey/i,
+  );
+
+  assert.throws(
+    () => media.listAssets({ siteKey: '' }),
+    /siteKey/i,
+  );
+});

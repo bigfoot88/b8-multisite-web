@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +11,8 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 const migrationRoot = path.join(projectRoot, 'data', 'migration');
 const execFileAsync = promisify(execFile);
+const require = createRequire(import.meta.url);
+const { assertValidSiteKey } = require('../src/config/sites.js');
 const inventoryDefaults = {
   siteKey: 'sample',
   baseUrl: 'https://example.com',
@@ -206,6 +209,7 @@ function inventorySummary(siteKey, baseUrl, aggregate) {
 }
 
 export function buildRedirects(siteKey, baseUrl, pages) {
+  assertValidSiteKey(siteKey);
   const base = new URL(baseUrl);
 
   return pages
@@ -225,21 +229,23 @@ export function buildRedirects(siteKey, baseUrl, pages) {
         targetPath = '/search';
       }
 
-      return {
-        siteKey,
-        sourcePath: url.pathname,
-        sourceQuery,
-        targetPath,
-        statusCode: 302,
-      };
-    })
-    .filter((item) => item.targetPath);
+        return {
+          siteKey,
+          sourcePath: url.pathname,
+          sourceQuery,
+          targetPath,
+          statusCode: 301,
+        };
+      })
+      .filter((item) => item.targetPath);
 }
 
 export async function crawlSite({ siteKey, baseUrl, maxPages = 200 } = {}) {
   if (!siteKey || !baseUrl) {
     throw new Error('crawlSite requires both siteKey and baseUrl');
   }
+
+  assertValidSiteKey(siteKey);
 
   const queue = [new URL(baseUrl).toString()];
   const queued = new Set(queue);
@@ -275,8 +281,8 @@ export async function crawlSite({ siteKey, baseUrl, maxPages = 200 } = {}) {
 
       inventory.assets.forEach((asset) => aggregate.assets.add(asset));
       inventory.downloads.forEach((download) => aggregate.downloads.set(download.url, download));
-    } catch {
-      continue;
+    } catch (error) {
+      throw new Error(`Failed to fetch required page ${currentUrl}: ${error.message}`);
     }
   }
 
@@ -291,6 +297,7 @@ async function writeJson(filePath, payload) {
 }
 
 export async function writeInventoryFiles({ siteKey, baseUrl, maxPages }) {
+  assertValidSiteKey(siteKey);
   const siteInventoryPath = path.join(migrationRoot, siteKey, 'inventory.json');
   const redirectsPath = path.join(migrationRoot, 'redirects.json');
   const crawledInventory = await crawlSite({ siteKey, baseUrl, maxPages });
@@ -398,8 +405,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.error('Usage: node scripts/crawl-site.mjs --site <site-key> --base-url <base-url> [--max-pages <count>]');
       process.exitCode = 1;
     } else {
-      const inventory = await writeInventoryFiles({ siteKey, baseUrl, maxPages });
-      console.log(`Captured ${inventory.stats.pageCount} pages, ${inventory.stats.assetCount} assets, and ${inventory.stats.downloadCount} downloads for ${siteKey}.`);
+      try {
+        const inventory = await writeInventoryFiles({ siteKey, baseUrl, maxPages });
+        console.log(`Captured ${inventory.stats.pageCount} pages, ${inventory.stats.assetCount} assets, and ${inventory.stats.downloadCount} downloads for ${siteKey}.`);
+      } catch (error) {
+        console.error(error.message);
+        process.exitCode = 1;
+      }
     }
   }
 }

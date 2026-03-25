@@ -25,7 +25,7 @@ function mapAsset(row) {
 }
 
 function createMediaRepository(db) {
-  const { ensureSite } = createSiteBootstrap(db);
+  const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const insertAsset = db.prepare(`
     INSERT INTO media_assets (asset_key, site_key, source_url, filename, mime_type, storage_path, alt_text, metadata_json)
     VALUES (@assetKey, @siteKey, @sourceUrl, @filename, @mimeType, @storagePath, @altText, @metadataJson)
@@ -40,7 +40,7 @@ function createMediaRepository(db) {
 
   return {
     createAsset({ assetKey, siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
-      if (siteKey) {
+      if (siteKey !== null && siteKey !== undefined) {
         ensureSite(siteKey);
       }
       const payload = {
@@ -60,6 +60,9 @@ function createMediaRepository(db) {
       return mapAsset(selectByKey.get(assetKey));
     },
     listAssets({ siteKey = null } = {}) {
+      if (siteKey !== null && siteKey !== undefined) {
+        assertValidSiteKey(siteKey);
+      }
       return selectAll.all({ siteKey }).map(mapAsset);
     },
   };

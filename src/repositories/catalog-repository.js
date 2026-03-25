@@ -58,7 +58,7 @@ function deriveSlugFromPath(value) {
 }
 
 function createCatalogRepository(db) {
-  const { ensureSite } = createSiteBootstrap(db);
+  const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const insertProduct = db.prepare(`
     INSERT INTO products (site_key, slug, title, summary, body_html, brochure_media_id, attachment_media_id, seo_title, seo_description, sort_order, publish_state, published_at, deleted_at)
     VALUES (@siteKey, @slug, @title, @summary, @bodyHtml, @brochureMediaId, @attachmentMediaId, @seoTitle, @seoDescription, @sortOrder, @publishState, @publishedAt, @deletedAt)
@@ -108,6 +108,7 @@ function createCatalogRepository(db) {
       return mapRecord(db.prepare('SELECT * FROM products WHERE id = ?').get(info.lastInsertRowid));
     },
     listProducts(siteKey) {
+      assertValidSiteKey(siteKey);
       return listProducts.all(siteKey).map(mapRecord);
     },
     createSolution(input) {
@@ -130,6 +131,7 @@ function createCatalogRepository(db) {
       return mapRecord(db.prepare('SELECT * FROM solutions WHERE id = ?').get(info.lastInsertRowid));
     },
     listSolutions(siteKey) {
+      assertValidSiteKey(siteKey);
       return listSolutions.all(siteKey).map(mapRecord);
     },
     createPage(input) {
@@ -162,6 +164,7 @@ function createCatalogRepository(db) {
       return mapPage(db.prepare('SELECT * FROM pages WHERE id = ?').get(info.lastInsertRowid));
     },
     listPages(siteKey) {
+      assertValidSiteKey(siteKey);
       return listPages.all(siteKey).map(mapPage);
     },
     createNewsArticle(input) {
@@ -184,6 +187,7 @@ function createCatalogRepository(db) {
       return mapRecord(db.prepare('SELECT * FROM news_articles WHERE id = ?').get(info.lastInsertRowid));
     },
     listNewsArticles(siteKey) {
+      assertValidSiteKey(siteKey);
       return listNews.all(siteKey).map(mapRecord);
     },
     createCaseStudy(input) {
@@ -206,6 +210,7 @@ function createCatalogRepository(db) {
       return mapRecord(db.prepare('SELECT * FROM case_studies WHERE id = ?').get(info.lastInsertRowid));
     },
     listCaseStudies(siteKey) {
+      assertValidSiteKey(siteKey);
       return listCaseStudies.all(siteKey).map(mapRecord);
     },
   };
