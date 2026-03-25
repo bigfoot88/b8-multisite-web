@@ -14,7 +14,7 @@ function parsePort(value) {
 
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parsePort(process.env.PORT || '3000'),
+  port: parsePort(process.env.PORT === undefined ? '3000' : process.env.PORT),
 };
 
 module.exports = {

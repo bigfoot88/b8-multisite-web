@@ -40,3 +40,23 @@ test('rejects non-numeric PORT values', () => {
     /PORT must be an integer between 0 and 65535/,
   );
 });
+
+test('defaults PORT to 3000 only when undefined', () => {
+  const { env } = loadEnvWithPort(undefined);
+
+  assert.equal(env.port, 3000);
+});
+
+test('rejects empty-string PORT values', () => {
+  assert.throws(
+    () => loadEnvWithPort(''),
+    /PORT must be an integer between 0 and 65535/,
+  );
+});
+
+test('rejects PORT values above 65535', () => {
+  assert.throws(
+    () => loadEnvWithPort('65536'),
+    /PORT must be an integer between 0 and 65535/,
+  );
+});
