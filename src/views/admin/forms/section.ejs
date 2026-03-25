@@ -8,6 +8,6 @@
     <input type="checkbox" name="isPublished" value="1" <%= currentSectionRecord.isPublished ? 'checked' : '' %> />
     发布到首页
   </label>
-  <label>配置 JSON<textarea name="configJson" rows="6"><%= JSON.stringify(currentSectionRecord.config || {}, null, 2) %></textarea></label>
+  <label>配置 JSON<textarea name="configJson" rows="6"><%= currentSectionRecord.configJson ?? JSON.stringify(currentSectionRecord.config || {}, null, 2) %></textarea></label>
   <button type="submit">保存模块</button>
 </form>

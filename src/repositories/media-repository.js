@@ -36,6 +36,23 @@ function createMediaRepository(db) {
   `);
   const selectByKey = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?');
   const selectById = db.prepare('SELECT * FROM media_assets WHERE id = ?');
+  const selectReferenceSites = db.prepare(`
+    SELECT DISTINCT site_key
+    FROM (
+      SELECT site_key, brochure_media_id AS media_id FROM products WHERE deleted_at IS NULL
+      UNION ALL
+      SELECT site_key, attachment_media_id AS media_id FROM products WHERE deleted_at IS NULL
+      UNION ALL
+      SELECT site_key, attachment_media_id AS media_id FROM solutions WHERE deleted_at IS NULL
+      UNION ALL
+      SELECT site_key, attachment_media_id AS media_id FROM pages WHERE deleted_at IS NULL
+      UNION ALL
+      SELECT site_key, hero_media_id AS media_id FROM news_articles WHERE deleted_at IS NULL
+      UNION ALL
+      SELECT site_key, attachment_media_id AS media_id FROM case_studies WHERE deleted_at IS NULL
+    ) AS references_by_site
+    WHERE media_id = ?
+  `);
   const updateAssetStatement = db.prepare(`
     UPDATE media_assets
     SET site_key = @siteKey,
@@ -61,6 +78,20 @@ function createMediaRepository(db) {
     }
   }
 
+  function assertRebindKeepsReferencesValid(current, nextSiteKey) {
+    if (!current || nextSiteKey === null || nextSiteKey === undefined || nextSiteKey === current.site_key) {
+      return;
+    }
+
+    const incompatibleReference = selectReferenceSites
+      .all(current.id)
+      .find((reference) => reference.site_key !== null && reference.site_key !== nextSiteKey);
+
+    if (incompatibleReference) {
+      throw createAdminValidationError('当前素材已被其他站点内容引用，不能迁移到该站点。', 'media-site-assignment-conflict');
+    }
+  }
+
   return {
     createAsset({ assetKey, siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
       if (siteKey !== null && siteKey !== undefined) {
@@ -80,12 +111,14 @@ function createMediaRepository(db) {
       return mapAsset(selectById.get(info.lastInsertRowid));
     },
     updateAsset(assetKey, { siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
+      const current = selectByKey.get(assetKey);
       if (siteKey === '') {
         throw createAdminValidationError('站点标识无效，请重新选择。', 'siteKey validation error');
       }
       if (siteKey !== null && siteKey !== undefined) {
         assertWritableSiteKey(siteKey);
       }
+      assertRebindKeepsReferencesValid(current, siteKey || null);
       updateAssetStatement.run({
         assetKey,
         siteKey: siteKey || null,

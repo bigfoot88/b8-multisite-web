@@ -149,6 +149,95 @@ test('homepage sections list exposes removal and deletes a section record', asyn
   assert.doesNotMatch(updatedListResponse.text, /promo-strip/);
 });
 
+test('homepage section create keeps malformed config json as a recoverable Chinese validation error', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-sections-invalid-json-create-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/dma/sections')
+    .type('form')
+    .send({
+      sectionKey: 'promo-strip',
+      heading: '保留标题',
+      subheading: '保留副标题',
+      body: '保留正文',
+      sortOrder: '7',
+      isPublished: '1',
+      configJson: '{"ctaLabel":"立即咨询",',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /配置 JSON 格式不正确，请检查后重试。/);
+  assert.match(response.text, /保留标题/);
+  assert.match(response.text, /保留正文/);
+  assert.match(response.text, /ctaLabel/);
+
+  const created = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'promo-strip');
+  assert.equal(created, undefined);
+});
+
+test('homepage section create rejects missing section key as a recoverable Chinese validation error', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-sections-missing-key-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+  const originalCount = db.prepare('SELECT COUNT(*) AS count FROM site_sections WHERE site_key = ?').get('dma').count;
+
+  const response = await agent
+    .post('/admin/dma/sections')
+    .type('form')
+    .send({
+      sectionKey: '   ',
+      heading: '缺少键名标题',
+      subheading: '缺少键名副标题',
+      body: '缺少键名正文',
+      sortOrder: '8',
+      isPublished: '1',
+      configJson: '{"ctaLabel":"立即咨询"}',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /模块键名不能为空，请填写后重试。/);
+  assert.match(response.text, /缺少键名标题/);
+  assert.match(response.text, /缺少键名正文/);
+  assert.match(response.text, /ctaLabel/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM site_sections WHERE site_key = ?').get('dma').count, originalCount);
+});
+
+test('homepage section update keeps malformed config json recoverable without overwriting stored config', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-sections-invalid-json-update-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const original = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'hero');
+
+  const response = await agent
+    .post('/admin/dma/sections/hero')
+    .type('form')
+    .send({
+      sectionKey: 'hero',
+      heading: '错误 JSON 标题',
+      subheading: '错误 JSON 副标题',
+      body: '错误 JSON 正文',
+      sortOrder: '1',
+      isPublished: '1',
+      configJson: '{"ctaLabel":"立即咨询"',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /配置 JSON 格式不正确，请检查后重试。/);
+  assert.match(response.text, /错误 JSON 标题/);
+  assert.match(response.text, /错误 JSON 正文/);
+  assert.match(response.text, /ctaLabel/);
+
+  const unchanged = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'hero');
+  assert.equal(unchanged.heading, original.heading);
+  assert.equal(unchanged.config_json, original.config_json);
+});
+
 test('site settings form updates contact and seo fields', async (t) => {
   const { agent, db } = withApp(t, 'b8-admin-settings-');
   t.after(() => db.close());

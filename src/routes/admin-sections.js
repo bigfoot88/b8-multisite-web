@@ -1,17 +1,18 @@
 const express = require('express');
 
+const { createAdminValidationError, isExpectedAdminError } = require('../lib/admin-errors');
 const { requireAdmin } = require('../lib/session');
 const { renderAdmin, requireKnownSite } = require('./admin-shared');
 
 function parseConfig(configJson) {
-  if (!configJson) {
+  if (!String(configJson || '').trim()) {
     return {};
   }
 
   try {
     return JSON.parse(configJson);
   } catch {
-    return {};
+    throw createAdminValidationError('配置 JSON 格式不正确，请检查后重试。', 'invalid-section-config-json');
   }
 }
 
@@ -20,11 +21,27 @@ function createAdminSectionsRouter() {
 
   router.use(requireAdmin);
 
-  router.get('/:siteKey/sections', requireKnownSite, (req, res) => {
+  function buildSectionDraft(input = {}, fallbackSectionKey = '') {
+    return {
+      sectionKey: typeof input.sectionKey === 'string' ? input.sectionKey.trim() : fallbackSectionKey,
+      heading: input.heading || '',
+      subheading: input.subheading || '',
+      body: input.body || '',
+      sortOrder: input.sortOrder ?? 0,
+      isPublished: input.isPublished === '1' || input.isPublished === 1 || input.isPublished === true,
+      config: input.config || {},
+      configJson: typeof input.configJson === 'string' ? input.configJson : JSON.stringify(input.config || {}, null, 2),
+    };
+  }
+
+  function renderSectionsPage(req, res, { status = 200, section = undefined, errorMessage = '' } = {}) {
     const sections = req.app.locals.siteRepository.listSections(req.params.siteKey);
     const editKey = req.query.edit || '';
-    const section = editKey ? req.app.locals.siteRepository.getSection(req.params.siteKey, editKey) : null;
+    const selectedSection = section === undefined
+      ? (editKey ? req.app.locals.siteRepository.getSection(req.params.siteKey, editKey) : null)
+      : section;
 
+    res.status(status);
     return renderAdmin(req, res, {
       title: '首页模块 · 中文后台',
       pageTitle: '首页模块',
@@ -33,7 +50,7 @@ function createAdminSectionsRouter() {
       currentPath: `/admin/${req.params.siteKey}/sections`,
       siteKey: req.params.siteKey,
       sections,
-      section,
+      section: selectedSection,
       emptySection: {
         sectionKey: '',
         heading: '',
@@ -42,41 +59,76 @@ function createAdminSectionsRouter() {
         sortOrder: 0,
         isPublished: true,
         config: {},
+        configJson: '{}',
       },
+      errorMessage,
     });
-  });
+  }
 
-  router.post('/:siteKey/sections', requireKnownSite, (req, res) => {
+  router.get('/:siteKey/sections', requireKnownSite, (req, res) => renderSectionsPage(req, res));
+
+  router.post('/:siteKey/sections', requireKnownSite, (req, res, next) => {
     const sectionKey = req.body?.sectionKey?.trim();
     if (!sectionKey) {
-      return res.redirect(`/admin/${req.params.siteKey}/sections`);
+      return renderSectionsPage(req, res, {
+        status: 400,
+        errorMessage: '模块键名不能为空，请填写后重试。',
+        section: buildSectionDraft(req.body),
+      });
     }
 
-    req.app.locals.siteRepository.saveSection({
-      siteKey: req.params.siteKey,
-      sectionKey,
-      heading: req.body?.heading?.trim() || null,
-      subheading: req.body?.subheading?.trim() || null,
-      body: req.body?.body?.trim() || null,
-      sortOrder: req.body?.sortOrder,
-      isPublished: req.body?.isPublished === '1',
-      config: parseConfig(req.body?.configJson),
-    });
+    try {
+      req.app.locals.siteRepository.saveSection({
+        siteKey: req.params.siteKey,
+        sectionKey,
+        heading: req.body?.heading?.trim() || null,
+        subheading: req.body?.subheading?.trim() || null,
+        body: req.body?.body?.trim() || null,
+        sortOrder: req.body?.sortOrder,
+        isPublished: req.body?.isPublished === '1',
+        config: parseConfig(req.body?.configJson),
+      });
+    } catch (error) {
+      if (isExpectedAdminError(error)) {
+        return renderSectionsPage(req, res, {
+          status: error.statusCode,
+          errorMessage: error.message,
+          section: buildSectionDraft(req.body),
+        });
+      }
+
+      return next(error);
+    }
 
     return res.redirect(`/admin/${req.params.siteKey}/sections`);
   });
 
-  router.post('/:siteKey/sections/:sectionKey', requireKnownSite, (req, res) => {
-    req.app.locals.siteRepository.saveSection({
-      siteKey: req.params.siteKey,
-      sectionKey: req.params.sectionKey,
-      heading: req.body?.heading?.trim() || null,
-      subheading: req.body?.subheading?.trim() || null,
-      body: req.body?.body?.trim() || null,
-      sortOrder: req.body?.sortOrder,
-      isPublished: req.body?.isPublished === '1',
-      config: parseConfig(req.body?.configJson),
-    });
+  router.post('/:siteKey/sections/:sectionKey', requireKnownSite, (req, res, next) => {
+    try {
+      req.app.locals.siteRepository.saveSection({
+        siteKey: req.params.siteKey,
+        sectionKey: req.params.sectionKey,
+        heading: req.body?.heading?.trim() || null,
+        subheading: req.body?.subheading?.trim() || null,
+        body: req.body?.body?.trim() || null,
+        sortOrder: req.body?.sortOrder,
+        isPublished: req.body?.isPublished === '1',
+        config: parseConfig(req.body?.configJson),
+      });
+    } catch (error) {
+      if (isExpectedAdminError(error)) {
+        return renderSectionsPage(req, res, {
+          status: error.statusCode,
+          errorMessage: error.message,
+          section: buildSectionDraft({
+            ...req.body,
+            sectionKey: req.params.sectionKey,
+          }, req.params.sectionKey),
+        });
+      }
+
+      return next(error);
+    }
 
     return res.redirect(`/admin/${req.params.siteKey}/sections`);
   });

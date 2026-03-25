@@ -46,7 +46,11 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser(cookieSecret));
   app.use('/css', express.static(path.join(publicRoot, 'css')));
-  app.use('/uploads', express.static(uploadRoot));
+  app.use('/uploads', express.static(uploadRoot, {
+    setHeaders(res) {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  }));
   app.use('/admin', createAdminAuthRouter({ adminRepository: app.locals.adminRepository }));
   app.use('/admin', createAdminSitesRouter());
   app.use('/admin', createAdminSectionsRouter());

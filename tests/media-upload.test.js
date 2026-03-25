@@ -65,6 +65,10 @@ test('media library uploads an asset and replaces it without changing asset iden
   const mediaPage = await agent.get('/admin/media?siteKey=dma');
   assert.match(mediaPage.text, /DMA logo updated/);
   assert.match(mediaPage.text, /logo-replacement\.png/);
+
+  const uploadResponsePage = await agent.get(updated.source_url);
+  assert.equal(uploadResponsePage.status, 200);
+  assert.equal(uploadResponsePage.headers['x-content-type-options'], 'nosniff');
 });
 
 test('media library ignores invalid site filters instead of failing', async (t) => {
@@ -245,6 +249,34 @@ test('media upload rejects unsafe active-content files without leaking files', a
   assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
 });
 
+test('media upload rejects spoofed active-content files renamed as png without leaking files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-spoofed-upload-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '伪装 PNG')
+    .attach('file', `${__dirname}/fixtures/crawl-sample.html`, {
+      filename: 'spoofed.png',
+      contentType: 'image/png',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
 test('media replacement rejects missing assets without reporting success or leaking files', async (t) => {
   const paths = createSeededAppPaths('b8-admin-media-missing-replace-');
   t.after(() => {
@@ -338,4 +370,126 @@ test('media rebind rejects invalid site binding as a recoverable admin error', a
   const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
   assert.equal(unchanged.site_key, 'dma');
   assert.equal(unchanged.alt_text, 'DMA 原素材');
+});
+
+test('media rebind rejects moving a referenced asset to another site', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-rebind-reference-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA 已引用素材')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  db.prepare(`
+    INSERT INTO products (site_key, slug, title, brochure_media_id, sort_order, publish_state)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run('dma', 'referenced-product', '已引用产品', asset.id, 1, 'draft');
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/rebind`)
+    .type('form')
+    .send({
+      siteKey: 'bigfoot',
+      altText: '尝试跨站重绑',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /当前素材已被其他站点内容引用，不能迁移到该站点。/);
+
+  const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(unchanged.site_key, 'dma');
+  assert.equal(unchanged.alt_text, 'DMA 已引用素材');
+});
+
+test('media replacement rejects moving a referenced asset to another site and cleans up uploaded files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-replace-reference-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA 替换前素材')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  db.prepare(`
+    INSERT INTO products (site_key, slug, title, attachment_media_id, sort_order, publish_state)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run('dma', 'replace-guard-product', '替换保护产品', asset.id, 2, 'draft');
+  const originalUploads = listUploadFiles(paths.uploadRoot);
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/replace`)
+    .field('siteKey', 'bigfoot')
+    .field('altText', '尝试跨站替换')
+    .attach('file', replacementLogoFixturePath);
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /当前素材已被其他站点内容引用，不能迁移到该站点。/);
+
+  const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(unchanged.site_key, 'dma');
+  assert.equal(unchanged.storage_path, asset.storage_path);
+  assert.equal(unchanged.alt_text, asset.alt_text);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), originalUploads);
+});
+
+test('media replacement rejects spoofed active-content files renamed as png without leaking files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-spoofed-replace-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA 原素材')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  const originalUploads = listUploadFiles(paths.uploadRoot);
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/replace`)
+    .field('altText', '伪装替换')
+    .attach('file', `${__dirname}/fixtures/crawl-sample.html`, {
+      filename: 'spoofed.png',
+      contentType: 'image/png',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+
+  const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(unchanged.storage_path, asset.storage_path);
+  assert.equal(unchanged.alt_text, asset.alt_text);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), originalUploads);
 });
