@@ -462,7 +462,7 @@ test('seeded helper provisions default admins and both site settings rows', () =
   );
   assert.deepEqual(
     sites.listNavigation('dma').map((item) => item.href),
-    ['/solutions', '/cases', '/news', '/contact'],
+    ['/', '/about', '/products', '/solutions', '/news', '/cases', '/contact'],
   );
 });
 

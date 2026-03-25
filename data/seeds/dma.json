@@ -3,28 +3,457 @@
     "siteKey": "dma",
     "brandName": "智灵科技",
     "domain": "dma.b8water.com",
-    "seoTitle": "智灵科技 | DMA Lite · 夜间最小流量监测方案 | AI 抄表机器人",
-    "seoDescription": "DMA Lite 夜间最小流量监测方案与 AI 抄表机器人多站点迁移默认站点数据。",
+    "seoTitle": "智灵科技 | DMA Lite · 夜间最小流量+分区漏损监测方案",
+    "seoDescription": "围绕夜间最小流量、DMA 分区计量与现场闭环治理，为供水企业提供可持续降差的数字化能力。",
+    "contactEmail": "service@b8water.com",
     "contactPhone": "400-660-3328",
-    "contactAddress": "深圳市南山区粤海街道科技园社区科智西路1号"
+    "contactAddress": "深圳市南山区粤海街道科技园社区科智西路 1 号智谷研发中心 8 楼"
   },
   "navigation": [
-    { "label": "解决方案", "href": "/solutions", "position": 1 },
-    { "label": "案例", "href": "/cases", "position": 2 },
-    { "label": "新闻", "href": "/news", "position": 3 },
-    { "label": "联系我们", "href": "/contact", "position": 4 }
+    {
+      "key": "home",
+      "label": "首页",
+      "href": "/",
+      "position": 0
+    },
+    {
+      "key": "about",
+      "label": "关于我们",
+      "href": "/about",
+      "position": 1
+    },
+    {
+      "key": "products",
+      "label": "产品中心",
+      "href": "/products",
+      "position": 2
+    },
+    {
+      "key": "solutions",
+      "label": "解决方案",
+      "href": "/solutions",
+      "position": 3
+    },
+    {
+      "key": "news",
+      "label": "新闻中心",
+      "href": "/news",
+      "position": 4
+    },
+    {
+      "key": "cases",
+      "label": "客户案例",
+      "href": "/cases",
+      "position": 5
+    },
+    {
+      "key": "contact",
+      "label": "联系我们",
+      "href": "/contact",
+      "position": 6
+    }
+  ],
+  "mediaAssets": [
+    {
+      "assetKey": "dma-hero-monitoring",
+      "siteKey": "dma",
+      "filename": "dma-hero-monitoring.png",
+      "mimeType": "image/png",
+      "relativePath": "seeds/dma/dma-hero-monitoring.png",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/2/6/ABUIABACGAAg37-ZvwYonfCPxAYwuAg44AQ.jpg",
+      "altText": "DMA Lite 夜间漏损监测驾驶舱",
+      "metadata": {
+        "role": "hero"
+      }
+    },
+    {
+      "assetKey": "dma-lite-brochure",
+      "siteKey": "dma",
+      "filename": "dma-lite-brochure.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/dma/dma-lite-brochure.pdf",
+      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg5MHllQYo9pbrgAYwuAg4oAM!500x500.png",
+      "altText": "DMA Lite 宣传册",
+      "metadata": {
+        "role": "brochure"
+      }
+    },
+    {
+      "assetKey": "dma-lite-specs",
+      "siteKey": "dma",
+      "filename": "dma-lite-specs.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/dma/dma-lite-specs.pdf",
+      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg6Irq6gUowsr5qAUwsAk4sAk.png",
+      "altText": "DMA Lite 技术规格书",
+      "metadata": {
+        "role": "attachment"
+      }
+    },
+    {
+      "assetKey": "dma-lite-solution-pack",
+      "siteKey": "dma",
+      "filename": "dma-lite-solution-pack.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/dma/dma-lite-solution-pack.pdf",
+      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg4qTKmQYokJLqqQIwUDhQ.png",
+      "altText": "DMA Lite 解决方案包",
+      "metadata": {
+        "role": "solution-pack"
+      }
+    },
+    {
+      "assetKey": "dma-news-mnf-hero",
+      "siteKey": "dma",
+      "filename": "dma-news-mnf.png",
+      "mimeType": "image/png",
+      "relativePath": "seeds/dma/dma-news-mnf.png",
+      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg97HqlQYo9NbOmQQw2wI4UA.png",
+      "altText": "供水管网漏损精准化治理观察配图",
+      "metadata": {
+        "role": "news-hero"
+      }
+    },
+    {
+      "assetKey": "dma-history-pack",
+      "siteKey": "dma",
+      "filename": "dma-history-pack.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/dma/dma-history-pack.pdf",
+      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAgjf2UlgYo4IDf9AYwsAk4sAk!100x100.png",
+      "altText": "智灵科技发展历程资料",
+      "metadata": {
+        "role": "page-attachment"
+      }
+    },
+    {
+      "assetKey": "dma-qingyuan-case-pack",
+      "siteKey": "dma",
+      "filename": "dma-qingyuan-case-pack.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/dma/dma-qingyuan-case-pack.pdf",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/4/6/ABUIABAEGAAg37-ZvwYo4pjD4AMwuAg48AE.png",
+      "altText": "清远供水案例资料包",
+      "metadata": {
+        "role": "case-pack"
+      }
+    },
+    {
+      "assetKey": "dma-contact-qr",
+      "siteKey": "dma",
+      "filename": "dma-contact-qr.svg",
+      "mimeType": "image/svg+xml",
+      "relativePath": "seeds/dma/dma-contact-qr.svg",
+      "sourceUrl": "http://dma.b8water.com/qrCode.jsp?cmd=mobiQR&ide=AGcI",
+      "altText": "智灵科技联系二维码",
+      "metadata": {
+        "role": "contact"
+      }
+    }
   ],
   "siteSections": [
     {
       "sectionKey": "hero",
-      "heading": "DMA Lite · 夜间最小流量监测方案",
-      "subheading": "构建科学化、精细化漏损治理体系",
-      "body": "助力企业实现低投入、快收益、可持续的降差目标。",
+      "heading": "DMA Lite · 夜间最小流量+分区漏损监测方案",
+      "subheading": "把夜间最小流量、分区计量、巡检处置与治理复盘串成一条数据闭环。",
+      "body": "面向城市供水与园区供水场景，帮助漏损治理团队以更少的人力实现更快的问题定位、更稳的降差收益。",
+      "mediaAssetKey": "dma-hero-monitoring",
       "config": {
         "ctaLabel": "预约演示",
         "ctaHref": "/contact"
       },
-      "sortOrder": 0
+      "sortOrder": 0,
+      "isPublished": true
+    },
+    {
+      "sectionKey": "capabilities",
+      "heading": "从数据采集到工单闭环的一体化治理能力",
+      "subheading": "围绕分区、计量、报警、复盘建立标准动作。",
+      "body": "支持夜间最小流量分析、分区边界核查、异常工况识别、现场处置跟踪与月度治理复盘。",
+      "config": {
+        "highlights": [
+          "夜间最小流量",
+          "分区边界核查",
+          "闭环处置看板"
+        ]
+      },
+      "sortOrder": 1,
+      "isPublished": true
+    },
+    {
+      "sectionKey": "service-process",
+      "heading": "迁移后的种子数据覆盖产品、方案、案例与新闻验证路径",
+      "subheading": "为 Task 7 的端到端校验保留稳定 slug。",
+      "body": "数据集选取了可代表 DMA 站点调性的真实场景内容，并统一采用可复用的素材键与上传路径。",
+      "sortOrder": 2,
+      "isPublished": true
+    }
+  ],
+  "pages": [
+    {
+      "path": "/about",
+      "title": "关于智灵科技",
+      "summary": "智灵科技聚焦智慧供水场景，持续沉淀可量化的漏损治理方法论。",
+      "bodyHtml": "<p>智灵科技长期服务城市供水企业，围绕 DMA 分区治理、夜间最小流量监测、产销差分析和现场作业数字化，帮助客户建立持续降差的组织能力。</p><p>团队以“数据说清问题、流程推动解决、复盘沉淀标准”为原则，持续迭代适配水司经营现场的产品与服务。</p>",
+      "seoTitle": "关于智灵科技",
+      "seoDescription": "了解智灵科技在智慧供水与漏损治理领域的产品能力与项目经验。",
+      "sortOrder": 10,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T09:00:00.000Z"
+    },
+    {
+      "path": "/about/history",
+      "title": "发展历程",
+      "summary": "从单点试点到区域化复制，把成功经验沉淀成标准化方案。",
+      "bodyHtml": "<p>团队从夜间最小流量试点项目起步，逐步扩展到分区边界梳理、表务协同和异常事件闭环。</p><p>随着项目复制到更多区域，智灵科技形成了覆盖“诊断、部署、运营、复盘”的标准实施路径。</p>",
+      "attachmentAssetKey": "dma-history-pack",
+      "seoTitle": "智灵科技发展历程",
+      "sortOrder": 11,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T10:00:00.000Z"
+    },
+    {
+      "path": "/contact",
+      "title": "联系我们",
+      "summary": "欢迎预约演示、方案交流或项目咨询。",
+      "bodyHtml": "<p><strong>联系电话：</strong>400-660-3328</p><p><strong>联系邮箱：</strong>service@b8water.com</p><p><strong>办公地址：</strong>深圳市南山区粤海街道科技园社区科智西路 1 号智谷研发中心 8 楼</p><p>来源于原站 col.jsp?id=103 的联系信息已整理为可维护的站点设置与联系页面内容。</p>",
+      "attachmentAssetKey": "dma-contact-qr",
+      "seoTitle": "联系智灵科技",
+      "sortOrder": 12,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T11:00:00.000Z"
+    },
+    {
+      "path": "/search",
+      "title": "站内检索迁移说明",
+      "summary": "旧站搜索链接统一汇总至新的检索说明页。",
+      "bodyHtml": "<p>原站的 nr.jsp 搜索入口已整合到新的内容检索能力中。Task 7 将基于稳定 slug 对内容入口进行进一步校验。</p>",
+      "seoTitle": "DMA 站内检索说明",
+      "sortOrder": 13,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T12:00:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "slug": "dma-lite",
+      "title": "DMA Lite 夜间监测平台",
+      "summary": "围绕夜间最小流量与分区边界校核建立可复制的漏损监测能力。",
+      "bodyHtml": "<p>DMA Lite 以分区计量、夜间最小流量分析和异常波动识别为核心，帮助水司快速锁定重点漏损片区并安排现场核查。</p><p>平台支持多维阈值策略、事件工单回写和治理成效复盘，帮助管理层持续跟踪投资回报。</p>",
+      "brochureAssetKey": "dma-lite-brochure",
+      "attachmentAssetKey": "dma-lite-specs",
+      "seoTitle": "DMA Lite 产品",
+      "seoDescription": "DMA Lite 夜间最小流量与分区漏损监测平台。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-21T09:00:00.000Z"
+    },
+    {
+      "slug": "ai-meter-bot",
+      "title": "AI 抄表机器人",
+      "summary": "把抄表影像识别、异常复核与任务回传整合到同一流程。",
+      "bodyHtml": "<p>AI 抄表机器人适用于老旧小区与复杂地形场景，降低人工录入误差，提升抄表任务完成率。</p>",
+      "attachmentAssetKey": "dma-lite-specs",
+      "seoTitle": "AI 抄表机器人",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-21T10:00:00.000Z"
+    }
+  ],
+  "solutions": [
+    {
+      "slug": "dma-lite-solution",
+      "title": "DMA Lite 分区漏损治理方案",
+      "summary": "以夜间最小流量为抓手，形成“监测-诊断-处置-复盘”的治理闭环。",
+      "bodyHtml": "<p>方案聚焦 DMA 分区、边界核查、夜间最小流量基线建立与异常告警响应，帮助客户把高频监测和现场处置连接起来。</p><p>在老旧管网和重点片区，可通过阶段化治理策略实现更快的漏损定位与维修闭环。</p>",
+      "attachmentAssetKey": "dma-lite-solution-pack",
+      "seoTitle": "DMA Lite 解决方案",
+      "seoDescription": "夜间最小流量 + 分区漏损监测的一体化治理方案。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-22T09:00:00.000Z"
+    },
+    {
+      "slug": "pressure-zoning",
+      "title": "压力分区与异常波动联动方案",
+      "summary": "把压力监测、边界调整与告警策略联动起来，降低误报率。",
+      "bodyHtml": "<p>通过对压力分区和计量分区的联动建模，提升漏损研判效率并减少盲目巡查。</p>",
+      "attachmentAssetKey": "dma-lite-solution-pack",
+      "seoTitle": "压力分区联动方案",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-22T10:00:00.000Z"
+    }
+  ],
+  "news": [
+    {
+      "slug": "mnf-observation",
+      "title": "供水管网漏损精准化治理观察",
+      "summary": "基于原站 nd.jsp?id=111 的内容语义重构，聚焦夜间最小流量驱动的精准治理。",
+      "bodyHtml": "<p>原站文章提到，供水企业在漏损治理中最怕“看见问题，却难以形成持续动作”。智灵科技结合项目实践，将夜间最小流量分析与片区工单闭环串联，帮助客户建立持续复盘机制。</p><p>文章强调：只有把分区边界、异常事件、现场巡查和维修结果放到同一视图中，才能真正形成漏损精准化治理观察。</p>",
+      "heroAssetKey": "dma-news-mnf-hero",
+      "seoTitle": "供水管网漏损精准化治理观察",
+      "seoDescription": "基于 DMA 项目实践的漏损精准化治理方法观察。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-23T09:30:00.000Z"
+    },
+    {
+      "slug": "digital-twin-leakage",
+      "title": "数字孪生视角下的分区漏损复盘",
+      "summary": "从片区画像、告警复核到维修验证，建立多角色协同机制。",
+      "bodyHtml": "<p>通过统一的事件看板，运营、客服与维修班组可以围绕同一片区画像做协同判断，减少跨部门交接损耗。</p>",
+      "heroAssetKey": "dma-news-mnf-hero",
+      "seoTitle": "分区漏损复盘",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-22T08:00:00.000Z"
+    }
+  ],
+  "cases": [
+    {
+      "slug": "qingyuan-water",
+      "title": "清远供水分区治理案例",
+      "summary": "以夜间最小流量和分区边界校核为核心，逐步压降重点片区产销差。",
+      "bodyHtml": "<p>清远项目先以核心片区建立监测基线，再逐步扩展到重点支路和高频告警点。项目团队通过周复盘机制，把问题定位时间压缩到更短周期。</p><p>上线三个月后，客户在重点片区实现了更加稳定的夜间最小流量监控与维修闭环。</p>",
+      "attachmentAssetKey": "dma-qingyuan-case-pack",
+      "seoTitle": "清远供水案例",
+      "seoDescription": "清远供水分区漏损治理落地案例。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-24T09:00:00.000Z"
+    },
+    {
+      "slug": "nanshan-dma",
+      "title": "南山园区夜间最小流量治理案例",
+      "summary": "围绕重点园区建立夜间最小流量监测和处置流程。",
+      "bodyHtml": "<p>南山园区项目通过小范围先行试点，把监测、预警和运维处置流程跑通后再逐步复制到更多区域。</p>",
+      "attachmentAssetKey": "dma-qingyuan-case-pack",
+      "seoTitle": "南山园区案例",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-24T10:00:00.000Z"
+    }
+  ],
+  "redirects": [
+    {
+      "siteKey": "dma",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=101",
+      "targetPath": "/about",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=102",
+      "targetPath": "/products",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=103",
+      "targetPath": "/contact",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=105",
+      "targetPath": "/products/dma-lite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=106",
+      "targetPath": "/solutions/dma-lite-solution",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=116",
+      "targetPath": "/about/history",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=104",
+      "targetPath": "/news/digital-twin-leakage",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=106",
+      "targetPath": "/news/digital-twin-leakage",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=107",
+      "targetPath": "/news/digital-twin-leakage",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=108",
+      "targetPath": "/news/mnf-observation",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=109",
+      "targetPath": "/news/mnf-observation",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=110",
+      "targetPath": "/news/mnf-observation",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=111",
+      "targetPath": "/news/mnf-observation",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=4",
+      "targetPath": "/news/mnf-observation",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22_np%22%3A%220_31_1%22%7D%2C%22type%22%3A15%7D",
+      "targetPath": "/search",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22groupId%22%3A%221%22%2C%22mid%22%3A%2212%22%7D%2C%22type%22%3A15%7D&groupId=1&mid=12",
+      "targetPath": "/search",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "dma",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%7D%2C%22type%22%3A15%7D",
+      "targetPath": "/search",
+      "statusCode": 301
     }
   ]
 }

@@ -3,28 +3,599 @@
     "siteKey": "bigfoot",
     "brandName": "中山市同创科技发展有限公司",
     "domain": "www.chinabigfoot.com",
-    "seoTitle": "中山市同创科技发展有限公司，同创科技，智慧水务，自来水收费系统",
-    "seoDescription": "Bigfoot 智慧水务站点迁移默认站点数据。",
+    "seoTitle": "中山市同创科技发展有限公司 | B8ERP 智慧水务解决方案",
+    "seoDescription": "围绕收费系统、抄表作业、营业服务与经营分析，构建面向智慧水务的营收一体化平台。",
+    "contactEmail": "market@chinabigfoot.com",
     "contactPhone": "400-660-3328",
-    "contactAddress": "中山市同创科技发展有限公司"
+    "contactAddress": "广东省中山市东区兴中道 6 号假日广场南塔 8 楼"
   },
   "navigation": [
-    { "label": "收费系统", "href": "/products", "position": 1 },
-    { "label": "手机抄表", "href": "/solutions", "position": 2 },
-    { "label": "新闻动态", "href": "/news", "position": 3 },
-    { "label": "联系我们", "href": "/contact", "position": 4 }
+    {
+      "key": "home",
+      "label": "首页",
+      "href": "/",
+      "position": 0
+    },
+    {
+      "key": "about",
+      "label": "关于同创",
+      "href": "/about",
+      "position": 1
+    },
+    {
+      "key": "products",
+      "label": "收费系统",
+      "href": "/products",
+      "position": 2
+    },
+    {
+      "key": "solutions",
+      "label": "智慧水务",
+      "href": "/solutions",
+      "position": 3
+    },
+    {
+      "key": "news",
+      "label": "新闻动态",
+      "href": "/news",
+      "position": 4
+    },
+    {
+      "key": "cases",
+      "label": "客户案例",
+      "href": "/cases",
+      "position": 5
+    },
+    {
+      "key": "contact",
+      "label": "联系我们",
+      "href": "/contact",
+      "position": 6
+    }
+  ],
+  "mediaAssets": [
+    {
+      "assetKey": "bigfoot-hero-b8erp",
+      "siteKey": "bigfoot",
+      "filename": "bigfoot-hero-b8erp.png",
+      "mimeType": "image/png",
+      "relativePath": "seeds/bigfoot/bigfoot-hero-b8erp.png",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/2/5/ABUIABACGAAgz_iSvwYo5buJlgIw1AI4Rg.jpg",
+      "altText": "B8ERP 智慧水务首页主视觉",
+      "metadata": {
+        "role": "hero"
+      }
+    },
+    {
+      "assetKey": "bigfoot-billing-brochure",
+      "siteKey": "bigfoot",
+      "filename": "billing-suite-brochure.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/bigfoot/billing-suite-brochure.pdf",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg-fWXvwYo6avMwAYwuAg4hgQ.png",
+      "altText": "收费系统宣传册",
+      "metadata": {
+        "role": "brochure"
+      }
+    },
+    {
+      "assetKey": "bigfoot-billing-specs",
+      "siteKey": "bigfoot",
+      "filename": "billing-suite-specs.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/bigfoot/billing-suite-specs.pdf",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg0qmpvwYonrW0xgIw4QY4hwU.png",
+      "altText": "收费系统规格说明",
+      "metadata": {
+        "role": "attachment"
+      }
+    },
+    {
+      "assetKey": "bigfoot-smart-water-pack",
+      "siteKey": "bigfoot",
+      "filename": "smart-water-pack.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/bigfoot/smart-water-pack.pdf",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg3-WXvwYo3O-VrwEwuAg4wgQ.png",
+      "altText": "智慧水务方案包",
+      "metadata": {
+        "role": "solution-pack"
+      }
+    },
+    {
+      "assetKey": "bigfoot-news-contract-hero",
+      "siteKey": "bigfoot",
+      "filename": "bigfoot-news-contract.png",
+      "mimeType": "image/png",
+      "relativePath": "seeds/bigfoot/bigfoot-news-contract.png",
+      "sourceUrl": "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAg2a3ZpQYo8JKfvwUwgA847Qc.jpg",
+      "altText": "节水合同新闻配图",
+      "metadata": {
+        "role": "news-hero"
+      }
+    },
+    {
+      "assetKey": "bigfoot-history-pack",
+      "siteKey": "bigfoot",
+      "filename": "bigfoot-history-pack.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/bigfoot/bigfoot-history-pack.pdf",
+      "sourceUrl": "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAgpJvZpQYouN6wswQwgA84vgU.jpg",
+      "altText": "同创科技发展历程",
+      "metadata": {
+        "role": "page-attachment"
+      }
+    },
+    {
+      "assetKey": "bigfoot-zhongshan-case-pack",
+      "siteKey": "bigfoot",
+      "filename": "zhongshan-water-case-pack.pdf",
+      "mimeType": "application/pdf",
+      "relativePath": "seeds/bigfoot/zhongshan-water-case-pack.pdf",
+      "sourceUrl": "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAg2a3ZpQYo8JKfvwUwgA847Qc.jpg",
+      "altText": "中山供水案例资料包",
+      "metadata": {
+        "role": "case-pack"
+      }
+    },
+    {
+      "assetKey": "bigfoot-contact-qr",
+      "siteKey": "bigfoot",
+      "filename": "bigfoot-contact-qr.svg",
+      "mimeType": "image/svg+xml",
+      "relativePath": "seeds/bigfoot/bigfoot-contact-qr.svg",
+      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAghKmpvwYourKabTDhBjiNBQ.png",
+      "altText": "同创科技联系二维码",
+      "metadata": {
+        "role": "contact"
+      }
+    },
+    {
+      "assetKey": "bigfoot-jiaoqin-apk",
+      "siteKey": "bigfoot",
+      "filename": "jiaoqin.apk",
+      "mimeType": "application/vnd.android.package-archive",
+      "relativePath": "seeds/bigfoot/jiaoqin.apk",
+      "sourceUrl": "http://www.bigfoot8.com:690/new/jiaoqin.apk",
+      "altText": "外勤抄表 APK",
+      "metadata": {
+        "role": "download"
+      }
+    }
   ],
   "siteSections": [
     {
       "sectionKey": "hero",
       "heading": "选择B8ERP，开启智能水务新纪元",
-      "subheading": "从营收管理到供应链优化，从实时监测到设备养护，满足企业各种业务需求。",
-      "body": "覆盖收费系统、手机抄表、网上营业厅与硬件设备等核心模块。",
+      "subheading": "把收费系统、手机抄表、网上营业厅和经营分析放到同一平台中协同运行。",
+      "body": "B8ERP 面向水务企业的营收管理场景，覆盖表务、收费、客服、报装、稽核和领导驾驶舱。",
+      "mediaAssetKey": "bigfoot-hero-b8erp",
       "config": {
         "ctaLabel": "了解产品",
-        "ctaHref": "/products"
+        "ctaHref": "/products/billing-suite"
       },
-      "sortOrder": 0
+      "sortOrder": 0,
+      "isPublished": true
+    },
+    {
+      "sectionKey": "modules",
+      "heading": "收费、抄表、营业、经营分析统一建设",
+      "subheading": "让营收业务从分散系统走向统一数据底座。",
+      "body": "通过统一客户档案、表务台账、费用规则与经营指标，减少跨系统对账与人工核验成本。",
+      "sortOrder": 1,
+      "isPublished": true
+    },
+    {
+      "sectionKey": "delivery",
+      "heading": "保留稳定 slug，支撑后续前后台验收",
+      "subheading": "产品、方案、案例、新闻统一采用可长期验证的别名。",
+      "body": "导入种子不仅覆盖公开内容，也为后续管理端维护、重定向验证和本地素材演示准备了统一基线。",
+      "sortOrder": 2,
+      "isPublished": true
+    }
+  ],
+  "pages": [
+    {
+      "path": "/about",
+      "title": "关于同创科技",
+      "summary": "中山市同创科技发展有限公司长期深耕智慧水务与收费信息化建设。",
+      "bodyHtml": "<p>同创科技面向供水企业提供收费系统、手机抄表、营业服务和经营分析等产品与实施服务。</p><p>公司以“懂行业、懂现场、懂交付”为核心，持续服务水司的营收升级与管理数字化。</p>",
+      "seoTitle": "关于同创科技",
+      "seoDescription": "了解同创科技在智慧水务与收费系统领域的服务能力。",
+      "sortOrder": 10,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T09:00:00.000Z"
+    },
+    {
+      "path": "/about/history",
+      "title": "发展历程",
+      "summary": "从单一收费系统到营收一体化平台的持续演进。",
+      "bodyHtml": "<p>从传统收费系统建设开始，同创科技逐步扩展到抄表外勤、网上营业厅、移动客服与经营分析场景。</p><p>随着项目经验积累，团队沉淀出更适合水务行业的实施方法和运营指标体系。</p>",
+      "attachmentAssetKey": "bigfoot-history-pack",
+      "seoTitle": "同创科技发展历程",
+      "sortOrder": 11,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T10:00:00.000Z"
+    },
+    {
+      "path": "/contact",
+      "title": "联系我们",
+      "summary": "欢迎预约产品演示、项目交流与合作咨询。",
+      "bodyHtml": "<p><strong>服务热线：</strong>400-660-3328</p><p><strong>联系邮箱：</strong>market@chinabigfoot.com</p><p><strong>联系地址：</strong>广东省中山市东区兴中道 6 号假日广场南塔 8 楼</p><p>原站 col.jsp?id=105 中的联系信息已整理为统一的站点设置与内容页。</p>",
+      "attachmentAssetKey": "bigfoot-contact-qr",
+      "seoTitle": "联系同创科技",
+      "sortOrder": 12,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T11:00:00.000Z"
+    },
+    {
+      "path": "/downloads/jiaoqin",
+      "title": "抄勤移动端下载",
+      "summary": "保留原站 APK 下载入口，方便现场团队安装演示。",
+      "bodyHtml": "<p>用于现场抄表、工单处理和巡检回传的移动端安装包，适合作为本地验证素材保留。</p>",
+      "attachmentAssetKey": "bigfoot-jiaoqin-apk",
+      "seoTitle": "抄勤移动端下载",
+      "sortOrder": 13,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T12:00:00.000Z"
+    },
+    {
+      "path": "/search",
+      "title": "站内检索迁移说明",
+      "summary": "原站检索入口已并入新的公开站点结构。",
+      "bodyHtml": "<p>旧站 nr.jsp 的入口已重定向到新的站内检索说明页，后续可继续扩展为真正的搜索体验。</p>",
+      "seoTitle": "Bigfoot 站内检索说明",
+      "sortOrder": 14,
+      "publishState": "published",
+      "publishedAt": "2026-03-20T13:00:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "slug": "billing-suite",
+      "title": "B8ERP 收费营收一体化系统",
+      "summary": "以原站 pd.jsp?id=16 为基础重构，覆盖收费、表务、营业与稽核协同。",
+      "bodyHtml": "<p>B8ERP 收费营收一体化系统围绕水务企业收费系统核心场景设计，支持客户档案、表务管理、费用计算、欠费催缴、营业服务与经营分析。</p><p>系统可与手机抄表、网上营业厅及领导驾驶舱联动，帮助企业形成从前端服务到后端经营的数据闭环。</p>",
+      "brochureAssetKey": "bigfoot-billing-brochure",
+      "attachmentAssetKey": "bigfoot-billing-specs",
+      "seoTitle": "B8ERP 收费系统",
+      "seoDescription": "面向水务企业的收费营收一体化系统。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-21T09:00:00.000Z"
+    },
+    {
+      "slug": "mobile-metering",
+      "title": "手机抄表作业平台",
+      "summary": "支持移动抄表、异常回传、任务跟踪和现场拍照留痕。",
+      "bodyHtml": "<p>手机抄表作业平台帮助现场团队统一任务接收、拍照留痕、异常上报和结果回传，减少线下沟通成本。</p>",
+      "attachmentAssetKey": "bigfoot-jiaoqin-apk",
+      "seoTitle": "手机抄表作业平台",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-21T10:00:00.000Z"
+    }
+  ],
+  "solutions": [
+    {
+      "slug": "smart-water",
+      "title": "智慧水务营收协同方案",
+      "summary": "把收费、抄表、客服、调度和经营分析放到同一套运营视图中。",
+      "bodyHtml": "<p>方案以收费系统为核心，连接手机抄表、营业大厅、欠费催缴和经营分析，帮助管理层实时掌握营收波动与服务质量。</p><p>在项目交付中，可根据客户阶段拆分上线计划，兼顾存量系统迁移与新增能力落地。</p>",
+      "attachmentAssetKey": "bigfoot-smart-water-pack",
+      "seoTitle": "智慧水务方案",
+      "seoDescription": "收费、抄表、客服与经营分析协同的一体化方案。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-22T09:00:00.000Z"
+    },
+    {
+      "slug": "revenue-command",
+      "title": "营收指挥中心方案",
+      "summary": "打通业务进度、欠费回收、客服工单和经营分析指标。",
+      "bodyHtml": "<p>通过领导驾驶舱和经营看板，把关键指标从日报表变成实时可用的经营决策输入。</p>",
+      "attachmentAssetKey": "bigfoot-smart-water-pack",
+      "seoTitle": "营收指挥中心方案",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-22T10:00:00.000Z"
+    }
+  ],
+  "news": [
+    {
+      "slug": "contract-water-saving",
+      "title": "合同节水项目带动智慧水务升级",
+      "summary": "围绕合同节水与精细化运营，推动收费、计量和服务数据协同。",
+      "bodyHtml": "<p>随着合同节水项目推进，越来越多水务企业开始重视营收系统、客户服务与现场作业数据的协同效率。</p><p>同创科技结合项目经验，将节水目标拆解到收费规则、抄表任务和经营分析指标中，帮助客户把节水成果转化为可跟踪的经营改善。</p>",
+      "heroAssetKey": "bigfoot-news-contract-hero",
+      "seoTitle": "合同节水项目带动智慧水务升级",
+      "seoDescription": "合同节水场景下的智慧水务平台建设观察。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-23T09:00:00.000Z"
+    },
+    {
+      "slug": "cloud-billing-upgrade",
+      "title": "收费系统上云后的营收协同实践",
+      "summary": "从部署模式升级走向业务协同升级。",
+      "bodyHtml": "<p>收费系统上云后，企业可以更快串联移动抄表、客服工单与经营报表，为跨部门协作提供统一入口。</p>",
+      "heroAssetKey": "bigfoot-news-contract-hero",
+      "seoTitle": "收费系统上云实践",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-22T08:00:00.000Z"
+    }
+  ],
+  "cases": [
+    {
+      "slug": "zhongshan-water",
+      "title": "中山供水营收数字化案例",
+      "summary": "围绕收费、抄表与经营分析建立统一运营机制。",
+      "bodyHtml": "<p>中山供水项目重点解决收费规则分散、抄表回传不及时和经营指标滞后的问题，通过统一平台实现账务与现场协同。</p><p>项目上线后，管理层可以更快追踪重点指标变化，客户服务团队也能更及时联动现场问题处理。</p>",
+      "attachmentAssetKey": "bigfoot-zhongshan-case-pack",
+      "seoTitle": "中山供水案例",
+      "seoDescription": "中山供水营收数字化建设案例。",
+      "sortOrder": 1,
+      "publishState": "published",
+      "publishedAt": "2026-03-24T09:00:00.000Z"
+    },
+    {
+      "slug": "foshan-billing",
+      "title": "佛山营收稽核协同案例",
+      "summary": "通过稽核流程在线化提升异常处理效率。",
+      "bodyHtml": "<p>佛山项目把收费异常、抄表异常和客服投诉线索统一纳入稽核工作台，实现多部门协同闭环。</p>",
+      "attachmentAssetKey": "bigfoot-zhongshan-case-pack",
+      "seoTitle": "佛山营收案例",
+      "sortOrder": 2,
+      "publishState": "published",
+      "publishedAt": "2026-03-24T10:00:00.000Z"
+    }
+  ],
+  "redirects": [
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=101",
+      "targetPath": "/about",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=102",
+      "targetPath": "/products",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=103",
+      "targetPath": "/solutions/smart-water",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=104",
+      "targetPath": "/news",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=105",
+      "targetPath": "/contact",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=106",
+      "targetPath": "/cases",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=112",
+      "targetPath": "/about/history",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=114",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=115",
+      "targetPath": "/downloads/jiaoqin",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=119",
+      "targetPath": "/solutions/smart-water",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=78",
+      "targetPath": "/news/cloud-billing-upgrade",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=79",
+      "targetPath": "/news/cloud-billing-upgrade",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=80",
+      "targetPath": "/news/cloud-billing-upgrade",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=81",
+      "targetPath": "/news/cloud-billing-upgrade",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=91",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=92",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=93",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=94",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=95",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=96",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=147",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=148",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=149",
+      "targetPath": "/news/contract-water-saving",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%7D%2C%22type%22%3A15%7D",
+      "targetPath": "/search",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22groupId%22%3A%221%22%2C%22mid%22%3A%2212%22%7D%2C%22type%22%3A15%7D&groupId=1&mid=12",
+      "targetPath": "/search",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=16",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=17",
+      "targetPath": "/products/mobile-metering",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=18",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=19",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=20",
+      "targetPath": "/products/mobile-metering",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=21",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=22",
+      "targetPath": "/products/mobile-metering",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=23",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=24",
+      "targetPath": "/products/mobile-metering",
+      "statusCode": 301
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=25",
+      "targetPath": "/products/billing-suite",
+      "statusCode": 301
     }
   ]
 }

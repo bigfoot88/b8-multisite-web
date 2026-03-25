@@ -11,7 +11,7 @@ test('public routes render host-specific site pages and collection detail pages'
     .get('/')
     .set('host', 'dma.b8water.com');
   assert.equal(dmaHome.status, 200);
-  assert.match(dmaHome.text, /DMA Lite · 夜间最小流量监测方案/);
+  assert.match(dmaHome.text, /DMA Lite · 夜间最小流量\+分区漏损监测方案/);
   assert.match(dmaHome.text, /DMA Lite 夜间监测平台/);
 
   const products = await request(app)
