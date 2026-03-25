@@ -9,7 +9,7 @@
 
 ## 技术栈
 
-- Node.js
+- Node.js 22.9+
 - Express
 - EJS
 - SQLite (`better-sqlite3`)
@@ -42,6 +42,8 @@
 ```bash
 npm install
 ```
+
+建议本机使用 Node.js `22.9+`（当前部署文档按 Node.js 22 LTS 编写）。
 
 2. 准备环境变量：
 

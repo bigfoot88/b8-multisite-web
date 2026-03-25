@@ -6,6 +6,9 @@
   "directories": {
     "doc": "docs"
   },
+  "engines": {
+    "node": ">=22.9.0"
+  },
   "scripts": {
     "test": "node --test",
     "start": "node --env-file-if-exists=.env src/server.js",
