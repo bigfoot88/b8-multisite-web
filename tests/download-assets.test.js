@@ -133,6 +133,64 @@ test('download-assets rejects mismatched payloads and preserves curated local fi
   );
 });
 
+test('download-assets rejects unknown html payloads for expected pdf assets and preserves curated local files', async (t) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'b8-download-assets-'));
+  const uploadRoot = path.join(tempDir, 'uploads');
+  const seedPath = path.join(tempDir, 'seed.json');
+  const relativePath = path.join('seeds', 'dma', 'dma-lite-brochure.pdf');
+  const targetPath = path.join(uploadRoot, relativePath);
+  const curatedPdf = Buffer.from('%PDF-1.4\n% curated local brochure\n');
+  const htmlBody = Buffer.from('<!doctype html><html><body>not a pdf</body></html>');
+
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.writeFileSync(targetPath, curatedPdf);
+
+  const server = http.createServer((request, response) => {
+    if (request.url === '/unexpected.html') {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end(htmlBody);
+      return;
+    }
+
+    response.writeHead(404);
+    response.end();
+  });
+  const address = await listen(server);
+  t.after(() => server.close());
+  t.after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
+
+  fs.writeFileSync(seedPath, JSON.stringify({
+    site: { siteKey: 'dma' },
+    mediaAssets: [
+      {
+        assetKey: 'dma-lite-brochure',
+        siteKey: 'dma',
+        filename: 'dma-lite-brochure.pdf',
+        mimeType: 'application/pdf',
+        relativePath,
+        sourceUrl: `http://${address.address}:${address.port}/unexpected.html`,
+      },
+    ],
+  }, null, 2));
+
+  const result = await runDownloadAssets([
+    '--site', 'dma',
+    '--seed', seedPath,
+    '--upload-root', uploadRoot,
+    '--asset-key', 'dma-lite-brochure',
+    '--apply',
+    '--force',
+  ]);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /html|expected|confirm|validate|payload/i);
+  assert.deepEqual(fs.readFileSync(targetPath), curatedPdf);
+  assert.deepEqual(
+    fs.readdirSync(path.dirname(targetPath)).filter((entry) => entry.includes('.tmp')),
+    [],
+  );
+});
+
 test('seeded local repo assets are curated and structurally meaningful', () => {
   const pngAssets = [
     'public/uploads/seeds/dma/dma-hero-monitoring.png',

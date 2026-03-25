@@ -167,6 +167,7 @@ function validateDownloadedPayload(asset, response, buffer) {
   const contentTypeKind = inferKindFromContentType(contentType);
   const bufferKind = inferKindFromBuffer(buffer);
   const reasons = [];
+  const confirmations = [];
 
   if (contentTypeKind && contentTypeKind !== expectedKind) {
     reasons.push(`content-type ${contentType} does not match expected ${expectedKind}`);
@@ -177,9 +178,21 @@ function validateDownloadedPayload(asset, response, buffer) {
   if (contentTypeKind && bufferKind && contentTypeKind !== bufferKind) {
     reasons.push(`content-type ${contentTypeKind} disagrees with payload signature ${bufferKind}`);
   }
+  if (contentTypeKind === expectedKind) {
+    confirmations.push(`content-type ${contentType}`);
+  }
+  if (bufferKind === expectedKind) {
+    confirmations.push(`payload signature ${bufferKind}`);
+  }
 
   if (reasons.length > 0) {
     throw new Error(`Refusing to replace ${asset.assetKey || asset.filename || '(unknown asset)'}: ${reasons.join('; ')}`);
+  }
+  if (confirmations.length === 0) {
+    const observed = [];
+    observed.push(contentType ? `content-type ${contentType} was not a recognized ${expectedKind} signal` : 'content-type header was missing');
+    observed.push('payload signature was unrecognized');
+    throw new Error(`Refusing to replace ${asset.assetKey || asset.filename || '(unknown asset)'}: expected ${expectedKind}, but no validation signal confirmed it (${observed.join('; ')})`);
   }
 }
 
