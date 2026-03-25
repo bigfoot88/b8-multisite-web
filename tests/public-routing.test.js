@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { withPublicApp } = require('./helpers/public-fixtures');
+const { seedRepresentativePublicContent, withPublicApp } = require('./helpers/public-fixtures');
 
 test('public routes render host-specific site pages and collection detail pages', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-routes-');
@@ -118,6 +118,50 @@ test('generic public pages support hierarchical paths, stay behind specific rout
   assert.equal(productsPage.status, 200);
   assert.match(productsPage.text, /DMA Lite 夜间监测平台/);
   assert.doesNotMatch(productsPage.text, /不应覆盖产品列表/);
+});
+
+test('generic public pages return 404 for unrelated missing paths even when a root page exists', async (t) => {
+  const { app } = withPublicApp(t, 'b8-public-root-page-', ({ catalogRepository, ...repositories }) => {
+    seedRepresentativePublicContent({ catalogRepository, ...repositories });
+    catalogRepository.createPage({
+      siteKey: 'dma',
+      path: '/',
+      title: 'DMA Root Page',
+      summary: 'Root page should not catch all missing URLs.',
+      bodyHtml: '<p>Root page placeholder.</p>',
+      publishState: 'published',
+      sortOrder: 0,
+    });
+  });
+
+  const missingPage = await request(app)
+    .get('/totally/missing/path')
+    .set('host', 'dma.b8water.com');
+  assert.equal(missingPage.status, 404);
+  assert.match(missingPage.text, /未找到相关页面/);
+  assert.doesNotMatch(missingPage.text, /DMA Root Page/);
+
+  const hierarchicalFallback = await request(app)
+    .get('/about/history/timeline')
+    .set('host', 'dma.b8water.com');
+  assert.equal(hierarchicalFallback.status, 200);
+  assert.match(hierarchicalFallback.text, /发展历程/);
+});
+
+test('public routes do not expose unrequested /case-studies aliases', async (t) => {
+  const { app } = withPublicApp(t, 'b8-public-cases-only-');
+
+  const casesAliasIndex = await request(app)
+    .get('/case-studies')
+    .set('host', 'dma.b8water.com');
+  assert.equal(casesAliasIndex.status, 404);
+  assert.match(casesAliasIndex.text, /未找到相关页面/);
+
+  const casesAliasDetail = await request(app)
+    .get('/case-studies/shenzhen-utility')
+    .set('host', 'dma.b8water.com');
+  assert.equal(casesAliasDetail.status, 404);
+  assert.match(casesAliasDetail.text, /未找到相关页面/);
 });
 
 test('public pages render brochure and download links from managed local uploads', async (t) => {

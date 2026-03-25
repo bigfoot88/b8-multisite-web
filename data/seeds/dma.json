@@ -10,7 +10,7 @@
   },
   "navigation": [
     { "label": "解决方案", "href": "/solutions", "position": 1 },
-    { "label": "案例", "href": "/case-studies", "position": 2 },
+    { "label": "案例", "href": "/cases", "position": 2 },
     { "label": "新闻", "href": "/news", "position": 3 },
     { "label": "联系我们", "href": "/contact", "position": 4 }
   ],

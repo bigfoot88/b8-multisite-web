@@ -510,6 +510,10 @@ function createCatalogRepository(db) {
     assertValidSiteKey(siteKey);
     let currentPath = normalizePagePath(pagePath);
 
+    if (currentPath === '/') {
+      return listPublishedRecords('pages', siteKey, { path: '/', limit: 1 })[0] || null;
+    }
+
     while (currentPath && currentPath !== '/') {
       const page = listPublishedRecords('pages', siteKey, { path: currentPath, limit: 1 })[0] || null;
       if (page) {
@@ -521,7 +525,7 @@ function createCatalogRepository(db) {
       currentPath = segments.length > 0 ? `/${segments.join('/')}` : '/';
     }
 
-    return listPublishedRecords('pages', siteKey, { path: '/', limit: 1 })[0] || null;
+    return null;
   }
 
   return {

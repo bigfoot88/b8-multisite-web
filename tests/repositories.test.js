@@ -437,6 +437,10 @@ test('seeded helper provisions default admins and both site settings rows', () =
     sites.listSiteSettings().map((item) => item.siteKey),
     ['bigfoot', 'dma'],
   );
+  assert.deepEqual(
+    sites.listNavigation('dma').map((item) => item.href),
+    ['/solutions', '/cases', '/news', '/contact'],
+  );
 });
 
 test('pages cannot attach a parent from another site', () => {
@@ -475,6 +479,34 @@ test('pages derive slug from path when one is not supplied', () => {
   });
 
   assert.equal(page.slug, 'dma-lite');
+});
+
+test('hierarchical page lookup does not use the root page as a catch-all fallback', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const catalog = createCatalogRepository(db);
+
+  catalog.createPage({
+    siteKey: 'dma',
+    path: '/',
+    title: 'DMA Root Page',
+    publishState: 'published',
+  });
+  catalog.createPage({
+    siteKey: 'dma',
+    path: '/about/history',
+    title: 'DMA History',
+    publishState: 'published',
+  });
+
+  assert.equal(
+    catalog.findPublishedPageByHierarchicalPath('dma', '/about/history/timeline')?.path,
+    '/about/history',
+  );
+  assert.equal(
+    catalog.findPublishedPageByHierarchicalPath('dma', '/missing/branch'),
+    null,
+  );
 });
 
 test('repository layer rejects unsupported site keys', () => {

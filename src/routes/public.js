@@ -229,8 +229,6 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
 
   router.get('/cases', renderCasesIndex);
   router.get('/cases/:slug', renderCaseDetail);
-  router.get('/case-studies', renderCasesIndex);
-  router.get('/case-studies/:slug', renderCaseDetail);
 
   router.get('/about', (req, res) => {
     const page = publicSiteService.getAboutPage(req.site);
