@@ -206,6 +206,79 @@ test('site settings reject duplicate domains across sites', async (t) => {
   assert.notEqual(dmaRow.domain, originalBigfoot);
 });
 
+test('site settings normalize mixed-case domains and resolve requests by lowercase host', async (t) => {
+  const { app, agent, db } = withApp(t, 'b8-admin-domain-normalize-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/dma/settings')
+    .type('form')
+    .send({
+      brandName: '智灵科技',
+      domain: 'Foo.Local',
+      seoTitle: 'DMA Mixed Case SEO',
+      seoDescription: '大小写域名测试',
+      contactEmail: 'mixed@dma.example.com',
+      contactPhone: '0755-88888888',
+      contactAddress: '深圳测试地址',
+    });
+
+  assert.equal(response.status, 302);
+
+  const dmaRow = db.prepare('SELECT domain FROM site_settings WHERE site_key = ?').get('dma');
+  assert.equal(dmaRow.domain, 'foo.local');
+
+  const homepageResponse = await request(app)
+    .get('/')
+    .set('host', 'foo.local');
+  assert.equal(homepageResponse.status, 200);
+  assert.match(homepageResponse.text, /DMA Mixed Case SEO/);
+});
+
+test('site settings reject case-variant duplicate domains across sites', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-case-duplicate-domain-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const dmaSaveResponse = await agent
+    .post('/admin/dma/settings')
+    .type('form')
+    .send({
+      brandName: '智灵科技',
+      domain: 'Foo.Local',
+      seoTitle: 'DMA 大小写域名',
+      seoDescription: 'DMA 先保存混合大小写域名',
+      contactEmail: 'case@dma.example.com',
+      contactPhone: '0755-11111111',
+      contactAddress: 'DMA 地址',
+    });
+  assert.equal(dmaSaveResponse.status, 302);
+
+  const originalBigfoot = db.prepare('SELECT domain FROM site_settings WHERE site_key = ?').get('bigfoot').domain;
+  const duplicateResponse = await agent
+    .post('/admin/bigfoot/settings')
+    .type('form')
+    .send({
+      brandName: '中山市同创科技发展有限公司',
+      domain: 'foo.local',
+      seoTitle: 'Bigfoot 大小写冲突',
+      seoDescription: '不应保存',
+      contactEmail: 'case@bigfoot.example.com',
+      contactPhone: '400-660-3328',
+      contactAddress: 'Bigfoot 地址',
+    });
+
+  assert.equal(duplicateResponse.status, 400);
+  assert.match(duplicateResponse.text, /域名已被其他站点使用，请更换后重试。/);
+  assert.equal(
+    db.prepare('SELECT domain FROM site_settings WHERE site_key = ?').get('bigfoot').domain,
+    originalBigfoot,
+  );
+});
+
 test('site CRUD routes keep records isolated per domain', async (t) => {
   const { agent, db } = withApp(t, 'b8-admin-cross-site-');
   t.after(() => db.close());
@@ -372,5 +445,86 @@ test('page form rejects cross-site parent references with a recoverable error', 
   assert.equal(
     db.prepare('SELECT COUNT(*) AS count FROM pages WHERE site_key = ? AND path = ?').get('bigfoot', '/bigfoot-child').count,
     0,
+  );
+});
+
+test('navigation form rejects cross-site parent references with a recoverable error', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-cross-site-navigation-parent-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const parentResponse = await agent
+    .post('/admin/dma/navigation')
+    .type('form')
+    .send({
+      label: 'DMA 上级导航',
+      href: '/dma-parent',
+      position: '10',
+      kind: 'link',
+      isVisible: '1',
+    });
+  assert.equal(parentResponse.status, 302);
+
+  const dmaParent = db.prepare('SELECT id FROM navigation_items WHERE site_key = ? AND label = ?').get('dma', 'DMA 上级导航');
+  const crossSiteResponse = await agent
+    .post('/admin/bigfoot/navigation')
+    .type('form')
+    .send({
+      label: '错误站点导航',
+      href: '/wrong-parent',
+      parentId: String(dmaParent.id),
+      position: '11',
+      kind: 'link',
+      isVisible: '1',
+    });
+
+  assert.equal(crossSiteResponse.status, 400);
+  assert.match(crossSiteResponse.text, /父级导航必须属于当前站点。/);
+  assert.match(crossSiteResponse.text, /错误站点导航/);
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS count FROM navigation_items WHERE site_key = ? AND label = ?').get('bigfoot', '错误站点导航').count,
+    0,
+  );
+});
+
+test('navigation form rejects self-parent updates with a recoverable error', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-self-parent-navigation-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const createResponse = await agent
+    .post('/admin/dma/navigation')
+    .type('form')
+    .send({
+      label: '可编辑导航',
+      href: '/editable-nav',
+      position: '12',
+      kind: 'link',
+      isVisible: '1',
+    });
+  assert.equal(createResponse.status, 302);
+
+  const existingItem = db.prepare('SELECT id, parent_id FROM navigation_items WHERE site_key = ? AND label = ?').get('dma', '可编辑导航');
+  const updateResponse = await agent
+    .post(`/admin/dma/navigation`)
+    .type('form')
+    .send({
+      id: String(existingItem.id),
+      label: '可编辑导航',
+      href: '/editable-nav',
+      parentId: String(existingItem.id),
+      position: '12',
+      kind: 'link',
+      isVisible: '1',
+    });
+
+  assert.equal(updateResponse.status, 400);
+  assert.match(updateResponse.text, /导航项不能选择自身作为父级。/);
+  assert.match(updateResponse.text, /可编辑导航/);
+  assert.equal(
+    db.prepare('SELECT parent_id FROM navigation_items WHERE id = ?').get(existingItem.id).parent_id,
+    existingItem.parent_id,
   );
 });

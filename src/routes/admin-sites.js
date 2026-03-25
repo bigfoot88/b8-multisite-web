@@ -24,7 +24,7 @@ function createAdminSitesRouter() {
 
   router.post('/:siteKey/settings', requireKnownSite, (req, res) => {
     const siteKey = req.params.siteKey;
-    const nextDomain = req.body?.domain?.trim() || `${siteKey}.local`;
+    const nextDomain = (req.body?.domain?.trim() || `${siteKey}.local`).toLowerCase();
     const existingSite = req.app.locals.siteRepository.getSiteSettingsByDomain(nextDomain);
 
     if (existingSite && existingSite.siteKey !== siteKey) {

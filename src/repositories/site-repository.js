@@ -1,3 +1,4 @@
+const { createAdminValidationError } = require('../lib/admin-errors');
 const { createSiteBootstrap } = require('../lib/site-bootstrap');
 
 function parseJson(value) {
@@ -89,6 +90,14 @@ function normalizeConfig(config) {
   return config;
 }
 
+function normalizeDomain(domain) {
+  if (typeof domain !== 'string') {
+    return domain;
+  }
+
+  return domain.trim().toLowerCase();
+}
+
 function createSiteRepository(db) {
   const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const upsertSiteSettingsStatement = db.prepare(`
@@ -162,10 +171,10 @@ function createSiteRepository(db) {
     if (parentId) {
       const parent = selectNavigationItemById.get(parentId);
       if (!parent || parent.site_key !== input.siteKey) {
-        throw new Error('Navigation parent must belong to the same site');
+        throw createAdminValidationError('父级导航必须属于当前站点。', 'navigation-parent-site-mismatch');
       }
       if (input.id && Number(input.id) === Number(parentId)) {
-        throw new Error('Navigation item cannot be its own parent');
+        throw createAdminValidationError('导航项不能选择自身作为父级。', 'navigation-self-parent');
       }
     }
 
@@ -201,7 +210,7 @@ function createSiteRepository(db) {
       upsertSiteSettingsStatement.run({
         siteKey,
         brandName,
-        domain,
+        domain: normalizeDomain(domain),
         seoTitle,
         seoDescription,
         contactEmail,
@@ -221,7 +230,7 @@ function createSiteRepository(db) {
       if (!domain) {
         return null;
       }
-      return mapSiteSettings(selectSettingsByDomain.get(domain));
+      return mapSiteSettings(selectSettingsByDomain.get(normalizeDomain(domain)));
     },
     saveSection({ siteKey, sectionKey, heading = null, subheading = null, body = null, mediaAssetId = null, config = {}, isPublished = true, publishedAt = null, sortOrder = 0 }) {
       ensureSite(siteKey);

@@ -22,7 +22,7 @@ const { createAdminCasesRouter } = require('./routes/admin-cases');
 const { createAdminMediaRouter } = require('./routes/admin-media');
 
 function resolveSiteByHost(siteRepository, hostname) {
-  return siteRepository.listSiteSettings().find((site) => site.domain === hostname) || null;
+  return siteRepository.getSiteSettingsByDomain(hostname);
 }
 
 function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot } = {}) {
