@@ -118,6 +118,40 @@ test('media replacement can move a site asset into the global library', async (t
   assert.equal(updated.alt_text, 'Now global');
 });
 
+test('media replacement can clear alt text with a blank submission', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-clear-alt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '待清空替换文本')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/replace`)
+    .field('altText', '')
+    .attach('file', replacementLogoFixturePath);
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin/media');
+
+  const updated = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(updated.alt_text, null);
+  assert.match(updated.filename, /logo-replacement\.png/);
+});
+
 test('media library rebind updates assignment and metadata without uploading a file', async (t) => {
   const paths = createSeededAppPaths('b8-admin-media-rebind-');
   t.after(() => {
@@ -182,6 +216,31 @@ test('media upload rejects invalid site binding without leaking files', async (t
 
   assert.equal(response.status, 400);
   assert.match(response.text, /站点标识无效，请重新选择。/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
+test('media upload rejects unsafe active-content files without leaking files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-unsafe-upload-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '恶意 HTML')
+    .attach('file', `${__dirname}/fixtures/crawl-sample.html`);
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /不支持上传的文件类型/);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
   assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
 });

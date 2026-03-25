@@ -309,7 +309,7 @@ function createCatalogRepository(db) {
     softDelete: db.prepare(`UPDATE ${collections[type].table} SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND site_key = ?`),
   }]));
   const selectPageById = db.prepare('SELECT id, site_key FROM pages WHERE id = ?');
-  const selectMediaById = db.prepare('SELECT id FROM media_assets WHERE id = ?');
+  const selectMediaById = db.prepare('SELECT id, site_key FROM media_assets WHERE id = ?');
 
   const mediaFieldLabels = {
     brochureMediaId: '宣传册媒体资源',
@@ -356,8 +356,12 @@ function createCatalogRepository(db) {
       if (mediaId === null || mediaId === undefined || mediaId === '') {
         continue;
       }
-      if (!selectMediaById.get(mediaId)) {
+      const media = selectMediaById.get(mediaId);
+      if (!media) {
         throw createAdminValidationError(`${label}不存在，请重新选择。`, `missing-${field}`);
+      }
+      if (media.site_key !== null && media.site_key !== record.siteKey) {
+        throw createAdminValidationError(`${label}必须属于当前站点或全局素材，请重新选择。`, `cross-site-${field}`);
       }
     }
   }

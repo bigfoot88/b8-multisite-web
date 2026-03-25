@@ -3,6 +3,27 @@ const fs = require('node:fs');
 const path = require('node:path');
 const multer = require('multer');
 
+const { createAdminValidationError } = require('./admin-errors');
+
+const safeUploadExtensions = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.avif',
+  '.pdf',
+  '.txt',
+  '.csv',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.zip',
+]);
+
 function sanitizeFilename(name) {
   return String(name || 'upload')
     .replace(/[^a-zA-Z0-9._-]+/g, '-')
@@ -13,6 +34,10 @@ function sanitizeFilename(name) {
 function ensureUploadRoot(uploadRoot) {
   fs.mkdirSync(uploadRoot, { recursive: true });
   return uploadRoot;
+}
+
+function isAllowedUploadFilename(name) {
+  return safeUploadExtensions.has(path.extname(String(name || '')).toLowerCase());
 }
 
 function createUploader({ uploadRoot }) {
@@ -28,7 +53,16 @@ function createUploader({ uploadRoot }) {
     },
   });
 
-  return multer({ storage }).single('file');
+  return multer({
+    storage,
+    fileFilter(req, file, cb) {
+      if (!isAllowedUploadFilename(file.originalname)) {
+        return cb(createAdminValidationError('不支持上传的文件类型，请上传图片或文档。', 'unsafe-upload-type'));
+      }
+
+      return cb(null, true);
+    },
+  }).single('file');
 }
 
 function toPublicUploadPath(file) {
@@ -47,6 +81,7 @@ function removeUploadedFile(fileOrPath) {
 module.exports = {
   createUploader,
   ensureUploadRoot,
+  isAllowedUploadFilename,
   removeUploadedFile,
   sanitizeFilename,
   toPublicUploadPath,

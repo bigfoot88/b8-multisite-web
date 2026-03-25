@@ -623,6 +623,116 @@ test('product, page, and news forms reject missing media ids as recoverable admi
   }
 });
 
+test('catalog and page forms reject cross-site media ids as recoverable admin validation errors', async (t) => {
+  const { agent, db, app } = withApp(t, 'b8-admin-cross-site-media-create-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const bigfootDoc = app.locals.mediaRepository.createAsset({
+    assetKey: 'bigfoot-doc',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot.pdf',
+    mimeType: 'application/pdf',
+    storagePath: '/uploads/bigfoot.pdf',
+  });
+  const bigfootImage = app.locals.mediaRepository.createAsset({
+    assetKey: 'bigfoot-image',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/bigfoot.png',
+  });
+
+  const scenarios = [
+    {
+      path: '/admin/dma/products',
+      body: {
+        slug: 'cross-site-product-brochure',
+        title: '跨站点产品宣传册',
+        brochureMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      table: 'products',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'cross-site-product-brochure'],
+      message: /宣传册媒体资源必须属于当前站点或全局素材，请重新选择。/,
+    },
+    {
+      path: '/admin/dma/products',
+      body: {
+        slug: 'cross-site-product-attachment',
+        title: '跨站点产品附件',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      table: 'products',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'cross-site-product-attachment'],
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+    },
+    {
+      path: '/admin/dma/solutions',
+      body: {
+        slug: 'cross-site-solution-attachment',
+        title: '跨站点方案附件',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      table: 'solutions',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'cross-site-solution-attachment'],
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+    },
+    {
+      path: '/admin/dma/pages',
+      body: {
+        path: '/cross-site-page-attachment',
+        title: '跨站点页面附件',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      table: 'pages',
+      lookup: ['site_key = ? AND path = ?', 'dma', '/cross-site-page-attachment'],
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+    },
+    {
+      path: '/admin/dma/news',
+      body: {
+        slug: 'cross-site-news-hero',
+        title: '跨站点新闻头图',
+        heroMediaId: String(bigfootImage.id),
+        publishState: 'draft',
+      },
+      table: 'news_articles',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'cross-site-news-hero'],
+      message: /头图媒体资源必须属于当前站点或全局素材，请重新选择。/,
+    },
+    {
+      path: '/admin/dma/cases',
+      body: {
+        slug: 'cross-site-case-attachment',
+        title: '跨站点案例附件',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      table: 'case_studies',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'cross-site-case-attachment'],
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const response = await agent.post(scenario.path).type('form').send(scenario.body);
+    assert.equal(response.status, 400, scenario.path);
+    assert.match(response.text, scenario.message, scenario.path);
+    assert.match(response.text, new RegExp(scenario.body.title), scenario.path);
+    const [whereClause, ...params] = scenario.lookup;
+    assert.equal(
+      db.prepare(`SELECT COUNT(*) AS count FROM ${scenario.table} WHERE ${whereClause}`).get(...params).count,
+      0,
+      scenario.path,
+    );
+  }
+});
+
 test('catalog and page update forms keep validation failures recoverable', async (t) => {
   const { agent, db } = withApp(t, 'b8-admin-update-validation-');
   t.after(() => db.close());
@@ -769,6 +879,137 @@ test('catalog and page update forms keep validation failures recoverable', async
   assert.equal(pageAttachmentResponse.status, 400);
   assert.match(pageAttachmentResponse.text, /附件媒体资源不存在，请重新选择。/);
   assert.equal(db.prepare('SELECT attachment_media_id FROM pages WHERE id = ?').get(page.id).attachment_media_id, null);
+});
+
+test('catalog and page update forms reject cross-site media ids without mutating records', async (t) => {
+  const { agent, db, app } = withApp(t, 'b8-admin-cross-site-media-update-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const bigfootDoc = app.locals.mediaRepository.createAsset({
+    assetKey: 'bigfoot-doc-update',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot-update.pdf',
+    mimeType: 'application/pdf',
+    storagePath: '/uploads/bigfoot-update.pdf',
+  });
+  const bigfootImage = app.locals.mediaRepository.createAsset({
+    assetKey: 'bigfoot-image-update',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot-update.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/bigfoot-update.png',
+  });
+
+  await agent.post('/admin/dma/products').type('form').send({
+    slug: 'cross-site-update-product',
+    title: '待更新产品跨站媒体',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/solutions').type('form').send({
+    slug: 'cross-site-update-solution',
+    title: '待更新方案跨站媒体',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/news').type('form').send({
+    slug: 'cross-site-update-news',
+    title: '待更新新闻跨站媒体',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/cases').type('form').send({
+    slug: 'cross-site-update-case',
+    title: '待更新案例跨站媒体',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/pages').type('form').send({
+    path: '/cross-site-update-page',
+    title: '待更新页面跨站媒体',
+    publishState: 'published',
+  });
+
+  const product = db.prepare('SELECT id FROM products WHERE site_key = ? AND slug = ?').get('dma', 'cross-site-update-product');
+  const solution = db.prepare('SELECT id FROM solutions WHERE site_key = ? AND slug = ?').get('dma', 'cross-site-update-solution');
+  const article = db.prepare('SELECT id FROM news_articles WHERE site_key = ? AND slug = ?').get('dma', 'cross-site-update-news');
+  const caseStudy = db.prepare('SELECT id FROM case_studies WHERE site_key = ? AND slug = ?').get('dma', 'cross-site-update-case');
+  const page = db.prepare('SELECT id FROM pages WHERE site_key = ? AND path = ?').get('dma', '/cross-site-update-page');
+
+  const scenarios = [
+    {
+      path: `/admin/dma/products/${product.id}`,
+      body: {
+        slug: 'cross-site-update-product',
+        title: '待更新产品跨站媒体',
+        brochureMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      message: /宣传册媒体资源必须属于当前站点或全局素材，请重新选择。/,
+      assertion: () => assert.equal(db.prepare('SELECT brochure_media_id FROM products WHERE id = ?').get(product.id).brochure_media_id, null),
+    },
+    {
+      path: `/admin/dma/products/${product.id}`,
+      body: {
+        slug: 'cross-site-update-product',
+        title: '待更新产品跨站媒体',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+      assertion: () => assert.equal(db.prepare('SELECT attachment_media_id FROM products WHERE id = ?').get(product.id).attachment_media_id, null),
+    },
+    {
+      path: `/admin/dma/solutions/${solution.id}`,
+      body: {
+        slug: 'cross-site-update-solution',
+        title: '待更新方案跨站媒体',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+      assertion: () => assert.equal(db.prepare('SELECT attachment_media_id FROM solutions WHERE id = ?').get(solution.id).attachment_media_id, null),
+    },
+    {
+      path: `/admin/dma/pages/${page.id}`,
+      body: {
+        path: '/cross-site-update-page',
+        title: '待更新页面跨站媒体',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+      assertion: () => assert.equal(db.prepare('SELECT attachment_media_id FROM pages WHERE id = ?').get(page.id).attachment_media_id, null),
+    },
+    {
+      path: `/admin/dma/news/${article.id}`,
+      body: {
+        slug: 'cross-site-update-news',
+        title: '待更新新闻跨站媒体',
+        heroMediaId: String(bigfootImage.id),
+        publishState: 'draft',
+      },
+      message: /头图媒体资源必须属于当前站点或全局素材，请重新选择。/,
+      assertion: () => assert.equal(db.prepare('SELECT hero_media_id FROM news_articles WHERE id = ?').get(article.id).hero_media_id, null),
+    },
+    {
+      path: `/admin/dma/cases/${caseStudy.id}`,
+      body: {
+        slug: 'cross-site-update-case',
+        title: '待更新案例跨站媒体',
+        attachmentMediaId: String(bigfootDoc.id),
+        publishState: 'draft',
+      },
+      message: /附件媒体资源必须属于当前站点或全局素材，请重新选择。/,
+      assertion: () => assert.equal(db.prepare('SELECT attachment_media_id FROM case_studies WHERE id = ?').get(caseStudy.id).attachment_media_id, null),
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const response = await agent.post(scenario.path).type('form').send(scenario.body);
+    assert.equal(response.status, 400, scenario.path);
+    assert.match(response.text, scenario.message, scenario.path);
+    assert.match(response.text, new RegExp(scenario.body.title), scenario.path);
+    scenario.assertion();
+  }
 });
 
 test('navigation form rejects cross-site parent references with a recoverable error', async (t) => {

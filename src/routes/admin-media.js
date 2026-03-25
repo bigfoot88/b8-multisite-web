@@ -40,6 +40,25 @@ function createAdminMediaRouter({ uploadRoot }) {
     return renderMediaPage(req, res);
   });
 
+  function handleUpload(req, res, next, options, onSuccess) {
+    upload(req, res, (error) => {
+      if (error) {
+        removeUploadedFile(req.file);
+        if (isExpectedAdminError(error)) {
+          return renderMediaPage(req, res, {
+            status: error.statusCode,
+            errorMessage: error.message,
+            asset: options?.asset,
+          });
+        }
+
+        return next(error);
+      }
+
+      return onSuccess();
+    });
+  }
+
   router.post('/media/:assetKey/rebind', (req, res, next) => {
     const current = req.app.locals.mediaRepository.findByAssetKey(req.params.assetKey);
     if (!current) {
@@ -80,83 +99,87 @@ function createAdminMediaRouter({ uploadRoot }) {
     return res.redirect('/admin/media');
   });
 
-  router.post('/media', upload, (req, res, next) => {
-    if (!req.file) {
-      return res.redirect('/admin/media');
-    }
-
-    try {
-      req.app.locals.mediaRepository.createAsset({
-        assetKey: crypto.randomUUID(),
-        siteKey: req.body?.siteKey?.trim() || null,
-        sourceUrl: toPublicUploadPath(req.file),
-        filename: req.file.originalname,
-        mimeType: req.file.mimetype,
-        storagePath: req.file.path,
-        altText: req.body?.altText?.trim() || null,
-        metadata: {
-          size: req.file.size,
-        },
-      });
-    } catch (error) {
-      removeUploadedFile(req.file);
-      if (isExpectedAdminError(error)) {
-        return renderMediaPage(req, res, {
-          status: error.statusCode,
-          errorMessage: error.message,
-        });
+  router.post('/media', (req, res, next) => {
+    return handleUpload(req, res, next, {}, () => {
+      if (!req.file) {
+        return res.redirect('/admin/media');
       }
 
-      return next(error);
-    }
+      try {
+        req.app.locals.mediaRepository.createAsset({
+          assetKey: crypto.randomUUID(),
+          siteKey: req.body?.siteKey?.trim() || null,
+          sourceUrl: toPublicUploadPath(req.file),
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          storagePath: req.file.path,
+          altText: req.body?.altText?.trim() || null,
+          metadata: {
+            size: req.file.size,
+          },
+        });
+      } catch (error) {
+        removeUploadedFile(req.file);
+        if (isExpectedAdminError(error)) {
+          return renderMediaPage(req, res, {
+            status: error.statusCode,
+            errorMessage: error.message,
+          });
+        }
 
-    return res.redirect('/admin/media');
+        return next(error);
+      }
+
+      return res.redirect('/admin/media');
+    });
   });
 
-  router.post('/media/:assetKey/replace', upload, (req, res, next) => {
+  router.post('/media/:assetKey/replace', (req, res, next) => {
     const current = req.app.locals.mediaRepository.findByAssetKey(req.params.assetKey);
     if (!current) {
-      removeUploadedFile(req.file);
       return renderMediaPage(req, res, {
         status: 404,
         errorMessage: createAdminNotFoundError('未找到要替换的素材。').message,
       });
     }
 
-    const nextFile = req.file;
-    const requestedSiteKey = typeof req.body?.siteKey === 'string' ? req.body.siteKey.trim() : undefined;
-    let updated;
-    try {
-      updated = req.app.locals.mediaRepository.updateAsset(req.params.assetKey, {
-        siteKey: requestedSiteKey === undefined ? current.siteKey : (requestedSiteKey || null),
-        sourceUrl: nextFile ? toPublicUploadPath(nextFile) : current.sourceUrl,
-        filename: nextFile ? nextFile.originalname : current.filename,
-        mimeType: nextFile ? nextFile.mimetype : current.mimeType,
-        storagePath: nextFile ? nextFile.path : current.storagePath,
-        altText: req.body?.altText?.trim() || current.altText,
-        metadata: nextFile ? { size: nextFile.size } : current.metadata,
-      });
-    } catch (error) {
-      removeUploadedFile(nextFile);
-      if (isExpectedAdminError(error)) {
-        return renderMediaPage(req, res, {
-          status: error.statusCode,
-          errorMessage: error.message,
-          asset: {
-            ...current,
-            altText: req.body?.altText?.trim() || current.altText,
-          },
+    return handleUpload(req, res, next, { asset: current }, () => {
+      const nextFile = req.file;
+      const requestedSiteKey = typeof req.body?.siteKey === 'string' ? req.body.siteKey.trim() : undefined;
+      const requestedAltText = typeof req.body?.altText === 'string' ? req.body.altText.trim() : undefined;
+      let updated;
+      try {
+        updated = req.app.locals.mediaRepository.updateAsset(req.params.assetKey, {
+          siteKey: requestedSiteKey === undefined ? current.siteKey : (requestedSiteKey || null),
+          sourceUrl: nextFile ? toPublicUploadPath(nextFile) : current.sourceUrl,
+          filename: nextFile ? nextFile.originalname : current.filename,
+          mimeType: nextFile ? nextFile.mimetype : current.mimeType,
+          storagePath: nextFile ? nextFile.path : current.storagePath,
+          altText: requestedAltText === undefined ? current.altText : (requestedAltText || null),
+          metadata: nextFile ? { size: nextFile.size } : current.metadata,
         });
+      } catch (error) {
+        removeUploadedFile(nextFile);
+        if (isExpectedAdminError(error)) {
+          return renderMediaPage(req, res, {
+            status: error.statusCode,
+            errorMessage: error.message,
+            asset: {
+              ...current,
+              altText: requestedAltText === undefined ? current.altText : (requestedAltText || null),
+            },
+          });
+        }
+
+        return next(error);
       }
 
-      return next(error);
-    }
+      if (nextFile && current.storagePath && updated && current.storagePath !== updated.storagePath) {
+        fs.rmSync(current.storagePath, { force: true });
+      }
 
-    if (nextFile && current.storagePath && updated && current.storagePath !== updated.storagePath) {
-      fs.rmSync(current.storagePath, { force: true });
-    }
-
-    return res.redirect('/admin/media');
+      return res.redirect('/admin/media');
+    });
   });
 
   return router;
