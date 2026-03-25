@@ -1,0 +1,30 @@
+{
+  "site": {
+    "siteKey": "bigfoot",
+    "brandName": "中山市同创科技发展有限公司",
+    "domain": "www.chinabigfoot.com",
+    "seoTitle": "中山市同创科技发展有限公司，同创科技，智慧水务，自来水收费系统",
+    "seoDescription": "Bigfoot 智慧水务站点迁移默认站点数据。",
+    "contactPhone": "400-660-3328",
+    "contactAddress": "中山市同创科技发展有限公司"
+  },
+  "navigation": [
+    { "label": "收费系统", "href": "/products", "position": 1 },
+    { "label": "手机抄表", "href": "/solutions", "position": 2 },
+    { "label": "新闻动态", "href": "/news", "position": 3 },
+    { "label": "联系我们", "href": "/contact", "position": 4 }
+  ],
+  "siteSections": [
+    {
+      "sectionKey": "hero",
+      "heading": "选择B8ERP，开启智能水务新纪元",
+      "subheading": "从营收管理到供应链优化，从实时监测到设备养护，满足企业各种业务需求。",
+      "body": "覆盖收费系统、手机抄表、网上营业厅与硬件设备等核心模块。",
+      "config": {
+        "ctaLabel": "了解产品",
+        "ctaHref": "/products"
+      },
+      "sortOrder": 0
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "site": {
+    "siteKey": "dma",
+    "brandName": "智灵科技",
+    "domain": "dma.b8water.com",
+    "seoTitle": "智灵科技 | DMA Lite · 夜间最小流量监测方案 | AI 抄表机器人",
+    "seoDescription": "DMA Lite 夜间最小流量监测方案与 AI 抄表机器人多站点迁移默认站点数据。",
+    "contactPhone": "400-660-3328",
+    "contactAddress": "深圳市南山区粤海街道科技园社区科智西路1号"
+  },
+  "navigation": [
+    { "label": "解决方案", "href": "/solutions", "position": 1 },
+    { "label": "案例", "href": "/case-studies", "position": 2 },
+    { "label": "新闻", "href": "/news", "position": 3 },
+    { "label": "联系我们", "href": "/contact", "position": 4 }
+  ],
+  "siteSections": [
+    {
+      "sectionKey": "hero",
+      "heading": "DMA Lite · 夜间最小流量监测方案",
+      "subheading": "构建科学化、精细化漏损治理体系",
+      "body": "助力企业实现低投入、快收益、可持续的降差目标。",
+      "config": {
+        "ctaLabel": "预约演示",
+        "ctaHref": "/contact"
+      },
+      "sortOrder": 0
+    }
+  ]
+}

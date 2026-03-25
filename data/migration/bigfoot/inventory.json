@@ -1,0 +1,321 @@
+{
+  "siteKey": "bigfoot",
+  "baseUrl": "https://www.chinabigfoot.com",
+  "generatedAt": "2026-03-25T02:13:44.618Z",
+  "pages": [
+    "/",
+    "/col.jsp?id=101",
+    "/col.jsp?id=102",
+    "/col.jsp?id=103",
+    "/col.jsp?id=104",
+    "/col.jsp?id=105",
+    "/col.jsp?id=106",
+    "/col.jsp?id=112",
+    "/col.jsp?id=114",
+    "/col.jsp?id=115",
+    "/col.jsp?id=119",
+    "/nd.jsp?id=78",
+    "/nd.jsp?id=79",
+    "/nd.jsp?id=80",
+    "/nd.jsp?id=81",
+    "/nd.jsp?id=91",
+    "/nd.jsp?id=92",
+    "/nd.jsp?id=93",
+    "/nd.jsp?id=94",
+    "/nd.jsp?id=95",
+    "/nd.jsp?id=96",
+    "/nd.jsp?id=147",
+    "/nd.jsp?id=148",
+    "/nd.jsp?id=149",
+    "/nr.jsp?_reqArgs=%7B%22args%22%3A%7B%7D%2C%22type%22%3A15%7D",
+    "/nr.jsp?_reqArgs=%7B%22args%22%3A%7B%22groupId%22%3A%221%22%2C%22mid%22%3A%2212%22%7D%2C%22type%22%3A15%7D&groupId=1&mid=12",
+    "/pd.jsp?id=16",
+    "/pd.jsp?id=17",
+    "/pd.jsp?id=18",
+    "/pd.jsp?id=19",
+    "/pd.jsp?id=20",
+    "/pd.jsp?id=21",
+    "/pd.jsp?id=22",
+    "/pd.jsp?id=23",
+    "/pd.jsp?id=24",
+    "/pd.jsp?id=25"
+  ],
+  "assets": [
+    "https://0.ss.508sys.com/image/loading/dot.gif",
+    "https://1.ss.508sys.com/js/comm/jquery/jquery-core.min.js?v=202307101206",
+    "https://1.ss.508sys.com/js/dist/frontend.min.js?v=202512300957",
+    "https://1.ss.508sys.com/js/dist/site.min.js?v=202512300957",
+    "https://2.ss.508sys.com/css/dist/module.min.css?v=202601071138",
+    "https://2.ss.508sys.com/css/dist/styles/base2.min.css?v=202602061417",
+    "https://2.ss.508sys.com/css/dist/styles/detail2.min.css?v=202506231111",
+    "https://29531648.s21i.faiusr.com/2/5/ABUIABACGAAgz_iSvwYo5buJlgIw1AI4Rg.jpg",
+    "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg-fWXvwYo6avMwAYwuAg4hgQ.png",
+    "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg0qmpvwYonrW0xgIw4QY4hwU.png",
+    "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg3-WXvwYo3O-VrwEwuAg4wgQ.png",
+    "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAghKmpvwYourKabTDhBjiNBQ.png",
+    "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAgiKipvwYoyPOdkQMwqQQ4sgE.png",
+    "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAg2a3ZpQYo8JKfvwUwgA847Qc.jpg",
+    "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAgpJvZpQYouN6wswQwgA84vgU.jpg",
+    "https://jzfe.faisys.com/dist/jz/biz-shared/bizShared.min.js?v=202603181400",
+    "https://jzs.508sys.com/1006/fkTheme.min.css?v=20250217160642&aid=29531648&wid=500&isNavV2=true&isBannerV2=true&isGrayTest=true"
+  ],
+  "downloads": [
+    {
+      "url": "http://www.bigfoot8.com:690/new/jiaoqin.apk",
+      "filename": "jiaoqin.apk",
+      "assetKey": "bigfoot-jiaoqin-apk"
+    }
+  ],
+  "stats": {
+    "pageCount": 36,
+    "assetCount": 17,
+    "downloadCount": 1
+  },
+  "redirects": [
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=101",
+      "targetPath": "/pages/section-101",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=102",
+      "targetPath": "/pages/section-102",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=103",
+      "targetPath": "/pages/section-103",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=104",
+      "targetPath": "/pages/section-104",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=105",
+      "targetPath": "/pages/section-105",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=106",
+      "targetPath": "/pages/section-106",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=112",
+      "targetPath": "/pages/section-112",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=114",
+      "targetPath": "/pages/section-114",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=115",
+      "targetPath": "/pages/section-115",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/col.jsp",
+      "sourceQuery": "id=119",
+      "targetPath": "/pages/section-119",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=78",
+      "targetPath": "/news/78",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=79",
+      "targetPath": "/news/79",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=80",
+      "targetPath": "/news/80",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=81",
+      "targetPath": "/news/81",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=91",
+      "targetPath": "/news/91",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=92",
+      "targetPath": "/news/92",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=93",
+      "targetPath": "/news/93",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=94",
+      "targetPath": "/news/94",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=95",
+      "targetPath": "/news/95",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=96",
+      "targetPath": "/news/96",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=147",
+      "targetPath": "/news/147",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=148",
+      "targetPath": "/news/148",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nd.jsp",
+      "sourceQuery": "id=149",
+      "targetPath": "/news/149",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%7D%2C%22type%22%3A15%7D",
+      "targetPath": "/search",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/nr.jsp",
+      "sourceQuery": "_reqArgs=%7B%22args%22%3A%7B%22groupId%22%3A%221%22%2C%22mid%22%3A%2212%22%7D%2C%22type%22%3A15%7D&groupId=1&mid=12",
+      "targetPath": "/search",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=16",
+      "targetPath": "/products/16",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=17",
+      "targetPath": "/products/17",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=18",
+      "targetPath": "/products/18",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=19",
+      "targetPath": "/products/19",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=20",
+      "targetPath": "/products/20",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=21",
+      "targetPath": "/products/21",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=22",
+      "targetPath": "/products/22",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=23",
+      "targetPath": "/products/23",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=24",
+      "targetPath": "/products/24",
+      "statusCode": 302
+    },
+    {
+      "siteKey": "bigfoot",
+      "sourcePath": "/pd.jsp",
+      "sourceQuery": "id=25",
+      "targetPath": "/products/25",
+      "statusCode": 302
+    }
+  ]
+}
