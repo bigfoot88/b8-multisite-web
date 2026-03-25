@@ -267,6 +267,31 @@ test('schema rejects duplicate normalized domains across sites', () => {
   );
 });
 
+test('migrations block legacy databases with duplicate normalized site domains before applying schema indexes', () => {
+  const db = createTestDb();
+  db.exec(`
+    CREATE TABLE site_settings (
+      site_key TEXT PRIMARY KEY,
+      brand_name TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    INSERT INTO site_settings (site_key, brand_name, domain)
+    VALUES
+      ('dma', 'DMA', 'Foo.Local'),
+      ('bigfoot', 'Bigfoot', 'foo.local');
+  `);
+
+  assert.throws(() => runMigrations(db), (error) => {
+    assert.equal(error.code, 'LEGACY_DUPLICATE_SITE_DOMAINS');
+    assert.match(error.message, /duplicate normalized site domains/i);
+    assert.match(error.message, /resolve .*site_settings/i);
+    assert.doesNotMatch(error.message, /UNIQUE constraint failed|SQLITE_CONSTRAINT_UNIQUE/i);
+    return true;
+  });
+});
+
 test('redirect schema defaults to permanent redirects', () => {
   const db = createTestDb();
   runMigrations(db);

@@ -64,7 +64,55 @@ function ensureRedirectRulesDefault(db) {
   `);
 }
 
+function listTableColumns(db, tableName) {
+  return db.prepare(`PRAGMA table_info(${tableName})`).all().map((column) => column.name);
+}
+
+function ensureNoDuplicateNormalizedSiteDomains(db) {
+  const siteSettingsTable = db.prepare(`
+    SELECT name
+    FROM sqlite_master
+    WHERE type = 'table' AND name = 'site_settings'
+  `).get();
+
+  if (!siteSettingsTable) {
+    return;
+  }
+
+  const columns = new Set(listTableColumns(db, 'site_settings'));
+
+  if (!columns.has('site_key') || !columns.has('domain')) {
+    return;
+  }
+
+  const duplicates = db.prepare(`
+    SELECT
+      lower(trim(domain)) AS normalized_domain,
+      group_concat(site_key || ' (' || domain || ')', ', ') AS conflicts,
+      COUNT(*) AS count
+    FROM site_settings
+    GROUP BY lower(trim(domain))
+    HAVING COUNT(*) > 1
+    ORDER BY normalized_domain ASC
+  `).all();
+
+  if (duplicates.length === 0) {
+    return;
+  }
+
+  const details = duplicates
+    .map(({ normalized_domain: normalizedDomain, conflicts }) => `${normalizedDomain || '(empty domain)'}: ${conflicts}`)
+    .join('; ');
+
+  const error = new Error(
+    `Legacy site_settings rows contain duplicate normalized site domains. Resolve the conflicting site_settings rows before starting the app and rerun the migration. Conflicts: ${details}`,
+  );
+  error.code = 'LEGACY_DUPLICATE_SITE_DOMAINS';
+  throw error;
+}
+
 function runMigrations(db) {
+  ensureNoDuplicateNormalizedSiteDomains(db);
   db.exec(schemaSql);
   ensureSiteSettingsValidationTriggers(db);
   ensureRedirectRulesDefault(db);
