@@ -1,3 +1,4 @@
+const { createAdminConflictError, createAdminValidationError } = require('../lib/admin-errors');
 const { createSiteBootstrap } = require('../lib/site-bootstrap');
 
 const collections = {
@@ -321,11 +322,23 @@ function createCatalogRepository(db) {
 
     const parent = selectPageById.get(parentId);
     if (!parent || parent.site_key !== siteKey) {
-      throw new Error('Page parent must belong to the same site');
+      throw createAdminValidationError('上级页面必须属于当前站点。', 'same site validation error');
     }
     if (recordId && Number(recordId) === Number(parentId)) {
-      throw new Error('Page parent must not reference itself');
+      throw createAdminValidationError('上级页面不能指向自己。', 'invalid-page-parent-self');
     }
+  }
+
+  function translateRecordWriteError(type, error) {
+    if (error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      if (type === 'pages') {
+        return createAdminConflictError('页面路径已存在，请更换后重试。', 'duplicate-page-path');
+      }
+
+      return createAdminConflictError('Slug 已存在，请更换后重试。', `duplicate-${type}-slug`);
+    }
+
+    return error;
   }
 
   function createRecord(type, input) {
@@ -334,7 +347,12 @@ function createCatalogRepository(db) {
     if (type === 'pages') {
       validatePageParent(record.siteKey, record.parentId);
     }
-    const info = statements[type].insert.run(record);
+    let info;
+    try {
+      info = statements[type].insert.run(record);
+    } catch (error) {
+      throw translateRecordWriteError(type, error);
+    }
     return mapRow(statements[type].selectById.get(info.lastInsertRowid));
   }
 
@@ -347,7 +365,11 @@ function createCatalogRepository(db) {
     if (type === 'pages') {
       validatePageParent(siteKey, record.parentId, id);
     }
-    statements[type].update.run({ id, ...record });
+    try {
+      statements[type].update.run({ id, ...record });
+    } catch (error) {
+      throw translateRecordWriteError(type, error);
+    }
     return getRecord(type, siteKey, id);
   }
 

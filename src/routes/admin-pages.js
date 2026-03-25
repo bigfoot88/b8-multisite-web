@@ -1,5 +1,6 @@
 const express = require('express');
 
+const { isExpectedAdminError } = require('../lib/admin-errors');
 const { requireAdmin } = require('../lib/session');
 const { renderAdmin, requireKnownSite } = require('./admin-shared');
 
@@ -16,16 +17,17 @@ function createAdminPagesRouter() {
 
   router.use(requireAdmin);
 
-  router.get('/:siteKey/pages', requireKnownSite, (req, res) => {
+  function renderPagesPage(req, res, { status = 200, record = null, errorMessage = '' } = {}) {
     const filters = buildFilters(req.query);
     const pages = req.app.locals.catalogRepository.listPages(req.params.siteKey, {
       includeDeleted: filters.status === 'all',
       publishState: filters.publishState,
       sort: filters.sort,
     });
-    const editId = req.query.edit ? Number.parseInt(req.query.edit, 10) : null;
-    const page = editId ? req.app.locals.catalogRepository.getPage(req.params.siteKey, editId) : null;
+    const editId = record?.id ? Number.parseInt(record.id, 10) : (req.query.edit ? Number.parseInt(req.query.edit, 10) : null);
+    const page = record || (editId ? req.app.locals.catalogRepository.getPage(req.params.siteKey, editId) : null);
 
+    res.status(status);
     return renderAdmin(req, res, {
       title: '页面管理 · 中文后台',
       pageTitle: '页面管理',
@@ -51,21 +53,75 @@ function createAdminPagesRouter() {
       filters,
       basePath: `/admin/${req.params.siteKey}/pages`,
       formView: '../admin/forms/page',
-      pageOptions: pages.filter((item) => !page || item.id !== page.id),
+      pageOptions: pages.filter((item) => !page || Number(item.id) !== Number(page.id)),
+      errorMessage,
     });
+  }
+
+  router.get('/:siteKey/pages', requireKnownSite, (req, res) => {
+    return renderPagesPage(req, res);
   });
 
-  router.post('/:siteKey/pages', requireKnownSite, (req, res) => {
-    req.app.locals.catalogRepository.createPage({
-      ...req.body,
-      siteKey: req.params.siteKey,
-    });
+  router.post('/:siteKey/pages', requireKnownSite, (req, res, next) => {
+    try {
+      req.app.locals.catalogRepository.createPage({
+        ...req.body,
+        siteKey: req.params.siteKey,
+      });
+    } catch (error) {
+      if (isExpectedAdminError(error)) {
+        return renderPagesPage(req, res, {
+          status: error.statusCode,
+          errorMessage: error.message,
+          record: {
+            id: null,
+            parentId: req.body?.parentId || null,
+            path: req.body?.path || '/',
+            slug: req.body?.slug || '',
+            title: req.body?.title || '',
+            summary: req.body?.summary || '',
+            bodyHtml: req.body?.bodyHtml || '',
+            seoTitle: req.body?.seoTitle || '',
+            seoDescription: req.body?.seoDescription || '',
+            sortOrder: req.body?.sortOrder || 100,
+            publishState: req.body?.publishState || 'draft',
+          },
+        });
+      }
+
+      return next(error);
+    }
 
     return res.redirect(`/admin/${req.params.siteKey}/pages`);
   });
 
-  router.post('/:siteKey/pages/:id', requireKnownSite, (req, res) => {
-    req.app.locals.catalogRepository.updatePage(req.params.siteKey, req.params.id, req.body || {});
+  router.post('/:siteKey/pages/:id', requireKnownSite, (req, res, next) => {
+    try {
+      req.app.locals.catalogRepository.updatePage(req.params.siteKey, req.params.id, req.body || {});
+    } catch (error) {
+      if (isExpectedAdminError(error)) {
+        return renderPagesPage(req, res, {
+          status: error.statusCode,
+          errorMessage: error.message,
+          record: {
+            id: req.params.id,
+            parentId: req.body?.parentId || null,
+            path: req.body?.path || '/',
+            slug: req.body?.slug || '',
+            title: req.body?.title || '',
+            summary: req.body?.summary || '',
+            bodyHtml: req.body?.bodyHtml || '',
+            seoTitle: req.body?.seoTitle || '',
+            seoDescription: req.body?.seoDescription || '',
+            sortOrder: req.body?.sortOrder || 100,
+            publishState: req.body?.publishState || 'draft',
+          },
+        });
+      }
+
+      return next(error);
+    }
+
     return res.redirect(`/admin/${req.params.siteKey}/pages`);
   });
 

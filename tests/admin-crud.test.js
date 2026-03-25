@@ -270,3 +270,107 @@ test('product lists support soft delete, publish-state filter, and sorting', asy
   assert.match(draftOnly.text, /草稿产品/);
   assert.doesNotMatch(draftOnly.text, /已发布产品/);
 });
+
+test('product form reports duplicate slugs as a recoverable admin conflict', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-duplicate-product-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const firstResponse = await agent
+    .post('/admin/dma/products')
+    .type('form')
+    .send({
+      slug: 'duplicate-product',
+      title: '第一次创建',
+      publishState: 'published',
+    });
+  assert.equal(firstResponse.status, 302);
+
+  const duplicateResponse = await agent
+    .post('/admin/dma/products')
+    .type('form')
+    .send({
+      slug: 'duplicate-product',
+      title: '重复创建',
+      publishState: 'draft',
+    });
+
+  assert.equal(duplicateResponse.status, 409);
+  assert.match(duplicateResponse.text, /Slug 已存在，请更换后重试。/);
+  assert.match(duplicateResponse.text, /重复创建/);
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS count FROM products WHERE site_key = ? AND slug = ?').get('dma', 'duplicate-product').count,
+    1,
+  );
+});
+
+test('page form reports duplicate paths as a recoverable admin conflict', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-duplicate-page-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const firstResponse = await agent
+    .post('/admin/dma/pages')
+    .type('form')
+    .send({
+      path: '/duplicate-page',
+      title: '首次页面',
+      publishState: 'published',
+    });
+  assert.equal(firstResponse.status, 302);
+
+  const duplicateResponse = await agent
+    .post('/admin/dma/pages')
+    .type('form')
+    .send({
+      path: '/duplicate-page',
+      title: '重复页面',
+      publishState: 'draft',
+    });
+
+  assert.equal(duplicateResponse.status, 409);
+  assert.match(duplicateResponse.text, /页面路径已存在，请更换后重试。/);
+  assert.match(duplicateResponse.text, /重复页面/);
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS count FROM pages WHERE site_key = ? AND path = ?').get('dma', '/duplicate-page').count,
+    1,
+  );
+});
+
+test('page form rejects cross-site parent references with a recoverable error', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-cross-site-parent-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const parentResponse = await agent
+    .post('/admin/dma/pages')
+    .type('form')
+    .send({
+      path: '/dma-parent',
+      title: 'DMA 上级页面',
+      publishState: 'published',
+    });
+  assert.equal(parentResponse.status, 302);
+
+  const dmaParent = db.prepare('SELECT id FROM pages WHERE site_key = ? AND path = ?').get('dma', '/dma-parent');
+  const crossSiteResponse = await agent
+    .post('/admin/bigfoot/pages')
+    .type('form')
+    .send({
+      parentId: String(dmaParent.id),
+      path: '/bigfoot-child',
+      title: '错误站点页面',
+      publishState: 'draft',
+    });
+
+  assert.equal(crossSiteResponse.status, 400);
+  assert.match(crossSiteResponse.text, /上级页面必须属于当前站点。/);
+  assert.match(crossSiteResponse.text, /错误站点页面/);
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS count FROM pages WHERE site_key = ? AND path = ?').get('bigfoot', '/bigfoot-child').count,
+    0,
+  );
+});

@@ -1,4 +1,7 @@
 <% const currentRecord = record || emptyRecord; %>
+<% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+  <div class="admin-alert" role="alert"><%= errorMessage %></div>
+<% } %>
 <div class="admin-grid">
   <section class="admin-panel">
     <h2>解决方案列表</h2>

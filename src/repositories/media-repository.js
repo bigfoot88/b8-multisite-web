@@ -1,5 +1,6 @@
 const path = require('node:path');
 
+const { createAdminValidationError } = require('../lib/admin-errors');
 const { createSiteBootstrap } = require('../lib/site-bootstrap');
 
 function parseMetadata(value) {
@@ -48,10 +49,22 @@ function createMediaRepository(db) {
     WHERE asset_key = @assetKey
   `);
 
+  function assertWritableSiteKey(siteKey) {
+    try {
+      ensureSite(siteKey);
+    } catch (error) {
+      if (error?.message?.startsWith('siteKey must be one of:')) {
+        throw createAdminValidationError('站点标识无效，请重新选择。', 'siteKey validation error');
+      }
+
+      throw error;
+    }
+  }
+
   return {
     createAsset({ assetKey, siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
       if (siteKey !== null && siteKey !== undefined) {
-        ensureSite(siteKey);
+        assertWritableSiteKey(siteKey);
       }
       const payload = {
         assetKey,
@@ -68,10 +81,10 @@ function createMediaRepository(db) {
     },
     updateAsset(assetKey, { siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
       if (siteKey === '') {
-        throw new Error('siteKey must be one of: dma, bigfoot');
+        throw createAdminValidationError('站点标识无效，请重新选择。', 'siteKey validation error');
       }
       if (siteKey !== null && siteKey !== undefined) {
-        ensureSite(siteKey);
+        assertWritableSiteKey(siteKey);
       }
       updateAssetStatement.run({
         assetKey,

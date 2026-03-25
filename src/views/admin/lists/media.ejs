@@ -1,3 +1,6 @@
+<% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+  <div class="admin-alert" role="alert"><%= errorMessage %></div>
+<% } %>
 <div class="admin-grid">
   <section class="admin-panel">
     <h2>上传素材</h2>

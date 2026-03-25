@@ -35,9 +35,19 @@ function toPublicUploadPath(file) {
   return `/uploads/${path.basename(file.path)}`;
 }
 
+function removeUploadedFile(fileOrPath) {
+  const filePath = typeof fileOrPath === 'string' ? fileOrPath : fileOrPath?.path;
+  if (!filePath) {
+    return;
+  }
+
+  fs.rmSync(filePath, { force: true });
+}
+
 module.exports = {
   createUploader,
   ensureUploadRoot,
+  removeUploadedFile,
   sanitizeFilename,
   toPublicUploadPath,
 };
