@@ -77,13 +77,16 @@ ADMIN_SESSION_SECRET=<replace-with-a-long-random-secret>
 
 ## 5. 持久化上传目录
 
-应用默认从仓库内的 `public/uploads` 提供媒体文件。为了避免后续发布覆盖上传内容，建议把它软链接到共享目录：
+应用默认从仓库内的 `public/uploads` 提供媒体文件。首次部署时，先把仓库内已经提交的种子素材复制到共享目录，再把运行目录切到共享软链接：
 
 ```bash
 cd /srv/b8-multisite/current
+cp -a public/uploads/. /srv/b8-multisite/shared/uploads/
 rm -rf public/uploads
 ln -s /srv/b8-multisite/shared/uploads public/uploads
 ```
+
+这样 `scripts/import-seed-data.mjs` 在首次导入时就能找到所需的本地种子素材文件。
 
 ## 6. 初始化数据库与内容
 
@@ -114,10 +117,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/srv/b8-multisite/current
-Environment=NODE_ENV=production
-Environment=PORT=3000
-Environment=DATABASE_PATH=/srv/b8-multisite/shared/data/content.db
-Environment=ADMIN_SESSION_SECRET=<replace-with-a-long-random-secret>
+EnvironmentFile=/srv/b8-multisite/current/.env
 ExecStart=/usr/bin/node src/server.js
 Restart=always
 RestartSec=5

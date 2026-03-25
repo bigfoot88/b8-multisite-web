@@ -49,6 +49,8 @@ npm install
 cp .env.example .env
 ```
 
+`npm start` 与 `npm run dev` 会自动读取项目根目录下的 `.env`。
+
 至少要确认：
 
 - `PORT`
