@@ -1,13 +1,24 @@
 const crypto = require('node:crypto');
 
 const ADMIN_COOKIE_NAME = 'b8_admin';
-const DEFAULT_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: 'lax',
   signed: true,
   path: '/',
 };
+
+function resolveSessionSecret() {
+  if (process.env.ADMIN_SESSION_SECRET) {
+    return process.env.ADMIN_SESSION_SECRET;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_SESSION_SECRET must be set in production');
+  }
+
+  return crypto.randomBytes(32).toString('hex');
+}
 
 function buildAdminSession(admin) {
   return {
@@ -47,17 +58,25 @@ function requireAdmin(req, res, next) {
     return res.redirect('/admin/login');
   }
 
-  req.adminSession = adminSession;
+  const adminRepository = req.app?.locals?.adminRepository;
+  const admin = adminRepository?.findById ? adminRepository.findById(adminSession.id) : null;
+
+  if (!admin || !admin.isActive) {
+    clearAdminSession(res);
+    return res.redirect('/admin/login');
+  }
+
+  req.adminSession = buildAdminSession(admin);
   return next();
 }
 
 module.exports = {
   ADMIN_COOKIE_NAME,
   COOKIE_OPTIONS,
-  DEFAULT_SESSION_SECRET,
   buildAdminSession,
   clearAdminSession,
   readAdminSession,
   requireAdmin,
+  resolveSessionSecret,
   writeAdminSession,
 };

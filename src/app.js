@@ -5,13 +5,14 @@ const cookieParser = require('cookie-parser');
 const { sites } = require('./config/sites');
 const { openDatabase } = require('./lib/db');
 const { runMigrations } = require('./lib/migrations');
-const { DEFAULT_SESSION_SECRET } = require('./lib/session');
+const { resolveSessionSecret } = require('./lib/session');
 const { createAdminRepository } = require('./repositories/admin-repository');
 const { createAdminAuthRouter } = require('./routes/admin-auth');
 const { createAdminDashboardRouter } = require('./routes/admin-dashboard');
 
-function createApp({ databasePath, sessionSecret = DEFAULT_SESSION_SECRET } = {}) {
+function createApp({ databasePath, sessionSecret } = {}) {
   const app = express();
+  const cookieSecret = sessionSecret || resolveSessionSecret();
   const db = openDatabase(databasePath);
 
   runMigrations(db);
@@ -22,7 +23,7 @@ function createApp({ databasePath, sessionSecret = DEFAULT_SESSION_SECRET } = {}
   app.locals.adminRepository = createAdminRepository(db);
 
   app.use(express.urlencoded({ extended: false }));
-  app.use(cookieParser(sessionSecret));
+  app.use(cookieParser(cookieSecret));
   app.use('/css', express.static(path.join(__dirname, '..', 'public', 'css')));
   app.use('/admin', createAdminAuthRouter({ adminRepository: app.locals.adminRepository }));
   app.use('/admin', createAdminDashboardRouter());

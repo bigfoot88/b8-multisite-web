@@ -22,6 +22,7 @@ function createAdminRepository(db) {
     VALUES (@username, @email, @passwordHash, @displayName, @role, @isActive)
   `);
   const selectByEmail = db.prepare('SELECT * FROM admins WHERE email = ?');
+  const selectById = db.prepare('SELECT * FROM admins WHERE id = ?');
   const selectByUsername = db.prepare('SELECT * FROM admins WHERE username = ?');
   const selectAll = db.prepare('SELECT * FROM admins ORDER BY username ASC');
 
@@ -39,6 +40,9 @@ function createAdminRepository(db) {
     },
     findByEmail(email) {
       return mapAdmin(selectByEmail.get(email));
+    },
+    findById(id) {
+      return mapAdmin(selectById.get(id));
     },
     findByUsername(username) {
       return mapAdmin(selectByUsername.get(username));

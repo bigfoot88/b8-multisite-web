@@ -44,3 +44,54 @@ test('successful admin login redirects to the Chinese dashboard', async (t) => {
   assert.equal(response.headers.location, '/admin');
   assert.match(response.headers['set-cookie'][0], /b8_admin=/);
 });
+
+test('disabled admin sessions are rejected on protected routes', async (t) => {
+  const { tempDir, testDbPath } = createSeededAdminDb();
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: testDbPath });
+  const agent = request.agent(app);
+
+  const loginResponse = await agent
+    .post('/admin/login')
+    .type('form')
+    .send({ username: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+  assert.equal(loginResponse.headers.location, '/admin');
+
+  const db = createDatabase(testDbPath);
+  db.prepare('UPDATE admins SET is_active = 0 WHERE username = ?').run('admin');
+  db.close();
+
+  const response = await agent.get('/admin');
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin/login');
+  assert.match(response.headers['set-cookie'][0], /b8_admin=.*Expires=Thu, 01 Jan 1970 00:00:00 GMT/);
+});
+
+test('unknown admin site keys redirect to the admin dashboard', async (t) => {
+  const { tempDir, testDbPath } = createSeededAdminDb();
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: testDbPath });
+  const agent = request.agent(app);
+
+  const loginResponse = await agent
+    .post('/admin/login')
+    .type('form')
+    .send({ username: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+  assert.equal(loginResponse.headers.location, '/admin');
+
+  const response = await agent.get('/admin/not-a-site');
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin');
+});

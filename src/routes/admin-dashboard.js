@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { assertValidSiteKey, sites } = require('../config/sites');
+const { sites } = require('../config/sites');
 const { requireAdmin } = require('../lib/session');
 
 const navLinks = [
@@ -64,13 +64,12 @@ function createAdminDashboardRouter() {
     res.render('layouts/admin', buildDashboardModel('media', req.adminSession));
   });
 
-  router.get('/:siteKey', (req, res, next) => {
-    try {
-      assertValidSiteKey(req.params.siteKey);
-      res.render('layouts/admin', buildDashboardModel(req.params.siteKey, req.adminSession));
-    } catch (error) {
-      next(error);
+  router.get('/:siteKey', (req, res) => {
+    if (!sites.includes(req.params.siteKey)) {
+      return res.redirect('/admin');
     }
+
+    return res.render('layouts/admin', buildDashboardModel(req.params.siteKey, req.adminSession));
   });
 
   return router;
