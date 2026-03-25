@@ -141,6 +141,7 @@ function createSiteRepository(db) {
   const selectNavigation = db.prepare('SELECT * FROM navigation_items WHERE site_key = ? ORDER BY position ASC, id ASC');
   const selectNavigationItem = db.prepare('SELECT * FROM navigation_items WHERE site_key = ? AND id = ?');
   const selectNavigationItemById = db.prepare('SELECT * FROM navigation_items WHERE id = ?');
+  const deleteSectionStatement = db.prepare('DELETE FROM site_sections WHERE site_key = ? AND section_key = ?');
   const updateNavigationItemStatement = db.prepare(`
     UPDATE navigation_items
     SET label = @label,
@@ -241,6 +242,10 @@ function createSiteRepository(db) {
     getSection(siteKey, sectionKey) {
       assertValidSiteKey(siteKey);
       return mapSection(selectSection.get(siteKey, sectionKey));
+    },
+    deleteSection(siteKey, sectionKey) {
+      assertValidSiteKey(siteKey);
+      deleteSectionStatement.run(siteKey, sectionKey);
     },
     listSections(siteKey) {
       assertValidSiteKey(siteKey);

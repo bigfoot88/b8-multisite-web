@@ -109,6 +109,46 @@ test('homepage sections respect publish state by host', async (t) => {
   assert.match(bigfootResponse.text, /选择B8ERP/);
 });
 
+test('homepage sections list exposes removal and deletes a section record', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-sections-delete-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/dma/sections')
+    .type('form')
+    .send({
+      sectionKey: 'promo-strip',
+      heading: '限时活动',
+      subheading: '仅限本周',
+      body: '删除前可见',
+      sortOrder: '9',
+      isPublished: '1',
+      configJson: '{"ctaLabel":"立即咨询"}',
+    });
+
+  const listResponse = await agent.get('/admin/dma/sections');
+  assert.equal(listResponse.status, 200);
+  assert.match(listResponse.text, /\/admin\/dma\/sections\/hero\/delete/);
+  assert.match(listResponse.text, /\/admin\/dma\/sections\/promo-strip\/delete/);
+
+  const deleteResponse = await agent
+    .post('/admin/dma/sections/promo-strip/delete')
+    .type('form')
+    .send({});
+
+  assert.equal(deleteResponse.status, 302);
+  assert.equal(deleteResponse.headers.location, '/admin/dma/sections');
+
+  const deleted = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'promo-strip');
+  assert.equal(deleted, undefined);
+
+  const updatedListResponse = await agent.get('/admin/dma/sections');
+  assert.equal(updatedListResponse.status, 200);
+  assert.doesNotMatch(updatedListResponse.text, /promo-strip/);
+});
+
 test('site settings form updates contact and seo fields', async (t) => {
   const { agent, db } = withApp(t, 'b8-admin-settings-');
   t.after(() => db.close());

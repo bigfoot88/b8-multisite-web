@@ -13,7 +13,12 @@
             <td><%= item.heading || '未填写标题' %></td>
             <td><%= item.sortOrder %></td>
             <td><%= item.isPublished ? '已发布' : '未发布' %></td>
-            <td><a href="/admin/<%= siteKey %>/sections?edit=<%= item.sectionKey %>">编辑</a></td>
+            <td>
+              <a href="/admin/<%= siteKey %>/sections?edit=<%= item.sectionKey %>">编辑</a>
+              <form method="post" action="/admin/<%= siteKey %>/sections/<%= item.sectionKey %>/delete" style="display:inline">
+                <button type="submit">删除</button>
+              </form>
+            </td>
           </tr>
         <% }) %>
       </tbody>

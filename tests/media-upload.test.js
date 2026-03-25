@@ -109,3 +109,46 @@ test('media replacement can move a site asset into the global library', async (t
   assert.equal(updated.site_key, null);
   assert.equal(updated.alt_text, 'Now global');
 });
+
+test('media library rebind updates assignment and metadata without uploading a file', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-rebind-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA bound asset')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+
+  const listResponse = await agent.get(`/admin/media?siteKey=dma&edit=${asset.asset_key}`);
+  assert.equal(listResponse.status, 200);
+  assert.match(listResponse.text, new RegExp(`/admin/media/${asset.asset_key}/rebind`));
+
+  const rebindResponse = await agent
+    .post(`/admin/media/${asset.asset_key}/rebind`)
+    .type('form')
+    .send({
+      siteKey: '',
+      altText: 'Global asset copy',
+    });
+
+  assert.equal(rebindResponse.status, 302);
+  assert.equal(rebindResponse.headers.location, '/admin/media');
+
+  const updated = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(updated.site_key, null);
+  assert.equal(updated.alt_text, 'Global asset copy');
+  assert.equal(updated.filename, asset.filename);
+  assert.equal(updated.storage_path, asset.storage_path);
+});

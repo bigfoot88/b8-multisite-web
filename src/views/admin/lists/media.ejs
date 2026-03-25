@@ -38,11 +38,31 @@
             <td><a href="<%= item.publicUrl %>"><%= item.filename %></a></td>
             <td><%= item.siteKey || '全局' %></td>
             <td><%= item.altText || '未填写' %></td>
-            <td><a href="/admin/media?<%= selectedSiteKey ? `siteKey=${selectedSiteKey}&` : '' %>edit=<%= item.assetKey %>">替换</a></td>
+            <td><a href="/admin/media?<%= selectedSiteKey ? `siteKey=${selectedSiteKey}&` : '' %>edit=<%= item.assetKey %>">替换 / 重绑</a></td>
           </tr>
         <% }) %>
       </tbody>
     </table>
+  </section>
+
+  <section class="admin-panel">
+    <h2><%= asset ? `重绑素材：${asset.filename}` : '选择素材后可重绑' %></h2>
+    <% if (asset) { %>
+      <form method="post" action="/admin/media/<%= asset.assetKey %>/rebind" class="admin-form">
+        <label>所属站点
+          <select name="siteKey">
+            <option value="">全局素材</option>
+            <% availableSites.forEach((site) => { %>
+              <option value="<%= site.siteKey %>" <%= asset.siteKey === site.siteKey ? 'selected' : '' %>><%= site.brandName %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>替代文本<input type="text" name="altText" value="<%= asset.altText || '' %>" /></label>
+        <button type="submit">保存绑定信息</button>
+      </form>
+    <% } else { %>
+      <p>从上方列表中选择一条素材，可单独调整站点归属和替代文本，无需重新上传文件。</p>
+    <% } %>
   </section>
 
   <section class="admin-panel">

@@ -81,6 +81,11 @@ function createAdminSectionsRouter() {
     return res.redirect(`/admin/${req.params.siteKey}/sections`);
   });
 
+  router.post('/:siteKey/sections/:sectionKey/delete', requireKnownSite, (req, res) => {
+    req.app.locals.siteRepository.deleteSection(req.params.siteKey, req.params.sectionKey);
+    return res.redirect(`/admin/${req.params.siteKey}/sections`);
+  });
+
   return router;
 }
 
