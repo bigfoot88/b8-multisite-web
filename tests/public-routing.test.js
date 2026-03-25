@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { seedRepresentativePublicContent, withPublicApp } = require('./helpers/public-fixtures');
+const { seedRepresentativePublicContent, withPublicApp, writeUpload } = require('./helpers/public-fixtures');
 
 test('public routes render host-specific site pages and collection detail pages', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-routes-');
@@ -171,18 +171,144 @@ test('public pages render brochure and download links from managed local uploads
     .get('/products/dma-lite')
     .set('host', 'dma.b8water.com');
   assert.equal(productDetail.status, 200);
-  assert.match(productDetail.text, /href="\/uploads\/dma-lite-brochure\.pdf"/);
-  assert.match(productDetail.text, /href="\/uploads\/dma-lite-specs\.pdf"/);
+  assert.match(productDetail.text, /href="\/media\/dma-lite-brochure\.pdf"/);
+  assert.match(productDetail.text, /href="\/media\/dma-lite-specs\.pdf"/);
 
   const pageDetail = await request(app)
     .get('/about/history')
     .set('host', 'dma.b8water.com');
   assert.equal(pageDetail.status, 200);
-  assert.match(pageDetail.text, /href="\/uploads\/dma-history-pack\.pdf"/);
+  assert.match(pageDetail.text, /href="\/media\/dma-history-pack\.pdf"/);
 
   const solutionDetail = await request(app)
     .get('/solutions/district-metering')
     .set('host', 'dma.b8water.com');
   assert.equal(solutionDetail.status, 200);
-  assert.match(solutionDetail.text, /href="\/uploads\/dma-solution-pack\.pdf"/);
+  assert.match(solutionDetail.text, /href="\/media\/dma-solution-pack\.pdf"/);
+});
+
+test('public pages sanitize stored rich html before rendering', async (t) => {
+  const { app } = withPublicApp(t, 'b8-public-sanitize-', ({ catalogRepository, mediaRepository, redirectRepository, siteRepository, paths }) => {
+    seedRepresentativePublicContent({
+      catalogRepository,
+      mediaRepository,
+      redirectRepository,
+      siteRepository,
+      paths,
+    });
+
+    catalogRepository.createProduct({
+      siteKey: 'dma',
+      slug: 'xss-widget',
+      title: 'XSS Widget',
+      summary: 'Rich HTML should be sanitized before public render.',
+      bodyHtml: '<p onclick="alert(1)">保留段落</p><script>alert(1)</script><a href="javascript:alert(1)">危险链接</a><strong>安全加粗</strong>',
+      publishState: 'published',
+      sortOrder: 50,
+    });
+    catalogRepository.createPage({
+      siteKey: 'dma',
+      path: '/about/security',
+      title: '安全页面',
+      summary: '用于验证泛页面模板的富文本净化。',
+      bodyHtml: '<div><p onmouseover="alert(1)">安全说明</p><script>alert(1)</script><a href="javascript:alert(1)">危险链接</a></div>',
+      publishState: 'published',
+      sortOrder: 51,
+    });
+  });
+
+  const productDetail = await request(app)
+    .get('/products/xss-widget')
+    .set('host', 'dma.b8water.com');
+  assert.equal(productDetail.status, 200);
+  assert.match(productDetail.text, /<p>保留段落<\/p>/);
+  assert.match(productDetail.text, /<strong>安全加粗<\/strong>/);
+  assert.doesNotMatch(productDetail.text, /<div class="rich-text">[\s\S]*<script/i);
+  assert.doesNotMatch(productDetail.text, /onclick=|onmouseover=/i);
+  assert.doesNotMatch(productDetail.text, /javascript:/i);
+
+  const genericPage = await request(app)
+    .get('/about/security')
+    .set('host', 'dma.b8water.com');
+  assert.equal(genericPage.status, 200);
+  assert.match(genericPage.text, /<p>安全说明<\/p>/);
+  assert.doesNotMatch(genericPage.text, /<div class="rich-text">[\s\S]*<script/i);
+  assert.doesNotMatch(genericPage.text, /onmouseover=/i);
+  assert.doesNotMatch(genericPage.text, /javascript:/i);
+});
+
+test('public asset downloads stay site-scoped, require published references, and support nested paths', async (t) => {
+  const { app } = withPublicApp(t, 'b8-public-assets-', ({ catalogRepository, mediaRepository, redirectRepository, siteRepository, paths }) => {
+    seedRepresentativePublicContent({
+      catalogRepository,
+      mediaRepository,
+      redirectRepository,
+      siteRepository,
+      paths,
+    });
+
+    const nestedAsset = mediaRepository.createAsset({
+      assetKey: 'dma-nested-guide',
+      siteKey: 'dma',
+      filename: 'dma-guide.pdf',
+      mimeType: 'application/pdf',
+      storagePath: writeUpload(paths.uploadRoot, 'nested/guides/dma-guide.pdf', 'Nested DMA guide'),
+    });
+    const draftOnlyAsset = mediaRepository.createAsset({
+      assetKey: 'dma-draft-only',
+      siteKey: 'dma',
+      filename: 'draft-only.pdf',
+      mimeType: 'application/pdf',
+      storagePath: writeUpload(paths.uploadRoot, 'drafts/internal/draft-only.pdf', 'Draft-only asset'),
+    });
+
+    catalogRepository.createPage({
+      siteKey: 'dma',
+      path: '/downloads/nested-guide',
+      title: '嵌套下载',
+      summary: '嵌套路径素材应保持相对路径公开地址。',
+      bodyHtml: '<p>下载嵌套资料。</p>',
+      attachmentMediaId: nestedAsset.id,
+      publishState: 'published',
+      sortOrder: 60,
+    });
+    catalogRepository.createPage({
+      siteKey: 'dma',
+      path: '/drafts/private-asset',
+      title: '草稿资料页',
+      summary: '草稿资产不应公开下载。',
+      bodyHtml: '<p>草稿资料。</p>',
+      attachmentMediaId: draftOnlyAsset.id,
+      publishState: 'draft',
+      sortOrder: 61,
+    });
+  });
+
+  const nestedPage = await request(app)
+    .get('/downloads/nested-guide')
+    .set('host', 'dma.b8water.com');
+  assert.equal(nestedPage.status, 200);
+  assert.match(nestedPage.text, /href="\/media\/nested\/guides\/dma-guide\.pdf"/);
+
+  const nestedDownload = await request(app)
+    .get('/media/nested/guides/dma-guide.pdf')
+    .set('host', 'dma.b8water.com');
+  assert.equal(nestedDownload.status, 200);
+  assert.equal(nestedDownload.body.toString(), 'Nested DMA guide');
+  assert.equal(nestedDownload.headers['x-content-type-options'], 'nosniff');
+
+  const crossHostDownload = await request(app)
+    .get('/media/bigfoot-b8erp-pack.pdf')
+    .set('host', 'dma.b8water.com');
+  assert.equal(crossHostDownload.status, 404);
+
+  const draftOnlyDownload = await request(app)
+    .get('/media/drafts/internal/draft-only.pdf')
+    .set('host', 'dma.b8water.com');
+  assert.equal(draftOnlyDownload.status, 404);
+
+  const wrongHostForNestedDownload = await request(app)
+    .get('/media/nested/guides/dma-guide.pdf')
+    .set('host', 'www.chinabigfoot.com');
+  assert.equal(wrongHostForNestedDownload.status, 404);
 });

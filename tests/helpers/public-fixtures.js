@@ -10,8 +10,8 @@ const { createSiteRepository } = require('../../src/repositories/site-repository
 const { createSeededAppPaths } = require('./test-paths');
 
 function writeUpload(uploadRoot, filename, contents = filename) {
-  fs.mkdirSync(uploadRoot, { recursive: true });
   const storagePath = path.join(uploadRoot, filename);
+  fs.mkdirSync(path.dirname(storagePath), { recursive: true });
   fs.writeFileSync(storagePath, contents);
   return storagePath;
 }
@@ -253,5 +253,6 @@ function withPublicApp(t, prefix = 'b8-public-', seed = seedRepresentativePublic
 
 module.exports = {
   seedRepresentativePublicContent,
+  writeUpload,
   withPublicApp,
 };

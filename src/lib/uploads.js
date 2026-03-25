@@ -5,6 +5,7 @@ const path = require('node:path');
 const multer = require('multer');
 
 const { createAdminValidationError } = require('./admin-errors');
+const { buildPublicMediaPath, resolveManagedMediaRelativePath } = require('./media-paths');
 
 const safeUploadExtensions = new Set([
   '.png',
@@ -383,7 +384,11 @@ function createUploader({ uploadRoot }) {
 }
 
 function toPublicUploadPath(file) {
-  return `/uploads/${path.basename(file.path)}`;
+  const relativePath = resolveManagedMediaRelativePath({
+    storagePath: file?.path,
+    uploadRoot: file?.destination,
+  });
+  return buildPublicMediaPath(relativePath);
 }
 
 function removeUploadedFile(fileOrPath) {

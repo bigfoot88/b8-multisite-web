@@ -1,5 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const { createTestDb, createSeededDb } = require('./helpers/create-seeded-db');
 const { runMigrations } = require('../src/lib/migrations');
@@ -158,9 +161,29 @@ test('media repository can batch load assets by id for public rendering', () => 
     })),
     [
       { assetKey: 'global-logo', publicUrl: 'https://cdn.example.com/logo.png' },
-      { assetKey: 'dma-brochure', publicUrl: '/uploads/dma-lite.pdf' },
+      { assetKey: 'dma-brochure', publicUrl: '/media/dma-lite.pdf' },
     ],
   );
+});
+
+test('media repository preserves nested upload paths in public urls', (t) => {
+  const db = createTestDb();
+  runMigrations(db);
+  const uploadRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'b8-media-public-url-'));
+  t.after(() => {
+    fs.rmSync(uploadRoot, { recursive: true, force: true });
+  });
+  const media = createMediaRepository(db, { uploadRoot });
+
+  const nestedAsset = media.createAsset({
+    assetKey: 'dma-nested-brochure',
+    siteKey: 'dma',
+    filename: 'brochure.pdf',
+    mimeType: 'application/pdf',
+    storagePath: path.join(uploadRoot, 'imported/2026/03/brochure.pdf'),
+  });
+
+  assert.equal(nestedAsset.publicUrl, '/media/imported/2026/03/brochure.pdf');
 });
 
 test('catalog repository preserves news hero media ids', () => {

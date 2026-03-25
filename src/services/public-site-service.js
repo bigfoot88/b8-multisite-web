@@ -1,3 +1,5 @@
+const sanitizeHtml = require('sanitize-html');
+
 function createPublicSiteService({
   siteRepository,
   catalogRepository,
@@ -34,6 +36,7 @@ function createPublicSiteService({
 
     return {
       ...record,
+      bodyHtml: typeof record.bodyHtml === 'string' ? sanitizeHtml(record.bodyHtml) : record.bodyHtml,
       brochureAsset: record.brochureMediaId ? assets.get(record.brochureMediaId) || null : null,
       attachmentAsset: record.attachmentMediaId ? assets.get(record.attachmentMediaId) || null : null,
       heroAsset: record.heroMediaId ? assets.get(record.heroMediaId) || null : null,

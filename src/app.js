@@ -11,6 +11,7 @@ const { createSiteRepository } = require('./repositories/site-repository');
 const { createCatalogRepository } = require('./repositories/catalog-repository');
 const { createMediaRepository } = require('./repositories/media-repository');
 const { createRedirectRepository } = require('./repositories/redirect-repository');
+const { createMediaRouter } = require('./routes/media');
 const { createPublicSiteService } = require('./services/public-site-service');
 const { createPublicRouter } = require('./routes/public');
 const { createAdminAuthRouter } = require('./routes/admin-auth');
@@ -39,7 +40,7 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   app.locals.adminRepository = createAdminRepository(db);
   app.locals.siteRepository = createSiteRepository(db);
   app.locals.catalogRepository = createCatalogRepository(db);
-  app.locals.mediaRepository = createMediaRepository(db);
+  app.locals.mediaRepository = createMediaRepository(db, { uploadRoot });
   app.locals.redirectRepository = createRedirectRepository(db);
   app.locals.publicSiteService = createPublicSiteService({
     siteRepository: app.locals.siteRepository,
@@ -53,10 +54,10 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   app.use(cookieParser(cookieSecret));
   app.use('/css', express.static(path.join(publicRoot, 'css')));
   app.use('/js', express.static(path.join(publicRoot, 'js')));
-  app.use('/uploads', express.static(uploadRoot, {
-    setHeaders(res) {
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-    },
+  app.use('/media', createMediaRouter({
+    adminRepository: app.locals.adminRepository,
+    mediaRepository: app.locals.mediaRepository,
+    siteRepository: app.locals.siteRepository,
   }));
   app.use('/admin', createAdminAuthRouter({ adminRepository: app.locals.adminRepository }));
   app.use('/admin', createAdminSitesRouter());

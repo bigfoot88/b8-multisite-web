@@ -1,16 +1,28 @@
-const path = require('node:path');
-
 const { createAdminValidationError } = require('../lib/admin-errors');
+const {
+  buildPublicMediaPath,
+  normalizeRelativeMediaPath,
+  relativePathFromSourceUrl,
+  resolveManagedMediaRelativePath,
+} = require('../lib/media-paths');
 const { createSiteBootstrap } = require('../lib/site-bootstrap');
 
 function parseMetadata(value) {
   return value ? JSON.parse(value) : {};
 }
 
-function mapAsset(row) {
+function mapAsset(row, uploadRoot = null) {
   if (!row) {
     return null;
   }
+
+  const sourceRelativePath = relativePathFromSourceUrl(row.source_url);
+  const relativePath = sourceRelativePath || (!row.source_url
+    ? resolveManagedMediaRelativePath({
+      storagePath: row.storage_path,
+      uploadRoot,
+    })
+    : null);
 
   return {
     id: row.id,
@@ -22,13 +34,14 @@ function mapAsset(row) {
     storagePath: row.storage_path,
     altText: row.alt_text,
     metadata: parseMetadata(row.metadata_json),
-    publicUrl: row.source_url || (row.storage_path ? `/uploads/${path.basename(row.storage_path)}` : null),
+    publicUrl: relativePath ? buildPublicMediaPath(relativePath) : (row.source_url || null),
+    relativePath,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-function createMediaRepository(db) {
+function createMediaRepository(db, { uploadRoot = null } = {}) {
   const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const insertAsset = db.prepare(`
     INSERT INTO media_assets (asset_key, site_key, source_url, filename, mime_type, storage_path, alt_text, metadata_json)
@@ -36,6 +49,7 @@ function createMediaRepository(db) {
   `);
   const selectByKey = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?');
   const selectById = db.prepare('SELECT * FROM media_assets WHERE id = ?');
+  const selectAll = db.prepare('SELECT * FROM media_assets ORDER BY id ASC');
   const selectReferenceSites = db.prepare(`
     SELECT DISTINCT site_key
     FROM (
@@ -67,6 +81,24 @@ function createMediaRepository(db) {
         updated_at = CURRENT_TIMESTAMP
     WHERE asset_key = @assetKey
   `);
+  const selectPublishedPublicReference = db.prepare(`
+    SELECT 1
+    FROM (
+      SELECT site_key FROM products WHERE deleted_at IS NULL AND publish_state = 'published' AND (brochure_media_id = @assetId OR attachment_media_id = @assetId)
+      UNION
+      SELECT site_key FROM solutions WHERE deleted_at IS NULL AND publish_state = 'published' AND attachment_media_id = @assetId
+      UNION
+      SELECT site_key FROM pages WHERE deleted_at IS NULL AND publish_state = 'published' AND attachment_media_id = @assetId
+      UNION
+      SELECT site_key FROM news_articles WHERE deleted_at IS NULL AND publish_state = 'published' AND hero_media_id = @assetId
+      UNION
+      SELECT site_key FROM case_studies WHERE deleted_at IS NULL AND publish_state = 'published' AND attachment_media_id = @assetId
+      UNION
+      SELECT site_key FROM site_sections WHERE is_published = 1 AND media_asset_id = @assetId
+    ) AS public_references
+    WHERE site_key = @siteKey
+    LIMIT 1
+  `);
 
   function assertWritableSiteKey(siteKey) {
     try {
@@ -94,6 +126,26 @@ function createMediaRepository(db) {
     }
   }
 
+  function mapRowToAsset(row) {
+    return mapAsset(row, uploadRoot);
+  }
+
+  function findManagedAssetByRelativePath(relativePath) {
+    const normalizedRelativePath = normalizeRelativeMediaPath(relativePath);
+    if (!normalizedRelativePath) {
+      return null;
+    }
+
+    for (const row of selectAll.all()) {
+      const asset = mapRowToAsset(row);
+      if (asset?.relativePath === normalizedRelativePath) {
+        return asset;
+      }
+    }
+
+    return null;
+  }
+
   return {
     createAsset({ assetKey, siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
       if (siteKey !== null && siteKey !== undefined) {
@@ -110,7 +162,7 @@ function createMediaRepository(db) {
         metadataJson: JSON.stringify(metadata),
       };
       const info = insertAsset.run(payload);
-      return mapAsset(selectById.get(info.lastInsertRowid));
+      return mapRowToAsset(selectById.get(info.lastInsertRowid));
     },
     updateAsset(assetKey, { siteKey = null, sourceUrl = null, filename, mimeType, storagePath, altText = null, metadata = {} }) {
       const current = selectByKey.get(assetKey);
@@ -131,13 +183,33 @@ function createMediaRepository(db) {
         altText,
         metadataJson: JSON.stringify(metadata),
       });
-      return mapAsset(selectByKey.get(assetKey));
+      return mapRowToAsset(selectByKey.get(assetKey));
     },
     findByAssetKey(assetKey) {
-      return mapAsset(selectByKey.get(assetKey));
+      return mapRowToAsset(selectByKey.get(assetKey));
     },
     findById(id) {
-      return mapAsset(selectById.get(id));
+      return mapRowToAsset(selectById.get(id));
+    },
+    findManagedAssetByRelativePath,
+    findPublicAssetByPath(siteKey, relativePath) {
+      if (!siteKey) {
+        return null;
+      }
+
+      assertValidSiteKey(siteKey);
+      const asset = findManagedAssetByRelativePath(relativePath);
+      if (!asset) {
+        return null;
+      }
+      if (asset.siteKey !== null && asset.siteKey !== siteKey) {
+        return null;
+      }
+      if (!selectPublishedPublicReference.get({ assetId: asset.id, siteKey })) {
+        return null;
+      }
+
+      return asset;
     },
     findByIds(ids = []) {
       const normalizedIds = [...new Set(ids
@@ -155,7 +227,7 @@ function createMediaRepository(db) {
         WHERE id IN (${placeholders})
         ORDER BY id ASC
       `);
-      return statement.all(...normalizedIds).map(mapAsset);
+      return statement.all(...normalizedIds).map(mapRowToAsset);
     },
     listAssets({ siteKey = null } = {}) {
       if (siteKey === '') {
@@ -174,7 +246,7 @@ function createMediaRepository(db) {
           `)
         : db.prepare('SELECT * FROM media_assets ORDER BY updated_at DESC, id DESC');
 
-      return (siteKey ? statement.all({ siteKey }) : statement.all()).map(mapAsset);
+      return (siteKey ? statement.all({ siteKey }) : statement.all()).map(mapRowToAsset);
     },
   };
 }
