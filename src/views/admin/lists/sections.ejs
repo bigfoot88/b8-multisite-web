@@ -1,0 +1,27 @@
+<% const currentSectionRecord = section || emptySection; %>
+<div class="admin-grid">
+  <section class="admin-panel">
+    <h2>模块列表</h2>
+    <table>
+      <thead>
+        <tr><th>键名</th><th>标题</th><th>排序</th><th>状态</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+        <% sections.forEach((item) => { %>
+          <tr>
+            <td><code><%= item.sectionKey %></code></td>
+            <td><%= item.heading || '未填写标题' %></td>
+            <td><%= item.sortOrder %></td>
+            <td><%= item.isPublished ? '已发布' : '未发布' %></td>
+            <td><a href="/admin/<%= siteKey %>/sections?edit=<%= item.sectionKey %>">编辑</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="admin-panel">
+    <h2><%= section ? `编辑模块：${section.sectionKey}` : '新建模块' %></h2>
+    <%- include('../forms/section', { currentSectionRecord }) %>
+  </section>
+</div>

@@ -1,0 +1,17 @@
+<form method="post" action="/admin/<%= siteKey %>/navigation" class="admin-form">
+  <% if (currentNavItem.id) { %><input type="hidden" name="id" value="<%= currentNavItem.id %>" /><% } %>
+  <label>导航名称<input type="text" name="label" value="<%= currentNavItem.label || '' %>" required /></label>
+  <label>链接地址<input type="text" name="href" value="<%= currentNavItem.href || '' %>" required /></label>
+  <label>父级导航
+    <select name="parentId">
+      <option value="">无</option>
+      <% items.filter((candidate) => candidate.id !== currentNavItem.id).forEach((candidate) => { %>
+        <option value="<%= candidate.id %>" <%= Number(currentNavItem.parentId) === Number(candidate.id) ? 'selected' : '' %>><%= candidate.label %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>链接类型<input type="text" name="kind" value="<%= currentNavItem.kind || 'link' %>" /></label>
+  <label>排序<input type="number" name="position" value="<%= currentNavItem.position ?? 0 %>" /></label>
+  <label><input type="checkbox" name="isVisible" value="1" <%= currentNavItem.isVisible ? 'checked' : '' %> /> 显示在前台</label>
+  <button type="submit">保存导航项</button>
+</form>

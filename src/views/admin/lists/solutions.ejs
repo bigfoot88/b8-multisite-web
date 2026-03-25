@@ -1,0 +1,48 @@
+<% const currentRecord = record || emptyRecord; %>
+<div class="admin-grid">
+  <section class="admin-panel">
+    <h2>解决方案列表</h2>
+    <form method="get" action="<%= basePath %>" class="admin-form admin-form--inline">
+      <label>发布状态
+        <select name="publishState">
+          <option value="all" <%= filters.publishState === 'all' ? 'selected' : '' %>>全部</option>
+          <option value="draft" <%= filters.publishState === 'draft' ? 'selected' : '' %>>草稿</option>
+          <option value="published" <%= filters.publishState === 'published' ? 'selected' : '' %>>已发布</option>
+          <option value="archived" <%= filters.publishState === 'archived' ? 'selected' : '' %>>已归档</option>
+        </select>
+      </label>
+      <label>记录范围
+        <select name="status">
+          <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>仅有效</option>
+          <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>包含已删除</option>
+        </select>
+      </label>
+      <label>排序
+        <select name="sort">
+          <option value="default" <%= filters.sort === 'default' ? 'selected' : '' %>>默认排序</option>
+          <option value="title_desc" <%= filters.sort === 'title_desc' ? 'selected' : '' %>>标题倒序</option>
+          <option value="updated_desc" <%= filters.sort === 'updated_desc' ? 'selected' : '' %>>最近更新</option>
+        </select>
+      </label>
+      <button type="submit">应用筛选</button>
+    </form>
+    <table>
+      <thead><tr><th>Slug</th><th>标题</th><th>状态</th><th>排序</th><th>操作</th></tr></thead>
+      <tbody>
+        <% records.forEach((item) => { %>
+          <tr>
+            <td><code><%= item.slug %></code></td>
+            <td><%= item.title %> <%= item.deletedAt ? '（已删除）' : '' %></td>
+            <td><%= item.publishState %></td>
+            <td><%= item.sortOrder %></td>
+            <td><a href="<%= basePath %>?edit=<%= item.id %>">编辑</a> <form method="post" action="<%= basePath %>/<%= item.id %>/delete" style="display:inline"><button type="submit">软删除</button></form></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+  <section class="admin-panel">
+    <h2><%= record ? `编辑方案：${record.title}` : '新建解决方案' %></h2>
+    <%- include('../forms/solution', { currentRecord }) %>
+  </section>
+</div>

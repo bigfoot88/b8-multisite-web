@@ -1,0 +1,19 @@
+<div class="admin-grid">
+  <section class="admin-panel">
+    <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+      <p><strong><%= errorMessage %></strong></p>
+    <% } %>
+    <h2>当前配置</h2>
+    <ul class="admin-checklist">
+      <li>品牌名称：<strong><%= settings?.brandName || '未设置' %></strong></li>
+      <li>站点域名：<strong><%= settings?.domain || '未设置' %></strong></li>
+      <li>联系邮箱：<strong><%= settings?.contactEmail || '未设置' %></strong></li>
+      <li>SEO 标题：<strong><%= settings?.seoTitle || '未设置' %></strong></li>
+    </ul>
+  </section>
+
+  <section class="admin-panel">
+    <h2>编辑站点设置</h2>
+    <%- include('../forms/site-settings') %>
+  </section>
+</div>

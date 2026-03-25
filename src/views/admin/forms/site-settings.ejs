@@ -1,0 +1,10 @@
+<form method="post" action="/admin/<%= siteKey %>/settings" class="admin-form">
+  <label>品牌名称<input type="text" name="brandName" value="<%= settings?.brandName || '' %>" required /></label>
+  <label>站点域名<input type="text" name="domain" value="<%= settings?.domain || '' %>" required /></label>
+  <label>SEO 标题<input type="text" name="seoTitle" value="<%= settings?.seoTitle || '' %>" /></label>
+  <label>SEO 描述<textarea name="seoDescription" rows="3"><%= settings?.seoDescription || '' %></textarea></label>
+  <label>联系邮箱<input type="email" name="contactEmail" value="<%= settings?.contactEmail || '' %>" /></label>
+  <label>联系电话<input type="text" name="contactPhone" value="<%= settings?.contactPhone || '' %>" /></label>
+  <label>联系地址<textarea name="contactAddress" rows="3"><%= settings?.contactAddress || '' %></textarea></label>
+  <button type="submit">保存站点设置</button>
+</form>

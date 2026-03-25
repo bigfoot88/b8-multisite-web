@@ -1,34 +1,46 @@
 <div class="admin-grid">
   <% if (!currentSection) { %>
     <section class="admin-panel">
-      <h2>常用入口</h2>
+      <h2>站点总览</h2>
       <div class="admin-card-list">
         <% siteSummaries.forEach((site) => { %>
           <a class="admin-card" href="<%= site.href %>">
             <strong><%= site.label %></strong>
-            <p><%= site.description %></p>
+            <p><%= site.brandName %></p>
+            <small>页面 <%= site.counts.pages %> · 产品 <%= site.counts.products %> · 新闻 <%= site.counts.news %></small>
           </a>
         <% }) %>
         <a class="admin-card" href="/admin/media">
           <strong>媒体库</strong>
-          <p>集中访问上传素材、图片与附件。</p>
+          <p>当前共有 <%= mediaCount %> 条素材记录。</p>
         </a>
       </div>
     </section>
   <% } else { %>
     <section class="admin-panel">
-      <h2>当前入口</h2>
-      <p>此页面已准备好作为后续内容管理入口，当前阶段仅提供认证后的中文管理壳层。</p>
+      <h2><%= siteSummary.brandName %></h2>
+      <p>当前站点已接通设置、首页模块、导航、页面、产品、解决方案、新闻与案例内容入口。</p>
       <ul class="admin-checklist">
-        <li>已完成登录鉴权</li>
-        <li>已接通规范化后台地址</li>
-        <li>已预留后续 CRUD 页面挂载位</li>
+        <li>首页模块：<%= siteSummary.counts.sections %></li>
+        <li>导航项：<%= siteSummary.counts.navigation %></li>
+        <li>页面：<%= siteSummary.counts.pages %></li>
+        <li>产品：<%= siteSummary.counts.products %></li>
+        <li>解决方案：<%= siteSummary.counts.solutions %></li>
+        <li>新闻：<%= siteSummary.counts.news %></li>
+        <li>案例：<%= siteSummary.counts.cases %></li>
       </ul>
     </section>
-  <% } %>
 
-  <section class="admin-panel">
-    <h2>后台说明</h2>
-    <p>当前版本聚焦登录与导航结构，后续会在对应入口下补齐页面、产品、解决方案、新闻、案例与媒体管理功能。</p>
-  </section>
+    <section class="admin-panel">
+      <h2>快捷入口</h2>
+      <div class="admin-card-list">
+        <% siteSummary.shortcuts.forEach((shortcut) => { %>
+          <a class="admin-card" href="<%= shortcut.href %>">
+            <strong><%= shortcut.label %></strong>
+            <p>进入 <%= siteSummary.label %> 的 <%= shortcut.label %> 页面。</p>
+          </a>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
 </div>

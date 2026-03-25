@@ -1,0 +1,68 @@
+<div class="admin-grid">
+  <section class="admin-panel">
+    <h2>上传素材</h2>
+    <form method="get" action="/admin/media" class="admin-form admin-form--inline">
+      <label>站点筛选
+        <select name="siteKey">
+          <option value="">全部站点</option>
+          <% availableSites.forEach((site) => { %>
+            <option value="<%= site.siteKey %>" <%= selectedSiteKey === site.siteKey ? 'selected' : '' %>><%= site.brandName %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit">筛选媒体</button>
+    </form>
+    <form method="post" action="/admin/media" enctype="multipart/form-data" class="admin-form">
+      <label>所属站点
+        <select name="siteKey">
+          <option value="">全局素材</option>
+          <% availableSites.forEach((site) => { %>
+            <option value="<%= site.siteKey %>"><%= site.brandName %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>替代文本<input type="text" name="altText" value="" /></label>
+      <label>选择文件<input type="file" name="file" required /></label>
+      <button type="submit">上传素材</button>
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <h2>素材列表</h2>
+    <table>
+      <thead><tr><th>资产键</th><th>文件名</th><th>站点</th><th>替代文本</th><th>操作</th></tr></thead>
+      <tbody>
+        <% assets.forEach((item) => { %>
+          <tr>
+            <td><code><%= item.assetKey %></code></td>
+            <td><a href="<%= item.publicUrl %>"><%= item.filename %></a></td>
+            <td><%= item.siteKey || '全局' %></td>
+            <td><%= item.altText || '未填写' %></td>
+            <td><a href="/admin/media?<%= selectedSiteKey ? `siteKey=${selectedSiteKey}&` : '' %>edit=<%= item.assetKey %>">替换</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="admin-panel">
+    <h2><%= asset ? `替换素材：${asset.filename}` : '选择素材后可替换' %></h2>
+    <% if (asset) { %>
+      <form method="post" action="/admin/media/<%= asset.assetKey %>/replace" enctype="multipart/form-data" class="admin-form">
+        <label>所属站点
+          <select name="siteKey">
+            <option value="">全局素材</option>
+            <% availableSites.forEach((site) => { %>
+              <option value="<%= site.siteKey %>" <%= asset.siteKey === site.siteKey ? 'selected' : '' %>><%= site.brandName %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>替代文本<input type="text" name="altText" value="<%= asset.altText || '' %>" /></label>
+        <label>新文件<input type="file" name="file" required /></label>
+        <button type="submit">替换素材</button>
+      </form>
+    <% } else { %>
+      <p>从上方列表中选择一条素材进行原位替换，资产键会保持不变。</p>
+    <% } %>
+  </section>
+</div>

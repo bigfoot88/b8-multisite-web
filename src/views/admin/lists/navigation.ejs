@@ -1,0 +1,33 @@
+<% const currentNavItem = item || emptyItem; %>
+<div class="admin-grid">
+  <section class="admin-panel">
+    <h2>导航列表</h2>
+    <table>
+      <thead>
+        <tr><th>名称</th><th>链接</th><th>层级</th><th>排序</th><th>状态</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+        <% items.forEach((navItem) => { %>
+          <tr>
+            <td><%= navItem.label %></td>
+            <td><code><%= navItem.href %></code></td>
+            <td><%= navItem.parentId ? `父级 #${navItem.parentId}` : '一级' %></td>
+            <td><%= navItem.position %></td>
+            <td><%= navItem.isVisible ? '显示' : '隐藏' %></td>
+            <td>
+              <a href="/admin/<%= siteKey %>/navigation?edit=<%= navItem.id %>">编辑</a>
+              <form method="post" action="/admin/<%= siteKey %>/navigation/<%= navItem.id %>/delete" style="display:inline">
+                <button type="submit">删除</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="admin-panel">
+    <h2><%= item ? `编辑导航：${item.label}` : '新建导航项' %></h2>
+    <%- include('../forms/navigation-item', { currentNavItem }) %>
+  </section>
+</div>

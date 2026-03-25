@@ -1,12 +1,32 @@
-<%- include('../layouts/base', {
-  title,
-  body: `
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/public.css" />
+  </head>
+  <body>
     <main class="landing-shell">
       <section class="hero">
-        <p class="eyebrow">B8 Multisite</p>
-        <h1>Express bootstrap is ready.</h1>
-        <p class="copy">Public pages and future admin features will share a single Node.js process.</p>
+        <p class="eyebrow"><%= site ? site.brandName : 'B8 Multisite' %></p>
+        <h1><%= heroSection?.heading || 'Express bootstrap is ready.' %></h1>
+        <p class="copy"><%= heroSection?.subheading || heroSection?.body || 'Public pages and future admin features will share a single Node.js process.' %></p>
       </section>
+
+      <% if (publishedSections.length > 1) { %>
+        <section class="hero">
+          <h2>已发布首页模块</h2>
+          <ul>
+            <% publishedSections.slice(1).forEach((section) => { %>
+              <li>
+                <strong><%= section.heading || section.sectionKey %></strong>
+                <% if (section.body) { %>：<%= section.body %><% } %>
+              </li>
+            <% }) %>
+          </ul>
+        </section>
+      <% } %>
     </main>
-  `
-}) %>
+  </body>
+</html>

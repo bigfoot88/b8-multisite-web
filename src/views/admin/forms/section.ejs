@@ -1,0 +1,13 @@
+<form method="post" action="<%= currentSectionRecord.sectionKey && section ? `/admin/${siteKey}/sections/${currentSectionRecord.sectionKey}` : `/admin/${siteKey}/sections` %>" class="admin-form">
+  <label>模块键名<input type="text" name="sectionKey" value="<%= currentSectionRecord.sectionKey || '' %>" <%= section ? 'readonly' : 'required' %> /></label>
+  <label>标题<input type="text" name="heading" value="<%= currentSectionRecord.heading || '' %>" /></label>
+  <label>副标题<input type="text" name="subheading" value="<%= currentSectionRecord.subheading || '' %>" /></label>
+  <label>正文<textarea name="body" rows="4"><%= currentSectionRecord.body || '' %></textarea></label>
+  <label>排序<input type="number" name="sortOrder" value="<%= currentSectionRecord.sortOrder ?? 0 %>" /></label>
+  <label>
+    <input type="checkbox" name="isPublished" value="1" <%= currentSectionRecord.isPublished ? 'checked' : '' %> />
+    发布到首页
+  </label>
+  <label>配置 JSON<textarea name="configJson" rows="6"><%= JSON.stringify(currentSectionRecord.config || {}, null, 2) %></textarea></label>
+  <button type="submit">保存模块</button>
+</form>
