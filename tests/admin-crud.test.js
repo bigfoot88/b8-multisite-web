@@ -206,6 +206,45 @@ test('site settings reject duplicate domains across sites', async (t) => {
   assert.notEqual(dmaRow.domain, originalBigfoot);
 });
 
+test('site settings keep the Chinese duplicate-domain error when storage rejects a concurrent conflict', async (t) => {
+  const { agent, db, app } = withApp(t, 'b8-admin-storage-duplicate-domain-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const siteRepository = app.locals.siteRepository;
+  const originalLookup = siteRepository.getSiteSettingsByDomain.bind(siteRepository);
+  let conflictInjected = false;
+
+  siteRepository.getSiteSettingsByDomain = (domain) => {
+    const existing = originalLookup(domain);
+
+    if (!conflictInjected && domain === 'foo.local' && !existing) {
+      db.prepare('UPDATE site_settings SET domain = ? WHERE site_key = ?').run('foo.local', 'bigfoot');
+      conflictInjected = true;
+    }
+
+    return existing;
+  };
+
+  const response = await agent
+    .post('/admin/dma/settings')
+    .type('form')
+    .send({
+      brandName: '智灵科技',
+      domain: 'Foo.Local',
+      seoTitle: '并发冲突测试',
+      seoDescription: '应显示友好错误',
+      contactEmail: 'race@dma.example.com',
+      contactPhone: '0755-22222222',
+      contactAddress: 'DMA 地址',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /域名已被其他站点使用，请更换后重试。/);
+  assert.equal(db.prepare('SELECT domain FROM site_settings WHERE site_key = ?').get('dma').domain, 'dma.b8water.com');
+});
+
 test('site settings normalize mixed-case domains and resolve requests by lowercase host', async (t) => {
   const { app, agent, db } = withApp(t, 'b8-admin-domain-normalize-');
   t.after(() => db.close());

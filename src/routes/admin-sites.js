@@ -1,5 +1,6 @@
 const express = require('express');
 
+const { isExpectedAdminError } = require('../lib/admin-errors');
 const { requireAdmin } = require('../lib/session');
 const { renderAdmin, requireKnownSite } = require('./admin-shared');
 
@@ -22,7 +23,7 @@ function createAdminSitesRouter() {
     });
   });
 
-  router.post('/:siteKey/settings', requireKnownSite, (req, res) => {
+  router.post('/:siteKey/settings', requireKnownSite, (req, res, next) => {
     const siteKey = req.params.siteKey;
     const nextDomain = (req.body?.domain?.trim() || `${siteKey}.local`).toLowerCase();
     const existingSite = req.app.locals.siteRepository.getSiteSettingsByDomain(nextDomain);
@@ -50,16 +51,43 @@ function createAdminSitesRouter() {
       });
     }
 
-    req.app.locals.siteRepository.upsertSiteSettings({
-      siteKey,
-      brandName: req.body?.brandName?.trim() || siteKey.toUpperCase(),
-      domain: nextDomain,
-      seoTitle: req.body?.seoTitle?.trim() || null,
-      seoDescription: req.body?.seoDescription?.trim() || null,
-      contactEmail: req.body?.contactEmail?.trim() || null,
-      contactPhone: req.body?.contactPhone?.trim() || null,
-      contactAddress: req.body?.contactAddress?.trim() || null,
-    });
+    try {
+      req.app.locals.siteRepository.upsertSiteSettings({
+        siteKey,
+        brandName: req.body?.brandName?.trim() || siteKey.toUpperCase(),
+        domain: nextDomain,
+        seoTitle: req.body?.seoTitle?.trim() || null,
+        seoDescription: req.body?.seoDescription?.trim() || null,
+        contactEmail: req.body?.contactEmail?.trim() || null,
+        contactPhone: req.body?.contactPhone?.trim() || null,
+        contactAddress: req.body?.contactAddress?.trim() || null,
+      });
+    } catch (error) {
+      if (isExpectedAdminError(error)) {
+        res.status(error.statusCode);
+        return renderAdmin(req, res, {
+          title: '站点设置 · 中文后台',
+          pageTitle: '站点设置',
+          pageDescription: '维护站点品牌、联系方式与 SEO 字段。',
+          bodyView: '../admin/lists/site-settings',
+          currentPath: `/admin/${siteKey}/settings`,
+          siteKey,
+          settings: {
+            siteKey,
+            brandName: req.body?.brandName?.trim() || siteKey.toUpperCase(),
+            domain: nextDomain,
+            seoTitle: req.body?.seoTitle?.trim() || null,
+            seoDescription: req.body?.seoDescription?.trim() || null,
+            contactEmail: req.body?.contactEmail?.trim() || null,
+            contactPhone: req.body?.contactPhone?.trim() || null,
+            contactAddress: req.body?.contactAddress?.trim() || null,
+          },
+          errorMessage: error.message,
+        });
+      }
+
+      return next(error);
+    }
 
     return res.redirect(`/admin/${siteKey}/settings`);
   });

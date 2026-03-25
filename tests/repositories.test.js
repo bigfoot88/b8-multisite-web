@@ -75,6 +75,25 @@ test('site repository uses hero site section as the homepage banner source of tr
   assert.notEqual(sites.listNavigation('dma')[1].parentId, null);
 });
 
+test('site repository normalizes site domains on write and lookup below the route layer', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const sites = createSiteRepository(db);
+
+  const saved = sites.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'Foo.Local',
+  });
+
+  assert.equal(saved.domain, 'foo.local');
+  assert.equal(
+    db.prepare('SELECT domain FROM site_settings WHERE site_key = ?').get('dma').domain,
+    'foo.local',
+  );
+  assert.equal(sites.getSiteSettingsByDomain('FOO.LOCAL')?.siteKey, 'dma');
+});
+
 test('media and redirect repositories support site-scoped queries with global fallbacks', () => {
   const db = createTestDb();
   runMigrations(db);
@@ -225,6 +244,29 @@ test('schema rejects unsupported site keys in site settings', () => {
   );
 });
 
+test('schema rejects duplicate normalized domains across sites', () => {
+  const db = createTestDb();
+  runMigrations(db);
+
+  db.prepare(`
+    INSERT INTO site_settings (site_key, brand_name, domain)
+    VALUES ('dma', 'DMA', 'Foo.Local')
+  `).run();
+
+  assert.throws(
+    () => db.prepare(`
+      INSERT INTO site_settings (site_key, brand_name, domain)
+      VALUES ('bigfoot', 'Bigfoot', 'foo.local')
+    `).run(),
+    /UNIQUE constraint failed|SQLITE_CONSTRAINT_UNIQUE/i,
+  );
+
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS count FROM site_settings WHERE lower(domain) = ?').get('foo.local').count,
+    1,
+  );
+});
+
 test('redirect schema defaults to permanent redirects', () => {
   const db = createTestDb();
   runMigrations(db);
@@ -288,6 +330,13 @@ test('migrations upgrade legacy site and redirect schema constraints', () => {
     INSERT INTO site_settings (site_key, brand_name, domain)
     VALUES ('dma', 'DMA', 'dma.example.com')
   `).run();
+  assert.throws(
+    () => db.prepare(`
+      INSERT INTO site_settings (site_key, brand_name, domain)
+      VALUES ('bigfoot', 'Bigfoot', 'DMA.EXAMPLE.COM')
+    `).run(),
+    /UNIQUE constraint failed|SQLITE_CONSTRAINT_UNIQUE/i,
+  );
   const info = db.prepare(`
     INSERT INTO redirect_rules (site_key, source_path, target_path)
     VALUES ('dma', '/legacy-2', '/new-home-2')

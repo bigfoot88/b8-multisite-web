@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS redirect_rules (
 );
 
 CREATE INDEX IF NOT EXISTS idx_navigation_site_key ON navigation_items(site_key, position);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_site_settings_domain_lower ON site_settings(lower(trim(domain)));
 CREATE INDEX IF NOT EXISTS idx_site_sections_site_key ON site_sections(site_key, sort_order);
 CREATE INDEX IF NOT EXISTS idx_pages_site_key ON pages(site_key, publish_state, sort_order);
 CREATE INDEX IF NOT EXISTS idx_products_site_key ON products(site_key, publish_state, sort_order);

@@ -98,6 +98,14 @@ function normalizeDomain(domain) {
   return domain.trim().toLowerCase();
 }
 
+function translateSiteSettingsWriteError(error) {
+  if (error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    return createAdminValidationError('域名已被其他站点使用，请更换后重试。', 'duplicate-site-domain');
+  }
+
+  return error;
+}
+
 function createSiteRepository(db) {
   const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const upsertSiteSettingsStatement = db.prepare(`
@@ -135,7 +143,7 @@ function createSiteRepository(db) {
   const updateNavigationParent = db.prepare('UPDATE navigation_items SET parent_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
   const selectSettings = db.prepare('SELECT * FROM site_settings WHERE site_key = ?');
   const selectAllSettings = db.prepare('SELECT * FROM site_settings ORDER BY site_key ASC');
-  const selectSettingsByDomain = db.prepare('SELECT * FROM site_settings WHERE domain = ?');
+  const selectSettingsByDomain = db.prepare('SELECT * FROM site_settings WHERE lower(trim(domain)) = ?');
   const selectSections = db.prepare('SELECT * FROM site_sections WHERE site_key = ? ORDER BY sort_order ASC, section_key ASC');
   const selectPublishedSections = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND is_published = 1 ORDER BY sort_order ASC, section_key ASC');
   const selectSection = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND section_key = ?');
@@ -207,16 +215,20 @@ function createSiteRepository(db) {
   return {
     upsertSiteSettings({ siteKey, brandName, domain, seoTitle = null, seoDescription = null, contactEmail = null, contactPhone = null, contactAddress = null }) {
       assertValidSiteKey(siteKey);
-      upsertSiteSettingsStatement.run({
-        siteKey,
-        brandName,
-        domain: normalizeDomain(domain),
-        seoTitle,
-        seoDescription,
-        contactEmail,
-        contactPhone,
-        contactAddress,
-      });
+      try {
+        upsertSiteSettingsStatement.run({
+          siteKey,
+          brandName,
+          domain: normalizeDomain(domain),
+          seoTitle,
+          seoDescription,
+          contactEmail,
+          contactPhone,
+          contactAddress,
+        });
+      } catch (error) {
+        throw translateSiteSettingsWriteError(error);
+      }
       return mapSiteSettings(selectSettings.get(siteKey));
     },
     listSiteSettings() {
