@@ -4,7 +4,9 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const test = require('node:test');
+const request = require('supertest');
 
+const { createApp } = require('../src/app');
 const { createDatabase } = require('../src/lib/db');
 const { createCatalogRepository } = require('../src/repositories/catalog-repository');
 const { createMediaRepository } = require('../src/repositories/media-repository');
@@ -141,6 +143,68 @@ test('import-seed-data imports curated dma and bigfoot content with stable publi
     );
 
     db.close();
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('import-seed-data keeps bigfoot APK slugs but removes seeded public APK dependencies', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'b8-import-seed-bigfoot-'));
+  const databasePath = path.join(tempDir, 'content.db');
+
+  try {
+    const bigfootResult = runImporter([
+      '--site',
+      'bigfoot',
+      '--seed',
+      'data/seeds/bigfoot.json',
+      '--database-path',
+      databasePath,
+      '--apply',
+    ]);
+
+    assert.equal(bigfootResult.siteKey, 'bigfoot');
+    assert.equal(bigfootResult.applied, true);
+
+    const db = createDatabase(databasePath);
+    const catalogRepository = createCatalogRepository(db);
+    const mediaRepository = createMediaRepository(db, { uploadRoot });
+
+    const downloadPage = catalogRepository.findPublishedPageByPath('bigfoot', '/downloads/jiaoqin');
+    assert.ok(downloadPage);
+    assert.equal(downloadPage.attachmentMediaId, null);
+
+    const mobileMeteringProduct = catalogRepository.findPublishedProductBySlug('bigfoot', 'mobile-metering');
+    assert.ok(mobileMeteringProduct);
+    assert.equal(mobileMeteringProduct.attachmentMediaId, null);
+
+    assert.equal(mediaRepository.findByAssetKey('bigfoot-jiaoqin-apk'), null);
+
+    db.close();
+
+    const app = createApp({
+      databasePath,
+      sessionSecret: 'task6-importer-secret',
+      uploadRoot,
+    });
+
+    const downloadResponse = await request(app)
+      .get('/downloads/jiaoqin')
+      .set('host', 'www.chinabigfoot.com');
+    assert.equal(downloadResponse.status, 200);
+    assert.doesNotMatch(downloadResponse.text, /bigfoot8\.com:690\/new\/jiaoqin\.apk/);
+    assert.doesNotMatch(downloadResponse.text, /href="\/media\/seeds\/bigfoot\/jiaoqin\.apk"/);
+    assert.doesNotMatch(downloadResponse.text, /下载相关资料/);
+
+    const productResponse = await request(app)
+      .get('/products/mobile-metering')
+      .set('host', 'www.chinabigfoot.com');
+    assert.equal(productResponse.status, 200);
+    assert.doesNotMatch(productResponse.text, /bigfoot8\.com:690\/new\/jiaoqin\.apk/);
+    assert.doesNotMatch(productResponse.text, /href="\/media\/seeds\/bigfoot\/jiaoqin\.apk"/);
+    assert.doesNotMatch(productResponse.text, /下载产品资料/);
+
+    app.locals.db.close();
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }

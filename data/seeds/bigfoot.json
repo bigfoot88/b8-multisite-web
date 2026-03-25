@@ -141,18 +141,6 @@
       "metadata": {
         "role": "contact"
       }
-    },
-    {
-      "assetKey": "bigfoot-jiaoqin-apk",
-      "siteKey": "bigfoot",
-      "filename": "jiaoqin.apk",
-      "mimeType": "application/vnd.android.package-archive",
-      "relativePath": "seeds/bigfoot/jiaoqin.apk",
-      "sourceUrl": "http://www.bigfoot8.com:690/new/jiaoqin.apk",
-      "altText": "外勤抄表 APK",
-      "metadata": {
-        "role": "download"
-      }
     }
   ],
   "siteSections": [
@@ -223,9 +211,8 @@
     {
       "path": "/downloads/jiaoqin",
       "title": "抄勤移动端下载",
-      "summary": "保留原站 APK 下载入口，方便现场团队安装演示。",
-      "bodyHtml": "<p>用于现场抄表、工单处理和巡检回传的移动端安装包，适合作为本地验证素材保留。</p>",
-      "attachmentAssetKey": "bigfoot-jiaoqin-apk",
+      "summary": "保留原站下载栏目入口，方便后续由同创团队线下提供安装指引。",
+      "bodyHtml": "<p>用于现场抄表、工单处理和巡检回传的移动端应用仍保留栏目说明；当前演示站仅提供产品介绍与对接指引，不在公开前台直接分发安装包。</p>",
       "seoTitle": "抄勤移动端下载",
       "sortOrder": 13,
       "publishState": "published",
@@ -261,7 +248,6 @@
       "title": "手机抄表作业平台",
       "summary": "支持移动抄表、异常回传、任务跟踪和现场拍照留痕。",
       "bodyHtml": "<p>手机抄表作业平台帮助现场团队统一任务接收、拍照留痕、异常上报和结果回传，减少线下沟通成本。</p>",
-      "attachmentAssetKey": "bigfoot-jiaoqin-apk",
       "seoTitle": "手机抄表作业平台",
       "sortOrder": 2,
       "publishState": "published",
