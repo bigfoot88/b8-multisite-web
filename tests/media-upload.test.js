@@ -277,6 +277,286 @@ test('media upload rejects spoofed active-content files renamed as png without l
   assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
 });
 
+test('media upload accepts utf-8 chinese txt files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-cn-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const content = '第一行：中文内容\n第二行：UTF-8 文本。';
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '中文文本')
+    .attach('file', Buffer.from(content, 'utf8'), {
+      filename: 'cn.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin/media');
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  assert.match(asset.filename, /cn\.txt/);
+  assert.ok(fs.existsSync(asset.storage_path));
+  assert.equal(fs.readFileSync(asset.storage_path, 'utf8'), content);
+});
+
+test('media upload accepts utf-8 chinese csv files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-cn-csv-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const content = '名称,说明\n设备,中文描述\n表格,UTF-8 内容';
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '中文 CSV')
+    .attach('file', Buffer.from(content, 'utf8'), {
+      filename: 'cn.csv',
+      contentType: 'text/csv; charset=utf-8',
+    });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin/media');
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  assert.match(asset.filename, /cn\.csv/);
+  assert.ok(fs.existsSync(asset.storage_path));
+  assert.equal(fs.readFileSync(asset.storage_path, 'utf8'), content);
+});
+
+test('media upload accepts large utf-8 chinese txt files when the sniffing window ends mid-character', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-cn-large-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const content = `${'a'.repeat(65534)}中\n尾部内容`;
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '大文件中文文本')
+    .attach('file', Buffer.from(content, 'utf8'), {
+      filename: 'cn-large.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin/media');
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  assert.match(asset.filename, /cn-large\.txt/);
+  assert.ok(fs.existsSync(asset.storage_path));
+  assert.equal(fs.readFileSync(asset.storage_path, 'utf8'), content);
+});
+
+test('media upload rejects malformed utf-8 txt files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-invalid-utf8-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '损坏文本')
+    .attach('file', Buffer.from([0x41, 0xe4]), {
+      filename: 'invalid.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
+test('media upload rejects exact-window malformed utf-8 txt files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-invalid-utf8-window-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const invalidWindowSizedPayload = Buffer.concat([
+    Buffer.alloc(65533, 0x61),
+    Buffer.from([0xe4, 0x41, 0x41]),
+  ]);
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '窗口损坏文本')
+    .attach('file', invalidWindowSizedPayload, {
+      filename: 'invalid-window.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
+test('media upload rejects large malformed utf-8 txt files that do not end on a real truncated character', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-invalid-utf8-large-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const invalidLargePayload = Buffer.concat([
+    Buffer.alloc(65533, 0x61),
+    Buffer.from([0xe4, 0x41, 0x41]),
+    Buffer.from('tail', 'utf8'),
+  ]);
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '大文件损坏文本')
+    .attach('file', invalidLargePayload, {
+      filename: 'invalid-large.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
+test('media upload rejects large malformed utf-8 prefixes that can never form a valid character', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-invalid-utf8-prefix-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const invalidPrefixPayload = Buffer.concat([
+    Buffer.alloc(65533, 0x61),
+    Buffer.from([0xf0, 0x80, 0x80]),
+    Buffer.from('tail', 'utf8'),
+  ]);
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '非法 UTF-8 前缀')
+    .attach('file', invalidPrefixPayload, {
+      filename: 'invalid-prefix.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
+test('media upload rejects xml-prolog svg content renamed as txt', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-xml-svg-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const payload = '<?xml version="1.0" encoding="UTF-8"?><svg><script>alert(1)</script></svg>';
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '伪装 SVG 文本')
+    .attach('file', Buffer.from(payload, 'utf8'), {
+      filename: 'spoofed.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
+test('media upload rejects xml-prolog svg content with leading comments renamed as txt', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-xml-comment-svg-txt-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const payload = '<?xml version="1.0" encoding="UTF-8"?><!--comment--><svg><script>alert(1)</script></svg>';
+  const response = await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', '带注释的伪装 SVG 文本')
+    .attach('file', Buffer.from(payload, 'utf8'), {
+      filename: 'spoofed-comment.txt',
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /上传文件内容与文件类型不匹配/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM media_assets').get().count, 0);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), []);
+});
+
 test('media replacement rejects missing assets without reporting success or leaking files', async (t) => {
   const paths = createSeededAppPaths('b8-admin-media-missing-replace-');
   t.after(() => {

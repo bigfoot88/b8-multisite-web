@@ -1,4 +1,5 @@
 const crypto = require('node:crypto');
+const { isUtf8 } = require('node:buffer');
 const fs = require('node:fs');
 const path = require('node:path');
 const multer = require('multer');
@@ -115,22 +116,128 @@ function bufferStartsWith(buffer, signature) {
   return signature.every((value, index) => buffer[index] === value);
 }
 
+function isContinuationByte(byte) {
+  return (byte & 0b11000000) === 0b10000000;
+}
+
+function getExpectedUtf8Length(byte) {
+  if (byte >= 0xc2 && byte <= 0xdf) {
+    return 2;
+  }
+  if (byte >= 0xe0 && byte <= 0xef) {
+    return 3;
+  }
+  if (byte >= 0xf0 && byte <= 0xf4) {
+    return 4;
+  }
+  return 0;
+}
+
+function getIncompleteUtf8SequenceInfo(buffer, sequenceStart) {
+  const leadByte = buffer[sequenceStart];
+  const expectedLength = getExpectedUtf8Length(leadByte);
+  const actualLength = buffer.length - sequenceStart;
+
+  if (!expectedLength || actualLength >= expectedLength) {
+    return null;
+  }
+
+  for (let index = sequenceStart + 1; index < buffer.length; index += 1) {
+    if (!isContinuationByte(buffer[index])) {
+      return null;
+    }
+  }
+
+  const firstContinuation = buffer[sequenceStart + 1];
+  if (firstContinuation === undefined) {
+    return { sequenceStart, expectedLength, actualLength };
+  }
+
+  if (leadByte === 0xe0) {
+    return firstContinuation >= 0xa0 && firstContinuation <= 0xbf
+      ? { sequenceStart, expectedLength, actualLength }
+      : null;
+  }
+  if (leadByte === 0xed) {
+    return firstContinuation >= 0x80 && firstContinuation <= 0x9f
+      ? { sequenceStart, expectedLength, actualLength }
+      : null;
+  }
+  if (leadByte === 0xf0) {
+    return firstContinuation >= 0x90 && firstContinuation <= 0xbf
+      ? { sequenceStart, expectedLength, actualLength }
+      : null;
+  }
+  if (leadByte === 0xf4) {
+    return firstContinuation >= 0x80 && firstContinuation <= 0x8f
+      ? { sequenceStart, expectedLength, actualLength }
+      : null;
+  }
+
+  return { sequenceStart, expectedLength, actualLength };
+}
+
+function getUtf8Sample(handle, buffer, bytesRead, fileSize) {
+  if (isUtf8(buffer)) {
+    return buffer;
+  }
+
+  if (fileSize <= bytesRead) {
+    return null;
+  }
+
+  let sequenceStart = buffer.length - 1;
+  while (sequenceStart >= 0 && isContinuationByte(buffer[sequenceStart])) {
+    sequenceStart -= 1;
+  }
+
+  if (sequenceStart < 0) {
+    return null;
+  }
+
+  const info = getIncompleteUtf8SequenceInfo(buffer, sequenceStart);
+  if (!info) {
+    return null;
+  }
+
+  const remainingBytes = fileSize - bytesRead;
+  const neededBytes = info.expectedLength - info.actualLength;
+  if (remainingBytes < neededBytes) {
+    return null;
+  }
+
+  const completion = Buffer.alloc(neededBytes);
+  const completionBytesRead = fs.readSync(handle, completion, 0, neededBytes, bytesRead);
+  if (completionBytesRead !== neededBytes) {
+    return null;
+  }
+
+  const completedBuffer = Buffer.concat([buffer, completion]);
+  return isUtf8(completedBuffer) ? completedBuffer : null;
+}
+
 function isProbablyText(buffer) {
   if (!buffer.length) {
     return true;
   }
 
-  let printableBytes = 0;
-  for (const byte of buffer) {
-    if (byte === 0) {
+  if (!isUtf8(buffer)) {
+    return false;
+  }
+
+  let printableChars = 0;
+  let totalChars = 0;
+  for (const char of buffer.toString('utf8')) {
+    totalChars += 1;
+    if (char === '\0') {
       return false;
     }
-    if ((byte >= 32 && byte <= 126) || byte === 9 || byte === 10 || byte === 13) {
-      printableBytes += 1;
+    if (char === '\t' || char === '\n' || char === '\r' || char === '\ufeff' || !/\p{C}/u.test(char)) {
+      printableChars += 1;
     }
   }
 
-  return printableBytes / buffer.length > 0.9;
+  return printableChars / totalChars > 0.9;
 }
 
 function detectZipContainerType(buffer) {
@@ -153,7 +260,13 @@ function detectTextType(buffer) {
   }
 
   const snippet = buffer.toString('utf8').trimStart().slice(0, 512).toLowerCase();
-  if (/^<!doctype html\b|^<html\b|^<script\b|^<svg\b|^<iframe\b|^<object\b|^<embed\b/.test(snippet)) {
+  let activeContentPrefix = snippet;
+  let nextPrefix = activeContentPrefix.replace(/^(?:(?:<\?xml\b[\s\S]*?\?>)|(?:<!--[\s\S]*?-->)|(?:<!doctype[^>]*>))\s*/i, '');
+  while (nextPrefix !== activeContentPrefix) {
+    activeContentPrefix = nextPrefix;
+    nextPrefix = activeContentPrefix.replace(/^(?:(?:<\?xml\b[\s\S]*?\?>)|(?:<!--[\s\S]*?-->)|(?:<!doctype[^>]*>))\s*/i, '');
+  }
+  if (/^<!doctype html\b/.test(snippet) || /^<html\b|^<script\b|^<svg\b|^<iframe\b|^<object\b|^<embed\b/.test(activeContentPrefix)) {
     return 'html';
   }
   if (snippet.includes(',') && snippet.includes('\n')) {
@@ -168,6 +281,7 @@ function detectUploadType(filePath) {
     const buffer = Buffer.alloc(65536);
     const bytesRead = fs.readSync(handle, buffer, 0, buffer.length, 0);
     const chunk = buffer.subarray(0, bytesRead);
+    const fileSize = fs.fstatSync(handle).size;
 
     if (bufferStartsWith(chunk, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
       return 'png';
@@ -198,7 +312,8 @@ function detectUploadType(filePath) {
       return detectZipContainerType(chunk);
     }
 
-    return detectTextType(chunk);
+    const textSample = getUtf8Sample(handle, chunk, bytesRead, fileSize);
+    return textSample ? detectTextType(textSample) : null;
   } finally {
     fs.closeSync(handle);
   }
