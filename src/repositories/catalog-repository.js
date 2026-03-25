@@ -94,6 +94,10 @@ function normalizePublishState(value, fallback = 'draft') {
   return nextValue;
 }
 
+function preferInputValue(value, fallback) {
+  return value === undefined || value === null ? fallback : value;
+}
+
 function deriveSlugFromPath(value) {
   const parts = String(value || '').split('/').filter(Boolean);
   return parts.at(-1) || 'home';
@@ -106,12 +110,12 @@ function normalizeRecord(type, input, existing = null) {
     : null;
 
   if (type === 'pages') {
-    const pathValue = input.path || existing?.path;
+    const pathValue = preferInputValue(input.path, existing?.path);
     return {
       siteKey: input.siteKey || existing?.siteKey,
       parentId: normalizeInteger(input.parentId, existing?.parentId ?? null),
       path: pathValue,
-      slug: input.slug || existing?.slug || deriveSlugFromPath(pathValue),
+      slug: preferInputValue(input.slug, existing?.slug) || deriveSlugFromPath(pathValue),
       title: input.title || existing?.title || '',
       summary: input.summary ?? existing?.summary ?? null,
       bodyHtml: input.bodyHtml ?? existing?.bodyHtml ?? null,
@@ -128,7 +132,7 @@ function normalizeRecord(type, input, existing = null) {
   if (type === 'products') {
     return {
       siteKey: input.siteKey || existing?.siteKey,
-      slug: input.slug || existing?.slug,
+      slug: preferInputValue(input.slug, existing?.slug),
       title: input.title || existing?.title || '',
       summary: input.summary ?? existing?.summary ?? null,
       bodyHtml: input.bodyHtml ?? existing?.bodyHtml ?? null,
@@ -146,7 +150,7 @@ function normalizeRecord(type, input, existing = null) {
   if (type === 'news') {
     return {
       siteKey: input.siteKey || existing?.siteKey,
-      slug: input.slug || existing?.slug,
+      slug: preferInputValue(input.slug, existing?.slug),
       title: input.title || existing?.title || '',
       summary: input.summary ?? existing?.summary ?? null,
       bodyHtml: input.bodyHtml ?? existing?.bodyHtml ?? null,
@@ -162,7 +166,7 @@ function normalizeRecord(type, input, existing = null) {
 
   return {
     siteKey: input.siteKey || existing?.siteKey,
-    slug: input.slug || existing?.slug,
+    slug: preferInputValue(input.slug, existing?.slug),
     title: input.title || existing?.title || '',
     summary: input.summary ?? existing?.summary ?? null,
     bodyHtml: input.bodyHtml ?? existing?.bodyHtml ?? null,
@@ -305,6 +309,13 @@ function createCatalogRepository(db) {
     softDelete: db.prepare(`UPDATE ${collections[type].table} SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND site_key = ?`),
   }]));
   const selectPageById = db.prepare('SELECT id, site_key FROM pages WHERE id = ?');
+  const selectMediaById = db.prepare('SELECT id FROM media_assets WHERE id = ?');
+
+  const mediaFieldLabels = {
+    brochureMediaId: '宣传册媒体资源',
+    attachmentMediaId: '附件媒体资源',
+    heroMediaId: '头图媒体资源',
+  };
 
   function getRecord(type, siteKey, id) {
     assertValidSiteKey(siteKey);
@@ -329,6 +340,28 @@ function createCatalogRepository(db) {
     }
   }
 
+  function validateRequiredFields(type, record) {
+    if (type !== 'pages' && !String(record.slug || '').trim()) {
+      throw createAdminValidationError('Slug 不能为空，请填写后重试。', `missing-${type}-slug`);
+    }
+
+    if (type === 'pages' && !String(record.path || '').trim()) {
+      throw createAdminValidationError('页面路径不能为空，请填写后重试。', 'missing-page-path');
+    }
+  }
+
+  function validateMediaReferences(record) {
+    for (const [field, label] of Object.entries(mediaFieldLabels)) {
+      const mediaId = record[field];
+      if (mediaId === null || mediaId === undefined || mediaId === '') {
+        continue;
+      }
+      if (!selectMediaById.get(mediaId)) {
+        throw createAdminValidationError(`${label}不存在，请重新选择。`, `missing-${field}`);
+      }
+    }
+  }
+
   function translateRecordWriteError(type, error) {
     if (error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       if (type === 'pages') {
@@ -342,11 +375,14 @@ function createCatalogRepository(db) {
   }
 
   function createRecord(type, input) {
-    ensureSite(input.siteKey);
+    assertValidSiteKey(input.siteKey);
     const record = normalizeRecord(type, input);
+    validateRequiredFields(type, record);
     if (type === 'pages') {
       validatePageParent(record.siteKey, record.parentId);
     }
+    validateMediaReferences(record);
+    ensureSite(record.siteKey);
     let info;
     try {
       info = statements[type].insert.run(record);
@@ -362,9 +398,11 @@ function createCatalogRepository(db) {
       return null;
     }
     const record = normalizeRecord(type, { ...input, siteKey }, existing);
+    validateRequiredFields(type, record);
     if (type === 'pages') {
       validatePageParent(siteKey, record.parentId, id);
     }
+    validateMediaReferences(record);
     try {
       statements[type].update.run({ id, ...record });
     } catch (error) {

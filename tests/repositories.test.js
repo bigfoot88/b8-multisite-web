@@ -155,6 +155,179 @@ test('catalog repository preserves news hero media ids', () => {
   assert.equal(catalog.listNewsArticles('dma')[0].heroMediaId, hero.id);
 });
 
+test('catalog repository rejects blank slugs and paths before writing', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const catalog = createCatalogRepository(db);
+
+  const invalidCreates = [
+    {
+      label: 'product slug',
+      run: () => catalog.createProduct({ siteKey: 'dma', slug: '', title: 'DMA Product' }),
+      message: /Slug 不能为空，请填写后重试。/,
+    },
+    {
+      label: 'solution slug',
+      run: () => catalog.createSolution({ siteKey: 'dma', slug: '', title: 'DMA Solution' }),
+      message: /Slug 不能为空，请填写后重试。/,
+    },
+    {
+      label: 'news slug',
+      run: () => catalog.createNewsArticle({ siteKey: 'dma', slug: '', title: 'DMA News' }),
+      message: /Slug 不能为空，请填写后重试。/,
+    },
+    {
+      label: 'case slug',
+      run: () => catalog.createCaseStudy({ siteKey: 'dma', slug: '', title: 'DMA Case' }),
+      message: /Slug 不能为空，请填写后重试。/,
+    },
+    {
+      label: 'page path',
+      run: () => catalog.createPage({ siteKey: 'dma', path: '', title: 'DMA Page' }),
+      message: /页面路径不能为空，请填写后重试。/,
+    },
+  ];
+
+  for (const scenario of invalidCreates) {
+    assert.throws(scenario.run, (error) => {
+      assert.equal(error.statusCode, 400, scenario.label);
+      assert.match(error.message, scenario.message, scenario.label);
+      return true;
+    });
+  }
+
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM site_settings').get().count, 0);
+
+  const product = catalog.createProduct({
+    siteKey: 'dma',
+    slug: 'dma-product',
+    title: 'DMA Product',
+  });
+  const page = catalog.createPage({
+    siteKey: 'dma',
+    path: '/dma-page',
+    title: 'DMA Page',
+  });
+
+  assert.throws(
+    () => catalog.updateProduct('dma', product.id, { slug: '' }),
+    /Slug 不能为空，请填写后重试。/,
+  );
+  assert.throws(
+    () => catalog.updatePage('dma', page.id, { path: '' }),
+    /页面路径不能为空，请填写后重试。/,
+  );
+});
+
+test('catalog repository rejects missing media references before writing', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const catalog = createCatalogRepository(db);
+  const media = createMediaRepository(db);
+
+  const brochure = media.createAsset({
+    assetKey: 'dma-brochure',
+    siteKey: 'dma',
+    filename: 'dma.pdf',
+    mimeType: 'application/pdf',
+    storagePath: '/uploads/dma.pdf',
+  });
+  const attachment = media.createAsset({
+    assetKey: 'dma-attachment',
+    siteKey: 'dma',
+    filename: 'attach.pdf',
+    mimeType: 'application/pdf',
+    storagePath: '/uploads/attach.pdf',
+  });
+  const hero = media.createAsset({
+    assetKey: 'dma-hero',
+    siteKey: 'dma',
+    filename: 'hero.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/hero.png',
+  });
+  const siteCountBeforeInvalidCreates = db.prepare('SELECT COUNT(*) AS count FROM site_settings').get().count;
+
+  const invalidCreates = [
+    {
+      label: 'product brochure',
+      run: () => catalog.createProduct({ siteKey: 'dma', slug: 'product-brochure', title: 'DMA Product', brochureMediaId: 9999 }),
+      message: /宣传册媒体资源不存在，请重新选择。/,
+    },
+    {
+      label: 'product brochure zero',
+      run: () => catalog.createProduct({ siteKey: 'dma', slug: 'product-brochure-zero', title: 'DMA Product', brochureMediaId: 0 }),
+      message: /宣传册媒体资源不存在，请重新选择。/,
+    },
+    {
+      label: 'product attachment',
+      run: () => catalog.createProduct({ siteKey: 'dma', slug: 'product-attachment', title: 'DMA Product', attachmentMediaId: 9999 }),
+      message: /附件媒体资源不存在，请重新选择。/,
+    },
+    {
+      label: 'page attachment',
+      run: () => catalog.createPage({ siteKey: 'dma', path: '/page-attachment', title: 'DMA Page', attachmentMediaId: 9999 }),
+      message: /附件媒体资源不存在，请重新选择。/,
+    },
+    {
+      label: 'news hero',
+      run: () => catalog.createNewsArticle({ siteKey: 'dma', slug: 'news-hero', title: 'DMA News', heroMediaId: 9999 }),
+      message: /头图媒体资源不存在，请重新选择。/,
+    },
+  ];
+
+  for (const scenario of invalidCreates) {
+    assert.throws(scenario.run, (error) => {
+      assert.equal(error.statusCode, 400, scenario.label);
+      assert.match(error.message, scenario.message, scenario.label);
+      return true;
+    });
+  }
+
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM site_settings').get().count, siteCountBeforeInvalidCreates);
+
+  const product = catalog.createProduct({
+    siteKey: 'dma',
+    slug: 'product-with-media',
+    title: 'DMA Product',
+    brochureMediaId: brochure.id,
+    attachmentMediaId: attachment.id,
+  });
+  const page = catalog.createPage({
+    siteKey: 'dma',
+    path: '/page-with-media',
+    title: 'DMA Page',
+    attachmentMediaId: attachment.id,
+  });
+  const article = catalog.createNewsArticle({
+    siteKey: 'dma',
+    slug: 'news-with-hero',
+    title: 'DMA News',
+    heroMediaId: hero.id,
+  });
+
+  assert.throws(
+    () => catalog.updateProduct('dma', product.id, { brochureMediaId: 9999 }),
+    /宣传册媒体资源不存在，请重新选择。/,
+  );
+  assert.throws(
+    () => catalog.updateProduct('dma', product.id, { brochureMediaId: 0 }),
+    /宣传册媒体资源不存在，请重新选择。/,
+  );
+  assert.throws(
+    () => catalog.updateProduct('dma', product.id, { attachmentMediaId: 9999 }),
+    /附件媒体资源不存在，请重新选择。/,
+  );
+  assert.throws(
+    () => catalog.updatePage('dma', page.id, { attachmentMediaId: 9999 }),
+    /附件媒体资源不存在，请重新选择。/,
+  );
+  assert.throws(
+    () => catalog.updateNewsArticle('dma', article.id, { heroMediaId: 9999 }),
+    /头图媒体资源不存在，请重新选择。/,
+  );
+});
+
 test('seeded helper provisions default admins and both site settings rows', () => {
   const db = createSeededDb();
   const admins = createAdminRepository(db);

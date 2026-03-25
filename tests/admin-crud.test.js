@@ -487,6 +487,290 @@ test('page form rejects cross-site parent references with a recoverable error', 
   );
 });
 
+test('catalog forms reject empty slugs as recoverable admin validation errors', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-empty-slugs-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const scenarios = [
+    {
+      path: '/admin/dma/products',
+      body: { slug: '', title: '空产品 Slug', publishState: 'draft' },
+      table: 'products',
+      message: /Slug 不能为空，请填写后重试。/,
+      where: ['site_key = ? AND title = ?', 'dma', '空产品 Slug'],
+    },
+    {
+      path: '/admin/dma/solutions',
+      body: { slug: '', title: '空方案 Slug', publishState: 'draft' },
+      table: 'solutions',
+      message: /Slug 不能为空，请填写后重试。/,
+      where: ['site_key = ? AND title = ?', 'dma', '空方案 Slug'],
+    },
+    {
+      path: '/admin/dma/news',
+      body: { slug: '', title: '空新闻 Slug', publishState: 'draft' },
+      table: 'news_articles',
+      message: /Slug 不能为空，请填写后重试。/,
+      where: ['site_key = ? AND title = ?', 'dma', '空新闻 Slug'],
+    },
+    {
+      path: '/admin/dma/cases',
+      body: { slug: '', title: '空案例 Slug', publishState: 'draft' },
+      table: 'case_studies',
+      message: /Slug 不能为空，请填写后重试。/,
+      where: ['site_key = ? AND title = ?', 'dma', '空案例 Slug'],
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const response = await agent.post(scenario.path).type('form').send(scenario.body);
+    assert.equal(response.status, 400, scenario.path);
+    assert.match(response.text, scenario.message, scenario.path);
+    assert.match(response.text, new RegExp(scenario.body.title), scenario.path);
+    const [whereClause, ...params] = scenario.where;
+    assert.equal(
+      db.prepare(`SELECT COUNT(*) AS count FROM ${scenario.table} WHERE ${whereClause}`).get(...params).count,
+      0,
+      scenario.path,
+    );
+  }
+});
+
+test('page form rejects empty path as a recoverable admin validation error', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-empty-page-path-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/dma/pages')
+    .type('form')
+    .send({
+      path: '',
+      title: '空路径页面',
+      publishState: 'draft',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /页面路径不能为空，请填写后重试。/);
+  assert.match(response.text, /空路径页面/);
+  assert.match(response.text, /name="path" value=""/);
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS count FROM pages WHERE site_key = ? AND title = ?').get('dma', '空路径页面').count,
+    0,
+  );
+});
+
+test('product, page, and news forms reject missing media ids as recoverable admin validation errors', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-missing-media-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const scenarios = [
+    {
+      path: '/admin/dma/products',
+      body: {
+        slug: 'missing-product-media',
+        title: '缺失产品媒体',
+        brochureMediaId: '0',
+        attachmentMediaId: '9998',
+        publishState: 'draft',
+      },
+      message: /宣传册媒体资源不存在，请重新选择。/,
+      table: 'products',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'missing-product-media'],
+    },
+    {
+      path: '/admin/dma/pages',
+      body: {
+        path: '/missing-page-media',
+        title: '缺失页面媒体',
+        attachmentMediaId: '9999',
+        publishState: 'draft',
+      },
+      message: /附件媒体资源不存在，请重新选择。/,
+      table: 'pages',
+      lookup: ['site_key = ? AND path = ?', 'dma', '/missing-page-media'],
+    },
+    {
+      path: '/admin/dma/news',
+      body: {
+        slug: 'missing-news-hero',
+        title: '缺失新闻头图',
+        heroMediaId: '9999',
+        publishState: 'draft',
+      },
+      message: /头图媒体资源不存在，请重新选择。/,
+      table: 'news_articles',
+      lookup: ['site_key = ? AND slug = ?', 'dma', 'missing-news-hero'],
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const response = await agent.post(scenario.path).type('form').send(scenario.body);
+    assert.equal(response.status, 400, scenario.path);
+    assert.match(response.text, scenario.message, scenario.path);
+    assert.match(response.text, new RegExp(scenario.body.title), scenario.path);
+    const [whereClause, ...params] = scenario.lookup;
+    assert.equal(
+      db.prepare(`SELECT COUNT(*) AS count FROM ${scenario.table} WHERE ${whereClause}`).get(...params).count,
+      0,
+      scenario.path,
+    );
+  }
+});
+
+test('catalog and page update forms keep validation failures recoverable', async (t) => {
+  const { agent, db } = withApp(t, 'b8-admin-update-validation-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent.post('/admin/dma/products').type('form').send({
+    slug: 'update-product',
+    title: '待更新产品',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/solutions').type('form').send({
+    slug: 'update-solution',
+    title: '待更新方案',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/news').type('form').send({
+    slug: 'update-news',
+    title: '待更新新闻',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/cases').type('form').send({
+    slug: 'update-case',
+    title: '待更新案例',
+    publishState: 'published',
+  });
+  await agent.post('/admin/dma/pages').type('form').send({
+    path: '/update-page',
+    title: '待更新页面',
+    publishState: 'published',
+  });
+
+  const product = db.prepare('SELECT id, slug FROM products WHERE site_key = ? AND slug = ?').get('dma', 'update-product');
+  const solution = db.prepare('SELECT id, slug FROM solutions WHERE site_key = ? AND slug = ?').get('dma', 'update-solution');
+  const article = db.prepare('SELECT id, slug FROM news_articles WHERE site_key = ? AND slug = ?').get('dma', 'update-news');
+  const caseStudy = db.prepare('SELECT id, slug FROM case_studies WHERE site_key = ? AND slug = ?').get('dma', 'update-case');
+  const page = db.prepare('SELECT id, path FROM pages WHERE site_key = ? AND path = ?').get('dma', '/update-page');
+
+  const emptySlugUpdates = [
+    {
+      path: `/admin/dma/products/${product.id}`,
+      body: { slug: '', title: '待更新产品', publishState: 'draft' },
+      table: 'products',
+      id: product.id,
+    },
+    {
+      path: `/admin/dma/solutions/${solution.id}`,
+      body: { slug: '', title: '待更新方案', publishState: 'draft' },
+      table: 'solutions',
+      id: solution.id,
+    },
+    {
+      path: `/admin/dma/news/${article.id}`,
+      body: { slug: '', title: '待更新新闻', publishState: 'draft' },
+      table: 'news_articles',
+      id: article.id,
+    },
+    {
+      path: `/admin/dma/cases/${caseStudy.id}`,
+      body: { slug: '', title: '待更新案例', publishState: 'draft' },
+      table: 'case_studies',
+      id: caseStudy.id,
+    },
+  ];
+
+  for (const scenario of emptySlugUpdates) {
+    const response = await agent.post(scenario.path).type('form').send(scenario.body);
+    assert.equal(response.status, 400, scenario.path);
+    assert.match(response.text, /Slug 不能为空，请填写后重试。/, scenario.path);
+    assert.match(response.text, new RegExp(scenario.body.title), scenario.path);
+    assert.equal(
+      db.prepare(`SELECT slug FROM ${scenario.table} WHERE id = ?`).get(scenario.id).slug.startsWith('update-'),
+      true,
+      scenario.path,
+    );
+  }
+
+  const pageResponse = await agent
+    .post(`/admin/dma/pages/${page.id}`)
+    .type('form')
+    .send({
+      path: '',
+      title: '待更新页面',
+      publishState: 'draft',
+    });
+
+  assert.equal(pageResponse.status, 400);
+  assert.match(pageResponse.text, /页面路径不能为空，请填写后重试。/);
+  assert.match(pageResponse.text, /name="path" value=""/);
+  assert.equal(db.prepare('SELECT path FROM pages WHERE id = ?').get(page.id).path, '/update-page');
+
+  const newsHeroResponse = await agent
+    .post(`/admin/dma/news/${article.id}`)
+    .type('form')
+    .send({
+      slug: 'update-news',
+      title: '待更新新闻',
+      heroMediaId: '9999',
+      publishState: 'draft',
+    });
+
+  assert.equal(newsHeroResponse.status, 400);
+  assert.match(newsHeroResponse.text, /头图媒体资源不存在，请重新选择。/);
+  assert.equal(db.prepare('SELECT hero_media_id FROM news_articles WHERE id = ?').get(article.id).hero_media_id, null);
+
+  const productBrochureResponse = await agent
+    .post(`/admin/dma/products/${product.id}`)
+    .type('form')
+    .send({
+      slug: 'update-product',
+      title: '待更新产品',
+      brochureMediaId: '9999',
+      publishState: 'draft',
+    });
+
+  assert.equal(productBrochureResponse.status, 400);
+  assert.match(productBrochureResponse.text, /宣传册媒体资源不存在，请重新选择。/);
+  assert.equal(db.prepare('SELECT brochure_media_id FROM products WHERE id = ?').get(product.id).brochure_media_id, null);
+
+  const productAttachmentResponse = await agent
+    .post(`/admin/dma/products/${product.id}`)
+    .type('form')
+    .send({
+      slug: 'update-product',
+      title: '待更新产品',
+      attachmentMediaId: '9998',
+      publishState: 'draft',
+    });
+
+  assert.equal(productAttachmentResponse.status, 400);
+  assert.match(productAttachmentResponse.text, /附件媒体资源不存在，请重新选择。/);
+  assert.equal(db.prepare('SELECT attachment_media_id FROM products WHERE id = ?').get(product.id).attachment_media_id, null);
+
+  const pageAttachmentResponse = await agent
+    .post(`/admin/dma/pages/${page.id}`)
+    .type('form')
+    .send({
+      path: '/update-page',
+      title: '待更新页面',
+      attachmentMediaId: '9997',
+      publishState: 'draft',
+    });
+
+  assert.equal(pageAttachmentResponse.status, 400);
+  assert.match(pageAttachmentResponse.text, /附件媒体资源不存在，请重新选择。/);
+  assert.equal(db.prepare('SELECT attachment_media_id FROM pages WHERE id = ?').get(page.id).attachment_media_id, null);
+});
+
 test('navigation form rejects cross-site parent references with a recoverable error', async (t) => {
   const { agent, db } = withApp(t, 'b8-admin-cross-site-navigation-parent-');
   t.after(() => db.close());

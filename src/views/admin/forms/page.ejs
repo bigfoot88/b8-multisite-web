@@ -7,11 +7,12 @@
       <% }) %>
     </select>
   </label>
-  <label>页面路径<input type="text" name="path" value="<%= currentRecord.path || '/' %>" required /></label>
+  <label>页面路径<input type="text" name="path" value="<%= currentRecord.path ?? '/' %>" required /></label>
   <label>Slug<input type="text" name="slug" value="<%= currentRecord.slug || '' %>" /></label>
   <label>页面标题<input type="text" name="title" value="<%= currentRecord.title || '' %>" required /></label>
   <label>摘要<textarea name="summary" rows="3"><%= currentRecord.summary || '' %></textarea></label>
   <label>正文 HTML<textarea name="bodyHtml" rows="6"><%= currentRecord.bodyHtml || '' %></textarea></label>
+  <label>附件媒体 ID<input type="number" name="attachmentMediaId" value="<%= currentRecord.attachmentMediaId || '' %>" /></label>
   <label>SEO 标题<input type="text" name="seoTitle" value="<%= currentRecord.seoTitle || '' %>" /></label>
   <label>SEO 描述<textarea name="seoDescription" rows="3"><%= currentRecord.seoDescription || '' %></textarea></label>
   <label>排序<input type="number" name="sortOrder" value="<%= currentRecord.sortOrder ?? 100 %>" /></label>
