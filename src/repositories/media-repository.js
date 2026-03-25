@@ -50,6 +50,8 @@ function createMediaRepository(db) {
       SELECT site_key, hero_media_id AS media_id FROM news_articles WHERE deleted_at IS NULL
       UNION ALL
       SELECT site_key, attachment_media_id AS media_id FROM case_studies WHERE deleted_at IS NULL
+      UNION ALL
+      SELECT site_key, media_asset_id AS media_id FROM site_sections
     ) AS references_by_site
     WHERE media_id = ?
   `);

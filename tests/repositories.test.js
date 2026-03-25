@@ -328,6 +328,71 @@ test('catalog repository rejects missing media references before writing', () =>
   );
 });
 
+test('site repository rejects cross-site section media on save and update', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const sites = createSiteRepository(db);
+  const media = createMediaRepository(db);
+
+  const dmaAsset = media.createAsset({
+    assetKey: 'dma-section-media',
+    siteKey: 'dma',
+    filename: 'dma-section.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-section.png',
+  });
+  const bigfootAsset = media.createAsset({
+    assetKey: 'bigfoot-section-media',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot-section.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/bigfoot-section.png',
+  });
+
+  assert.throws(
+    () => sites.saveSection({
+      siteKey: 'dma',
+      sectionKey: 'cross-site-create',
+      heading: 'Cross-site create',
+      mediaAssetId: bigfootAsset.id,
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.match(error.message, /模块媒体资源必须属于当前站点或全局素材，请重新选择。/);
+      return true;
+    },
+  );
+
+  assert.equal(sites.getSection('dma', 'cross-site-create'), null);
+
+  const saved = sites.saveSection({
+    siteKey: 'dma',
+    sectionKey: 'hero',
+    heading: 'DMA hero',
+    mediaAssetId: dmaAsset.id,
+  });
+
+  assert.equal(saved.mediaAssetId, dmaAsset.id);
+
+  assert.throws(
+    () => sites.saveSection({
+      siteKey: 'dma',
+      sectionKey: 'hero',
+      heading: 'Broken hero',
+      mediaAssetId: bigfootAsset.id,
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.match(error.message, /模块媒体资源必须属于当前站点或全局素材，请重新选择。/);
+      return true;
+    },
+  );
+
+  const unchanged = sites.getSection('dma', 'hero');
+  assert.equal(unchanged.heading, 'DMA hero');
+  assert.equal(unchanged.mediaAssetId, dmaAsset.id);
+});
+
 test('seeded helper provisions default admins and both site settings rows', () => {
   const db = createSeededDb();
   const admins = createAdminRepository(db);

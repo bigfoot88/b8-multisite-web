@@ -144,6 +144,7 @@ function createSiteRepository(db) {
   const selectSettings = db.prepare('SELECT * FROM site_settings WHERE site_key = ?');
   const selectAllSettings = db.prepare('SELECT * FROM site_settings ORDER BY site_key ASC');
   const selectSettingsByDomain = db.prepare('SELECT * FROM site_settings WHERE lower(trim(domain)) = ?');
+  const selectMediaById = db.prepare('SELECT id, site_key FROM media_assets WHERE id = ?');
   const selectSections = db.prepare('SELECT * FROM site_sections WHERE site_key = ? ORDER BY sort_order ASC, section_key ASC');
   const selectPublishedSections = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND is_published = 1 ORDER BY sort_order ASC, section_key ASC');
   const selectSection = db.prepare('SELECT * FROM site_sections WHERE site_key = ? AND section_key = ?');
@@ -212,6 +213,20 @@ function createSiteRepository(db) {
     return mapNavigation(selectNavigationItem.get(input.siteKey, info.lastInsertRowid));
   });
 
+  function validateSectionMediaReference(siteKey, mediaAssetId) {
+    if (mediaAssetId === null || mediaAssetId === undefined || mediaAssetId === '') {
+      return;
+    }
+
+    const media = selectMediaById.get(mediaAssetId);
+    if (!media) {
+      throw createAdminValidationError('模块媒体资源不存在，请重新选择。', 'missing-section-media-asset');
+    }
+    if (media.site_key !== null && media.site_key !== siteKey) {
+      throw createAdminValidationError('模块媒体资源必须属于当前站点或全局素材，请重新选择。', 'cross-site-section-media-asset');
+    }
+  }
+
   return {
     upsertSiteSettings({ siteKey, brandName, domain, seoTitle = null, seoDescription = null, contactEmail = null, contactPhone = null, contactAddress = null }) {
       assertValidSiteKey(siteKey);
@@ -246,13 +261,15 @@ function createSiteRepository(db) {
     },
     saveSection({ siteKey, sectionKey, heading = null, subheading = null, body = null, mediaAssetId = null, config = {}, isPublished = true, publishedAt = null, sortOrder = 0 }) {
       ensureSite(siteKey);
+      const normalizedMediaAssetId = normalizeInteger(mediaAssetId);
+      validateSectionMediaReference(siteKey, normalizedMediaAssetId);
       upsertSectionStatement.run({
         siteKey,
         sectionKey,
         heading,
         subheading,
         body,
-        mediaAssetId: normalizeInteger(mediaAssetId),
+        mediaAssetId: normalizedMediaAssetId,
         configJson: JSON.stringify(normalizeConfig(config)),
         isPublished: isPublished ? 1 : 0,
         publishedAt: isPublished ? (publishedAt || new Date().toISOString()) : null,

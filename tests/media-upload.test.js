@@ -413,6 +413,47 @@ test('media rebind rejects moving a referenced asset to another site', async (t)
   assert.equal(unchanged.alt_text, 'DMA 已引用素材');
 });
 
+test('media rebind rejects moving an asset referenced by another site section', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-rebind-section-reference-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA 模块素材')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  db.prepare(`
+    INSERT INTO site_sections (site_key, section_key, heading, media_asset_id, config_json, is_published, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run('dma', 'hero-media-guard', 'DMA 模块引用', asset.id, '{}', 1, 1);
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/rebind`)
+    .type('form')
+    .send({
+      siteKey: 'bigfoot',
+      altText: '尝试跨站重绑模块素材',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /当前素材已被其他站点内容引用，不能迁移到该站点。/);
+
+  const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(unchanged.site_key, 'dma');
+  assert.equal(unchanged.alt_text, 'DMA 模块素材');
+});
+
 test('media replacement rejects moving a referenced asset to another site and cleans up uploaded files', async (t) => {
   const paths = createSeededAppPaths('b8-admin-media-replace-reference-');
   t.after(() => {
@@ -443,6 +484,48 @@ test('media replacement rejects moving a referenced asset to another site and cl
     .post(`/admin/media/${asset.asset_key}/replace`)
     .field('siteKey', 'bigfoot')
     .field('altText', '尝试跨站替换')
+    .attach('file', replacementLogoFixturePath);
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /当前素材已被其他站点内容引用，不能迁移到该站点。/);
+
+  const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(unchanged.site_key, 'dma');
+  assert.equal(unchanged.storage_path, asset.storage_path);
+  assert.equal(unchanged.alt_text, asset.alt_text);
+  assert.deepEqual(listUploadFiles(paths.uploadRoot), originalUploads);
+});
+
+test('media replacement rejects moving an asset referenced by another site section and cleans up uploaded files', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-replace-section-reference-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA 模块替换前素材')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  db.prepare(`
+    INSERT INTO site_sections (site_key, section_key, heading, media_asset_id, config_json, is_published, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run('dma', 'hero-media-replace-guard', 'DMA 模块引用', asset.id, '{}', 1, 2);
+  const originalUploads = listUploadFiles(paths.uploadRoot);
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/replace`)
+    .field('siteKey', 'bigfoot')
+    .field('altText', '尝试跨站替换模块素材')
     .attach('file', replacementLogoFixturePath);
 
   assert.equal(response.status, 400);
