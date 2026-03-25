@@ -27,11 +27,20 @@ function createAdminSectionsRouter() {
       heading: input.heading || '',
       subheading: input.subheading || '',
       body: input.body || '',
+      mediaAssetId: input.mediaAssetId ?? '',
       sortOrder: input.sortOrder ?? 0,
       isPublished: input.isPublished === '1' || input.isPublished === 1 || input.isPublished === true,
       config: input.config || {},
       configJson: typeof input.configJson === 'string' ? input.configJson : JSON.stringify(input.config || {}, null, 2),
     };
+  }
+
+  function resolveSectionMediaAssetId(body, existingSection = null) {
+    if (!body || !Object.prototype.hasOwnProperty.call(body, 'mediaAssetId')) {
+      return existingSection?.mediaAssetId ?? null;
+    }
+
+    return body.mediaAssetId;
   }
 
   function renderSectionsPage(req, res, { status = 200, section = undefined, errorMessage = '' } = {}) {
@@ -56,6 +65,7 @@ function createAdminSectionsRouter() {
         heading: '',
         subheading: '',
         body: '',
+        mediaAssetId: '',
         sortOrder: 0,
         isPublished: true,
         config: {},
@@ -84,6 +94,7 @@ function createAdminSectionsRouter() {
         heading: req.body?.heading?.trim() || null,
         subheading: req.body?.subheading?.trim() || null,
         body: req.body?.body?.trim() || null,
+        mediaAssetId: resolveSectionMediaAssetId(req.body),
         sortOrder: req.body?.sortOrder,
         isPublished: req.body?.isPublished === '1',
         config: parseConfig(req.body?.configJson),
@@ -104,6 +115,8 @@ function createAdminSectionsRouter() {
   });
 
   router.post('/:siteKey/sections/:sectionKey', requireKnownSite, (req, res, next) => {
+    const existingSection = req.app.locals.siteRepository.getSection(req.params.siteKey, req.params.sectionKey);
+
     try {
       req.app.locals.siteRepository.saveSection({
         siteKey: req.params.siteKey,
@@ -111,6 +124,7 @@ function createAdminSectionsRouter() {
         heading: req.body?.heading?.trim() || null,
         subheading: req.body?.subheading?.trim() || null,
         body: req.body?.body?.trim() || null,
+        mediaAssetId: resolveSectionMediaAssetId(req.body, existingSection),
         sortOrder: req.body?.sortOrder,
         isPublished: req.body?.isPublished === '1',
         config: parseConfig(req.body?.configJson),
@@ -121,6 +135,7 @@ function createAdminSectionsRouter() {
           status: error.statusCode,
           errorMessage: error.message,
           section: buildSectionDraft({
+            mediaAssetId: resolveSectionMediaAssetId(req.body, existingSection) ?? '',
             ...req.body,
             sectionKey: req.params.sectionKey,
           }, req.params.sectionKey),

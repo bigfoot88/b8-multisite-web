@@ -238,6 +238,120 @@ test('homepage section update keeps malformed config json recoverable without ov
   assert.equal(unchanged.config_json, original.config_json);
 });
 
+
+test('homepage section update preserves an existing media reference when the admin does not change it', async (t) => {
+  const { agent, db, app } = withApp(t, 'b8-admin-sections-preserve-media-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const sectionMedia = app.locals.mediaRepository.createAsset({
+    assetKey: 'dma-section-edit-media',
+    siteKey: 'dma',
+    filename: 'dma-section-edit.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-section-edit.png',
+  });
+  const original = app.locals.siteRepository.getSection('dma', 'hero');
+  app.locals.siteRepository.saveSection({
+    ...original,
+    siteKey: 'dma',
+    sectionKey: 'hero',
+    mediaAssetId: sectionMedia.id,
+  });
+
+  const response = await agent
+    .post('/admin/dma/sections/hero')
+    .type('form')
+    .send({
+      sectionKey: 'hero',
+      heading: '保留媒体后的 Hero',
+      subheading: '媒体不应丢失',
+      body: '更新正文',
+      sortOrder: '0',
+      isPublished: '1',
+      configJson: '{"ctaLabel":"预约演示","ctaHref":"/contact"}',
+    });
+
+  assert.equal(response.status, 302);
+  assert.equal(
+    db.prepare('SELECT media_asset_id FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'hero').media_asset_id,
+    sectionMedia.id,
+  );
+});
+
+test('homepage section form exposes media id and allows changing or clearing it intentionally', async (t) => {
+  const { agent, db, app } = withApp(t, 'b8-admin-sections-edit-media-field-');
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const sameSiteAsset = app.locals.mediaRepository.createAsset({
+    assetKey: 'dma-section-current-media',
+    siteKey: 'dma',
+    filename: 'dma-section-current.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-section-current.png',
+  });
+  const globalAsset = app.locals.mediaRepository.createAsset({
+    assetKey: 'global-section-media',
+    filename: 'global-section.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/global-section.png',
+  });
+  const original = app.locals.siteRepository.getSection('dma', 'hero');
+  app.locals.siteRepository.saveSection({
+    ...original,
+    siteKey: 'dma',
+    sectionKey: 'hero',
+    mediaAssetId: sameSiteAsset.id,
+  });
+
+  const editPage = await agent.get('/admin/dma/sections?edit=hero');
+  assert.equal(editPage.status, 200);
+  assert.match(editPage.text, new RegExp(`name=\"mediaAssetId\" value=\"${sameSiteAsset.id}\"`));
+
+  const updateResponse = await agent
+    .post('/admin/dma/sections/hero')
+    .type('form')
+    .send({
+      sectionKey: 'hero',
+      heading: '切换到全局素材',
+      subheading: '允许更换媒体',
+      body: '切换成功',
+      sortOrder: '0',
+      isPublished: '1',
+      mediaAssetId: String(globalAsset.id),
+      configJson: '{"ctaLabel":"预约演示","ctaHref":"/contact"}',
+    });
+
+  assert.equal(updateResponse.status, 302);
+  assert.equal(
+    db.prepare('SELECT media_asset_id FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'hero').media_asset_id,
+    globalAsset.id,
+  );
+
+  const clearResponse = await agent
+    .post('/admin/dma/sections/hero')
+    .type('form')
+    .send({
+      sectionKey: 'hero',
+      heading: '清除媒体引用',
+      subheading: '允许留空清除',
+      body: '已清除',
+      sortOrder: '0',
+      isPublished: '1',
+      mediaAssetId: '',
+      configJson: '{"ctaLabel":"预约演示","ctaHref":"/contact"}',
+    });
+
+  assert.equal(clearResponse.status, 302);
+  assert.equal(
+    db.prepare('SELECT media_asset_id FROM site_sections WHERE site_key = ? AND section_key = ?').get('dma', 'hero').media_asset_id,
+    null,
+  );
+});
+
 test('site settings form updates contact and seo fields', async (t) => {
   const { agent, db } = withApp(t, 'b8-admin-settings-');
   t.after(() => db.close());

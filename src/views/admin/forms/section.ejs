@@ -3,6 +3,8 @@
   <label>标题<input type="text" name="heading" value="<%= currentSectionRecord.heading || '' %>" /></label>
   <label>副标题<input type="text" name="subheading" value="<%= currentSectionRecord.subheading || '' %>" /></label>
   <label>正文<textarea name="body" rows="4"><%= currentSectionRecord.body || '' %></textarea></label>
+  <label>媒体素材 ID<input type="number" name="mediaAssetId" value="<%= currentSectionRecord.mediaAssetId || '' %>" /></label>
+  <p>留空可清除媒体引用；可填写当前站点或全局素材 ID。</p>
   <label>排序<input type="number" name="sortOrder" value="<%= currentSectionRecord.sortOrder ?? 0 %>" /></label>
   <label>
     <input type="checkbox" name="isPublished" value="1" <%= currentSectionRecord.isPublished ? 'checked' : '' %> />
