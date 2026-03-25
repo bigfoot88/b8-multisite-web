@@ -1,21 +1,126 @@
 %PDF-1.4
-1 0 obj<<>>endobj
-2 0 obj<< /Type /Catalog /Pages 3 0 R >>endobj
-3 0 obj<< /Type /Pages /Kids [4 0 R] /Count 1 >>endobj
-4 0 obj<< /Type /Page /Parent 3 0 R /MediaBox [0 0 200 200] /Contents 5 0 R >>endobj
-5 0 obj<< /Length 44 >>stream
-BT /F1 12 Tf 36 160 Td (B8 seed asset) Tj ET
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [ 6 0 R 8 0 R ] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 954 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.059 0.463 0.431 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (DMA Lite Brochure) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Night flow + district leakage monitoring for utility operations teams.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Unifies district metering, minimum night flow analysis, alarms, and work orders.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Highlights leak-priority zones so field teams can focus on abnormal districts first.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Supports staged rollout from pilot DMA zones into city-wide governance programs.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Designed to keep public product pages stocked with a meaningful local brochure file.) Tj
+ET
+0.059 0.463 0.431 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Use this brochure as the repo-delivered local asset for /products/dma-lite.) Tj
+ET
+Q
 endstream
 endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 931 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.059 0.463 0.431 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Recommended Operating Flow) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (From signal capture to post-repair validation.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Collect district flow, pressure, and meter boundary updates each night.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Compare observed minimum night flow against historical and seasonal baselines.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Assign field verification packs to crews with district maps and anomaly windows.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Close the loop with repair outcomes, savings estimates, and monthly review snapshots.) Tj
+ET
+0.059 0.463 0.431 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Curated for importer tests that expect a stable brochure asset with real content.) Tj
+ET
+Q
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
 xref
-0 6
+0 9
 0000000000 65535 f 
-0000000010 00000 n 
-0000000031 00000 n 
-0000000080 00000 n 
-0000000137 00000 n 
-0000000224 00000 n 
-trailer<< /Root 2 0 R /Size 6 >>
+0000000015 00000 n 
+0000000064 00000 n 
+0000000129 00000 n 
+0000000199 00000 n 
+0000000274 00000 n 
+0000001279 00000 n 
+0000001415 00000 n 
+0000002397 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
 startxref
-318
+2533
 %%EOF

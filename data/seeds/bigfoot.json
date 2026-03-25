@@ -60,7 +60,6 @@
       "filename": "bigfoot-hero-b8erp.png",
       "mimeType": "image/png",
       "relativePath": "seeds/bigfoot/bigfoot-hero-b8erp.png",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/2/5/ABUIABACGAAgz_iSvwYo5buJlgIw1AI4Rg.jpg",
       "altText": "B8ERP 智慧水务首页主视觉",
       "metadata": {
         "role": "hero"
@@ -72,7 +71,6 @@
       "filename": "billing-suite-brochure.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/bigfoot/billing-suite-brochure.pdf",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg-fWXvwYo6avMwAYwuAg4hgQ.png",
       "altText": "收费系统宣传册",
       "metadata": {
         "role": "brochure"
@@ -84,7 +82,6 @@
       "filename": "billing-suite-specs.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/bigfoot/billing-suite-specs.pdf",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg0qmpvwYonrW0xgIw4QY4hwU.png",
       "altText": "收费系统规格说明",
       "metadata": {
         "role": "attachment"
@@ -96,7 +93,6 @@
       "filename": "smart-water-pack.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/bigfoot/smart-water-pack.pdf",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAg3-WXvwYo3O-VrwEwuAg4wgQ.png",
       "altText": "智慧水务方案包",
       "metadata": {
         "role": "solution-pack"
@@ -108,7 +104,6 @@
       "filename": "bigfoot-news-contract.png",
       "mimeType": "image/png",
       "relativePath": "seeds/bigfoot/bigfoot-news-contract.png",
-      "sourceUrl": "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAg2a3ZpQYo8JKfvwUwgA847Qc.jpg",
       "altText": "节水合同新闻配图",
       "metadata": {
         "role": "news-hero"
@@ -120,7 +115,6 @@
       "filename": "bigfoot-history-pack.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/bigfoot/bigfoot-history-pack.pdf",
-      "sourceUrl": "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAgpJvZpQYouN6wswQwgA84vgU.jpg",
       "altText": "同创科技发展历程",
       "metadata": {
         "role": "page-attachment"
@@ -132,7 +126,6 @@
       "filename": "zhongshan-water-case-pack.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/bigfoot/zhongshan-water-case-pack.pdf",
-      "sourceUrl": "https://31397139.s61i.faiusr.com/2/AD0Ik6r8DhACGAAg2a3ZpQYo8JKfvwUwgA847Qc.jpg",
       "altText": "中山供水案例资料包",
       "metadata": {
         "role": "case-pack"
@@ -144,7 +137,6 @@
       "filename": "bigfoot-contact-qr.svg",
       "mimeType": "image/svg+xml",
       "relativePath": "seeds/bigfoot/bigfoot-contact-qr.svg",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/4/5/ABUIABAEGAAghKmpvwYourKabTDhBjiNBQ.png",
       "altText": "同创科技联系二维码",
       "metadata": {
         "role": "contact"

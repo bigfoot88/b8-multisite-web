@@ -1,21 +1,126 @@
 %PDF-1.4
-1 0 obj<<>>endobj
-2 0 obj<< /Type /Catalog /Pages 3 0 R >>endobj
-3 0 obj<< /Type /Pages /Kids [4 0 R] /Count 1 >>endobj
-4 0 obj<< /Type /Page /Parent 3 0 R /MediaBox [0 0 200 200] /Contents 5 0 R >>endobj
-5 0 obj<< /Length 44 >>stream
-BT /F1 12 Tf 36 160 Td (B8 seed asset) Tj ET
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [ 6 0 R 8 0 R ] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 931 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.576 0.200 0.918 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Technical Reference) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Capabilities represented by the billing suite attachment.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Supports account master data, tariff configuration, billing cycles, and payment channels.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Highlights exception queues for validation, audit, and reconciliation workflows.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Pairs with the seeded revenue-focused product copy and public download tests.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Stored locally to prevent overwrite from mismatched remote image endpoints.) Tj
+ET
+0.576 0.200 0.918 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Curated attachment used by the importer for the billing-suite product.) Tj
+ET
+Q
 endstream
 endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 896 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.576 0.200 0.918 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Implementation Considerations) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Rollout patterns that fit the seeded site content.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Normalize customer and meter data before migrating billing rules.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Train cash office, service desk, and audit teams on shared exception handling.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Use staged cutovers for bills, receivables, and mobile payment reconciliation.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Maintain the stable slug and local asset path expected by current tests.) Tj
+ET
+0.576 0.200 0.918 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Task 6 document refresh for repo-delivered imported content.) Tj
+ET
+Q
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
 xref
-0 6
+0 9
 0000000000 65535 f 
-0000000010 00000 n 
-0000000031 00000 n 
-0000000080 00000 n 
-0000000137 00000 n 
-0000000224 00000 n 
-trailer<< /Root 2 0 R /Size 6 >>
+0000000015 00000 n 
+0000000064 00000 n 
+0000000129 00000 n 
+0000000199 00000 n 
+0000000274 00000 n 
+0000001256 00000 n 
+0000001392 00000 n 
+0000002339 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
 startxref
-318
+2475
 %%EOF

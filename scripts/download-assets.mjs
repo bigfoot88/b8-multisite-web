@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { normalizeRelativeMediaPath } = require('../src/lib/media-paths.js');
+const mime = require('mime-types');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,6 +58,150 @@ function resolveAssetTarget(uploadRoot, asset) {
   };
 }
 
+function stripContentTypeParameters(contentType) {
+  if (!contentType) {
+    return null;
+  }
+
+  return contentType.split(';', 1)[0].trim().toLowerCase() || null;
+}
+
+function inferExpectedKind(asset) {
+  const filename = asset.filename || asset.relativePath || asset.storagePath || '';
+  const extension = path.extname(filename).toLowerCase();
+  const declaredMimeType = stripContentTypeParameters(asset.mimeType) || stripContentTypeParameters(mime.lookup(filename));
+
+  if (extension === '.pdf' || declaredMimeType === 'application/pdf') {
+    return 'pdf';
+  }
+  if (extension === '.png' || declaredMimeType === 'image/png') {
+    return 'png';
+  }
+  if (extension === '.jpg' || extension === '.jpeg' || declaredMimeType === 'image/jpeg') {
+    return 'jpeg';
+  }
+  if (extension === '.svg' || declaredMimeType === 'image/svg+xml') {
+    return 'svg';
+  }
+  if (extension === '.apk' || declaredMimeType === 'application/vnd.android.package-archive') {
+    return 'apk';
+  }
+
+  return null;
+}
+
+function inferKindFromContentType(contentType) {
+  const normalized = stripContentTypeParameters(contentType);
+  if (!normalized || normalized === 'application/octet-stream') {
+    return null;
+  }
+
+  if (normalized === 'application/pdf') {
+    return 'pdf';
+  }
+  if (normalized === 'image/png') {
+    return 'png';
+  }
+  if (normalized === 'image/jpeg') {
+    return 'jpeg';
+  }
+  if (normalized === 'image/svg+xml') {
+    return 'svg';
+  }
+  if (
+    normalized === 'application/vnd.android.package-archive'
+    || normalized === 'application/zip'
+    || normalized === 'application/x-zip-compressed'
+  ) {
+    return 'apk';
+  }
+
+  return null;
+}
+
+function inferKindFromBuffer(buffer) {
+  if (buffer.length >= 5 && buffer.subarray(0, 5).toString('ascii') === '%PDF-') {
+    return 'pdf';
+  }
+  if (
+    buffer.length >= 8
+    && buffer[0] === 0x89
+    && buffer[1] === 0x50
+    && buffer[2] === 0x4e
+    && buffer[3] === 0x47
+    && buffer[4] === 0x0d
+    && buffer[5] === 0x0a
+    && buffer[6] === 0x1a
+    && buffer[7] === 0x0a
+  ) {
+    return 'png';
+  }
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return 'jpeg';
+  }
+  if (
+    buffer.length >= 4
+    && buffer[0] === 0x50
+    && buffer[1] === 0x4b
+    && (buffer[2] === 0x03 || buffer[2] === 0x05 || buffer[2] === 0x07)
+    && (buffer[3] === 0x04 || buffer[3] === 0x06 || buffer[3] === 0x08)
+  ) {
+    return 'apk';
+  }
+
+  const leadingText = buffer.subarray(0, Math.min(buffer.length, 2048)).toString('utf8').trimStart().toLowerCase();
+  if (leadingText.startsWith('<svg') || (leadingText.startsWith('<?xml') && leadingText.includes('<svg'))) {
+    return 'svg';
+  }
+
+  return null;
+}
+
+function validateDownloadedPayload(asset, response, buffer) {
+  const expectedKind = inferExpectedKind(asset);
+  if (!expectedKind) {
+    return;
+  }
+
+  const contentType = stripContentTypeParameters(response.headers.get('content-type'));
+  const contentTypeKind = inferKindFromContentType(contentType);
+  const bufferKind = inferKindFromBuffer(buffer);
+  const reasons = [];
+
+  if (contentTypeKind && contentTypeKind !== expectedKind) {
+    reasons.push(`content-type ${contentType} does not match expected ${expectedKind}`);
+  }
+  if (bufferKind && bufferKind !== expectedKind) {
+    reasons.push(`payload signature ${bufferKind} does not match expected ${expectedKind}`);
+  }
+  if (contentTypeKind && bufferKind && contentTypeKind !== bufferKind) {
+    reasons.push(`content-type ${contentTypeKind} disagrees with payload signature ${bufferKind}`);
+  }
+
+  if (reasons.length > 0) {
+    throw new Error(`Refusing to replace ${asset.assetKey || asset.filename || '(unknown asset)'}: ${reasons.join('; ')}`);
+  }
+}
+
+function writeFileAtomically(storagePath, buffer) {
+  fs.mkdirSync(path.dirname(storagePath), { recursive: true });
+  const tempPath = `${storagePath}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  try {
+    fs.writeFileSync(tempPath, buffer, { flag: 'wx' });
+    fs.renameSync(tempPath, storagePath);
+  } catch (error) {
+    try {
+      if (fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
+      }
+    } catch {
+      // Ignore cleanup errors and surface the original failure below.
+    }
+    throw error;
+  }
+}
+
 async function downloadAssets({
   seed,
   siteKey,
@@ -99,8 +244,8 @@ async function downloadAssets({
     }
 
     const buffer = Buffer.from(await response.arrayBuffer());
-    fs.mkdirSync(path.dirname(storagePath), { recursive: true });
-    fs.writeFileSync(storagePath, buffer);
+    validateDownloadedPayload(asset, response, buffer);
+    writeFileAtomically(storagePath, buffer);
     results.push({
       assetKey: asset.assetKey,
       relativePath,

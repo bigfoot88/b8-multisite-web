@@ -60,7 +60,6 @@
       "filename": "dma-hero-monitoring.png",
       "mimeType": "image/png",
       "relativePath": "seeds/dma/dma-hero-monitoring.png",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/2/6/ABUIABACGAAg37-ZvwYonfCPxAYwuAg44AQ.jpg",
       "altText": "DMA Lite 夜间漏损监测驾驶舱",
       "metadata": {
         "role": "hero"
@@ -72,7 +71,6 @@
       "filename": "dma-lite-brochure.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/dma/dma-lite-brochure.pdf",
-      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg5MHllQYo9pbrgAYwuAg4oAM!500x500.png",
       "altText": "DMA Lite 宣传册",
       "metadata": {
         "role": "brochure"
@@ -84,7 +82,6 @@
       "filename": "dma-lite-specs.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/dma/dma-lite-specs.pdf",
-      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg6Irq6gUowsr5qAUwsAk4sAk.png",
       "altText": "DMA Lite 技术规格书",
       "metadata": {
         "role": "attachment"
@@ -96,7 +93,6 @@
       "filename": "dma-lite-solution-pack.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/dma/dma-lite-solution-pack.pdf",
-      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg4qTKmQYokJLqqQIwUDhQ.png",
       "altText": "DMA Lite 解决方案包",
       "metadata": {
         "role": "solution-pack"
@@ -108,7 +104,6 @@
       "filename": "dma-news-mnf.png",
       "mimeType": "image/png",
       "relativePath": "seeds/dma/dma-news-mnf.png",
-      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAg97HqlQYo9NbOmQQw2wI4UA.png",
       "altText": "供水管网漏损精准化治理观察配图",
       "metadata": {
         "role": "news-hero"
@@ -120,7 +115,6 @@
       "filename": "dma-history-pack.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/dma/dma-history-pack.pdf",
-      "sourceUrl": "https://12794934.s61i.faiusr.com/4/AD0ItviMBhAEGAAgjf2UlgYo4IDf9AYwsAk4sAk!100x100.png",
       "altText": "智灵科技发展历程资料",
       "metadata": {
         "role": "page-attachment"
@@ -132,7 +126,6 @@
       "filename": "dma-qingyuan-case-pack.pdf",
       "mimeType": "application/pdf",
       "relativePath": "seeds/dma/dma-qingyuan-case-pack.pdf",
-      "sourceUrl": "https://29531648.s21i.faiusr.com/4/6/ABUIABAEGAAg37-ZvwYo4pjD4AMwuAg48AE.png",
       "altText": "清远供水案例资料包",
       "metadata": {
         "role": "case-pack"
@@ -144,7 +137,6 @@
       "filename": "dma-contact-qr.svg",
       "mimeType": "image/svg+xml",
       "relativePath": "seeds/dma/dma-contact-qr.svg",
-      "sourceUrl": "http://dma.b8water.com/qrCode.jsp?cmd=mobiQR&ide=AGcI",
       "altText": "智灵科技联系二维码",
       "metadata": {
         "role": "contact"

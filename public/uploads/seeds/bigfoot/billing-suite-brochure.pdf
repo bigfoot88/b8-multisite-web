@@ -1,21 +1,126 @@
 %PDF-1.4
-1 0 obj<<>>endobj
-2 0 obj<< /Type /Catalog /Pages 3 0 R >>endobj
-3 0 obj<< /Type /Pages /Kids [4 0 R] /Count 1 >>endobj
-4 0 obj<< /Type /Page /Parent 3 0 R /MediaBox [0 0 200 200] /Contents 5 0 R >>endobj
-5 0 obj<< /Length 44 >>stream
-BT /F1 12 Tf 36 160 Td (B8 seed asset) Tj ET
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [ 6 0 R 8 0 R ] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 941 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.486 0.227 0.929 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Billing and Revenue Brochure) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Curated local brochure for the B8ERP billing-suite product page.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Connects meter reading, billing, collection, reconciliation, and customer service workflows.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Emphasizes revenue visibility, exception handling, and staff productivity improvements.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Suitable for seeded product pages that must render useful brochure downloads offline.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Replaces the tiny placeholder PDF with a real repo-delivered document.) Tj
+ET
+0.486 0.227 0.929 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Primary brochure asset for /products/billing-suite.) Tj
+ET
+Q
 endstream
 endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 869 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.486 0.227 0.929 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Where It Fits) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Typical roles served by the product.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Billing teams manage tariff updates, bill generation, and account changes.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Revenue teams follow arrears, payment plans, and reconciliation quality metrics.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Leaders review service levels, collection cycles, and audit exceptions.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Implementation teams reuse the same curated brochure during importer demos.) Tj
+ET
+0.486 0.227 0.929 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Task 6 local brochure upgrade for the Bigfoot site seed.) Tj
+ET
+Q
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
 xref
-0 6
+0 9
 0000000000 65535 f 
-0000000010 00000 n 
-0000000031 00000 n 
-0000000080 00000 n 
-0000000137 00000 n 
-0000000224 00000 n 
-trailer<< /Root 2 0 R /Size 6 >>
+0000000015 00000 n 
+0000000064 00000 n 
+0000000129 00000 n 
+0000000199 00000 n 
+0000000274 00000 n 
+0000001266 00000 n 
+0000001402 00000 n 
+0000002322 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
 startxref
-318
+2458
 %%EOF

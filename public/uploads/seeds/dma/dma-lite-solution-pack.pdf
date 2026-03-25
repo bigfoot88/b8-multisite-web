@@ -1,21 +1,126 @@
 %PDF-1.4
-1 0 obj<<>>endobj
-2 0 obj<< /Type /Catalog /Pages 3 0 R >>endobj
-3 0 obj<< /Type /Pages /Kids [4 0 R] /Count 1 >>endobj
-4 0 obj<< /Type /Page /Parent 3 0 R /MediaBox [0 0 200 200] /Contents 5 0 R >>endobj
-5 0 obj<< /Length 44 >>stream
-BT /F1 12 Tf 36 160 Td (B8 seed asset) Tj ET
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [ 6 0 R 8 0 R ] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 942 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.051 0.580 0.533 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Solution Pack) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Monitoring, diagnosis, response, and review in one migration-safe file.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Frames leakage work as a sequence of monitor, diagnose, respond, and review.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Explains how district boundaries, alarms, and field action should reinforce each other.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Supports both the main DMA Lite solution and the pressure-zoning variant content.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Provides a richer local attachment than the old one-line placeholder PDF.) Tj
+ET
+0.051 0.580 0.533 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Useful for public solution downloads that should work without network access.) Tj
+ET
+Q
 endstream
 endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 901 >>
+stream
+q
+0.96 0.98 1 rg 0 0 595 842 re f
+0.051 0.580 0.533 rg 36 760 523 46 re f
+BT
+/F2 24 Tf
+1 1 1 rg
+50 790 Td (Service Blueprint) Tj
+ET
+BT
+/F1 12 Tf
+0.16 0.18 0.25 rg
+48 730 Td (Typical rollout stages for district leakage programs.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 688 Td (- Phase 1: baseline districts, current loss picture, and meter hierarchy cleanup.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 660 Td (- Phase 2: alert tuning, on-call roles, and incident review cadence.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 632 Td (- Phase 3: field verification packs, repair tracking, and savings reporting.) Tj
+ET
+BT
+/F1 11 Tf
+0.16 0.18 0.25 rg
+54 604 Td (- Phase 4: governance dashboards for leaders, planners, and operations teams.) Tj
+ET
+0.051 0.580 0.533 RG 36 120 523 72 re S
+BT
+/F1 11 Tf
+0.20 0.22 0.29 rg
+50 164 Td (Curated to stay coherent with importer behavior and stable product slugs.) Tj
+ET
+Q
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
 xref
-0 6
+0 9
 0000000000 65535 f 
-0000000010 00000 n 
-0000000031 00000 n 
-0000000080 00000 n 
-0000000137 00000 n 
-0000000224 00000 n 
-trailer<< /Root 2 0 R /Size 6 >>
+0000000015 00000 n 
+0000000064 00000 n 
+0000000129 00000 n 
+0000000199 00000 n 
+0000000274 00000 n 
+0000001267 00000 n 
+0000001403 00000 n 
+0000002355 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
 startxref
-318
+2491
 %%EOF
