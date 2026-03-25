@@ -33,6 +33,8 @@ const DOWNLOAD_EXTENSIONS = new Set([
 ]);
 
 const ASSET_EXTENSIONS = new Set([
+  '.css',
+  '.js',
   '.png',
   '.jpg',
   '.jpeg',
