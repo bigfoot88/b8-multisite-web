@@ -30,9 +30,13 @@ function createAdminAuthRouter({ adminRepository }) {
 
   router.post('/login', async (req, res, next) => {
     try {
-      const username = req.body?.username?.trim() || '';
+      const identifier = req.body?.username?.trim() || '';
       const password = req.body?.password || '';
-      const admin = username ? adminRepository.findByUsername(username) : null;
+      let admin = null;
+      if (identifier) {
+        // allow login by username or email for convenience
+        admin = adminRepository.findByUsername(identifier) || adminRepository.findByEmail(identifier);
+      }
       const passwordMatches = admin ? await verifyPassword(password, admin.passwordHash) : false;
 
       if (!admin || !admin.isActive || !passwordMatches) {
