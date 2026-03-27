@@ -5,9 +5,9 @@
   <div class="container card-grid card-grid--2">
     <% cases.forEach((item) => { %>
       <article class="card">
-        <h2><a href="/cases/<%= item.slug %>"><%= item.title %></a></h2>
+        <h2><a href="<%= sitePath('/cases/' + item.slug) %>"><%= item.title %></a></h2>
         <p><%= item.summary %></p>
-        <a href="/cases/<%= item.slug %>" class="text-link">查看案例</a>
+        <a href="<%= sitePath('/cases/' + item.slug) %>" class="text-link">查看案例</a>
       </article>
     <% }) %>
   </div>

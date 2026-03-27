@@ -2,16 +2,20 @@
 <%- include('../partials/hero', { hero, site }) %>
 
 <section class="section">
-  <div class="container card-grid card-grid--2">
-    <% products.forEach((product) => { %>
-      <article class="card">
-        <h2><a href="/products/<%= product.slug %>"><%= product.title %></a></h2>
-        <% if (product.summary) { %><p><%= product.summary %></p><% } %>
-        <div class="card__actions">
-          <a href="/products/<%= product.slug %>" class="text-link">查看详情</a>
-        </div>
-      </article>
-    <% }) %>
+  <div class="container">
+    <div class="card-grid card-grid--2">
+      <% products.forEach((product) => { %>
+        <article class="card reveal">
+          <span class="card__icon">🔧</span>
+          <p class="card__eyebrow">核心产品</p>
+          <h2 class="card__title"><a href="<%= sitePath('/products/' + product.slug) %>"><%= product.title %></a></h2>
+          <% if (product.summary) { %><p class="card p"><%= product.summary %></p><% } %>
+          <div class="card__actions">
+            <a href="<%= sitePath('/products/' + product.slug) %>" class="button button--secondary card-cta">查看详情</a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
   </div>
 </section>
 

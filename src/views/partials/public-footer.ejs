@@ -1,29 +1,59 @@
       </main>
       <footer class="site-footer">
-        <div class="container site-footer__grid">
-          <div>
-            <p class="footer-kicker">可信赖的水务数字化伙伴</p>
-            <h2><%= site?.brandName || 'B8 Multisite' %></h2>
-            <p><%= site?.seoDescription || '聚焦工业与城市供水场景的多站点内容平台。' %></p>
-            <div class="footer-cta">
-              <a href="<%= site ? '/contact' : '/' %>" class="button button--secondary"><%= site ? '预约方案交流' : '返回首页' %></a>
+        <div class="container">
+          <div class="site-footer__grid">
+            <div class="footer-col footer-col--brand">
+              <a class="site-brand site-brand--footer" href="<%= sitePath('/') %>">
+                <span class="site-brand__mark"><%= theme?.label || 'B8' %></span>
+                <span>
+                  <strong><%= site?.brandName || 'B8 Multisite' %></strong>
+                </span>
+              </a>
+              <p class="footer-desc"><%= site?.seoDescription || '聚焦工业与城市供水场景的多站点内容平台。' %></p>
+              <% if (site?.contactPhone) { %>
+                <p class="footer-phone"><a href="tel:<%= site.contactPhone %>"><%= site.contactPhone %></a></p>
+              <% } %>
+              <div class="footer-cta">
+                <a href="<%= sitePath(site ? '/contact' : '/') %>" class="button button--primary"><%= site ? '预约方案交流' : '返回首页' %></a>
+              </div>
+            </div>
+            <div class="footer-col">
+              <h4 class="footer-col__title">联系我们</h4>
+              <ul class="contact-list">
+                <% if (site?.contactPhone) { %>
+                  <li class="contact-list__item">
+                    <span class="contact-list__icon">📞</span>
+                    <a href="tel:<%= site.contactPhone %>"><%= site.contactPhone %></a>
+                  </li>
+                <% } %>
+                <% if (site?.contactEmail) { %>
+                  <li class="contact-list__item">
+                    <span class="contact-list__icon">✉️</span>
+                    <a href="mailto:<%= site.contactEmail %>"><%= site.contactEmail %></a>
+                  </li>
+                <% } %>
+                <% if (site?.contactAddress) { %>
+                  <li class="contact-list__item">
+                    <span class="contact-list__icon">📍</span>
+                    <span><%= site.contactAddress %></span>
+                  </li>
+                <% } %>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4 class="footer-col__title">快速导航</h4>
+              <ul class="footer-links">
+                <% (navigation || []).slice(0, 6).forEach((item) => { %>
+                  <li><a href="<%= sitePath(item.href) %>"><%= item.label %></a></li>
+                <% }) %>
+              </ul>
             </div>
           </div>
-          <div>
-            <h3>联系信息</h3>
-            <ul class="contact-list">
-              <% if (site?.contactPhone) { %><li>电话：<%= site.contactPhone %></li><% } %>
-              <% if (site?.contactEmail) { %><li>邮箱：<%= site.contactEmail %></li><% } %>
-              <% if (site?.contactAddress) { %><li>地址：<%= site.contactAddress %></li><% } %>
-            </ul>
-          </div>
-          <div>
-            <h3>快速入口</h3>
-            <ul class="footer-links">
-              <% (navigation || []).slice(0, 5).forEach((item) => { %>
-                <li><a href="<%= item.href %>"><%= item.label %></a></li>
-              <% }) %>
-            </ul>
+          <div class="footer-bottom">
+            <p>&copy; <%= new Date().getFullYear() %> <%= site?.brandName || 'B8 Multisite' %>. 保留所有权利。</p>
+            <% if (site?.icp) { %>
+              <p class="footer-beian"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer"><%= site.icp %></a></p>
+            <% } %>
           </div>
         </div>
       </footer>

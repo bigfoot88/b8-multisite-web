@@ -1,32 +1,46 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-site-theme="default">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= title %></title>
+    <title><%= pageTitle || 'B8 多站点内容平台' %></title>
+    <% if (pageDescription) { %>
+      <meta name="description" content="<%= pageDescription %>" />
+    <% } %>
     <link rel="stylesheet" href="/css/public.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
   </head>
-  <body>
-    <main class="landing-shell">
-      <section class="hero">
-        <p class="eyebrow"><%= site ? site.brandName : 'B8 Multisite' %></p>
-        <h1><%= heroSection?.heading || 'Express bootstrap is ready.' %></h1>
-        <p class="copy"><%= heroSection?.subheading || heroSection?.body || 'Public pages and future admin features will share a single Node.js process.' %></p>
+  <body class="site-body">
+    <main class="site-shell">
+      <section class="hero-panel">
+        <div class="hero-panel__bg"></div>
+        <div class="container hero-panel__inner">
+          <div class="hero-copy reveal is-visible">
+            <p class="eyebrow">B8 Multisite</p>
+            <h1>欢迎访问 B8 多站点内容平台</h1>
+            <p class="lead">无需修改本机 hosts，也可以直接从服务器 IP 访问两个品牌站点。请选择下方入口继续浏览。</p>
+            <div class="hero-actions">
+              <a href="<%= sitePath('/dma') %>" class="button button--hero-primary">进入 DMA 站点</a>
+              <a href="<%= sitePath('/bigfoot') %>" class="button button--ghost">进入 Bigfoot 站点</a>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <% if (publishedSections.length > 1) { %>
-        <section class="hero">
-          <h2>已发布首页模块</h2>
-          <ul>
-            <% publishedSections.slice(1).forEach((section) => { %>
-              <li>
-                <strong><%= section.heading || section.sectionKey %></strong>
-                <% if (section.body) { %>：<%= section.body %><% } %>
-              </li>
-            <% }) %>
-          </ul>
-        </section>
-      <% } %>
+      <section class="section section--dark-tint">
+        <div class="container card-grid card-grid--2">
+          <% (siteCards || []).forEach((card) => { %>
+            <article class="card reveal is-visible">
+              <p class="card__eyebrow"><%= card.siteKey === 'dma' ? 'DMA' : 'Bigfoot' %></p>
+              <h2 class="card__title"><a href="<%= sitePath('/' + card.siteKey) %>"><%= card.brandName %></a></h2>
+              <p class="card__copy"><%= card.seoDescription || '点击进入站点首页。' %></p>
+              <div class="card__actions">
+                <a href="<%= sitePath('/' + card.siteKey) %>" class="text-link">打开站点 →</a>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </section>
     </main>
   </body>
 </html>

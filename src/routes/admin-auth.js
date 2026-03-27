@@ -43,7 +43,7 @@ function createAdminAuthRouter({ adminRepository }) {
         return renderLogin(res, {
           status: 401,
           errorMessage: '用户名或密码不正确，请重试。',
-          username,
+          username: identifier,
         });
       }
 

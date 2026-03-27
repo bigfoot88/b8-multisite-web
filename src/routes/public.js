@@ -1,6 +1,7 @@
 const express = require('express');
 
-const { createHostRoutingMiddleware } = require('../lib/host-routing');
+const { createHostRoutingMiddleware, getThemeForSite } = require('../lib/host-routing');
+const { sites } = require('../config/sites');
 
 function normalizePagePath(pathname) {
   if (!pathname || pathname === '/') {
@@ -14,31 +15,136 @@ function buildPageTitle(base, site) {
   return base ? `${base} · ${site.brandName}` : (site.seoTitle || site.brandName);
 }
 
+function normalizeBasePath(basePath) {
+  if (!basePath) {
+    return '';
+  }
+
+  return `/${String(basePath).replace(/^\/+|\/+$/g, '')}`;
+}
+
+function createSiteLink(basePath) {
+  const normalizedBasePath = normalizeBasePath(basePath);
+
+  return function siteLink(target = '/') {
+    if (!target || target === '/') {
+      return normalizedBasePath || '/';
+    }
+
+    if (/^(?:https?:|mailto:|tel:|\/\/)/i.test(target)) {
+      return target;
+    }
+
+    if (!normalizedBasePath) {
+      return target;
+    }
+
+    if (target.startsWith('/')) {
+      return `${normalizedBasePath}${target}`;
+    }
+
+    return `${normalizedBasePath}/${target}`;
+  };
+}
+
+function splitUrlPathAndSearch(url = '') {
+  const questionMarkIndex = url.indexOf('?');
+  if (questionMarkIndex === -1) {
+    return { pathname: url, search: '' };
+  }
+
+  return {
+    pathname: url.slice(0, questionMarkIndex),
+    search: url.slice(questionMarkIndex),
+  };
+}
+
+function resolvePrefixedSiteKey(pathname) {
+  const normalizedPath = String(pathname || '/');
+
+  for (const siteKey of sites) {
+    if (normalizedPath === `/${siteKey}` || normalizedPath.startsWith(`/${siteKey}/`)) {
+      return siteKey;
+    }
+  }
+
+  return null;
+}
+
+function stripSitePrefix(pathname, siteKey) {
+  const normalizedPath = String(pathname || '/');
+  const prefix = `/${siteKey}`;
+
+  if (normalizedPath === prefix) {
+    return '/';
+  }
+
+  if (normalizedPath.startsWith(`${prefix}/`)) {
+    return normalizedPath.slice(prefix.length) || '/';
+  }
+
+  return normalizedPath;
+}
+
 function createPublicRouter({ siteRepository, publicSiteService }) {
   const router = express.Router();
 
   router.use(createHostRoutingMiddleware(siteRepository));
   router.use((req, res, next) => {
-    if (!req.site) {
-      return res.status(404).render('public/not-found', {
-        pageTitle: '站点未找到',
-        pageDescription: '当前域名未配置公开站点。',
-        currentPath: req.path,
-        site: null,
-        navigation: [],
-        hero: {
-          eyebrow: 'B8 Multisite',
-          title: '未找到相关站点',
-          summary: '请检查访问的域名或联系管理员完成站点绑定。',
-        },
-      });
+    if (req.site) {
+      req.siteBasePath = '';
+      req.sitePath = createSiteLink('');
+      res.locals.site = req.site;
+      res.locals.siteTheme = req.siteTheme;
+      res.locals.siteBasePath = req.siteBasePath;
+      res.locals.sitePath = req.sitePath;
+      const frame = publicSiteService.getSiteFrame(req.site);
+      res.locals.navigation = frame.navigation;
+      res.locals.heroSection = frame.heroSection;
+      res.locals.publishedSections = frame.publishedSections;
+      return next();
     }
 
-    const frame = publicSiteService.getSiteFrame(req.site);
-    res.locals.navigation = frame.navigation;
-    res.locals.heroSection = frame.heroSection;
-    res.locals.publishedSections = frame.publishedSections;
-    return next();
+    const prefixedSiteKey = resolvePrefixedSiteKey(req.path);
+    if (prefixedSiteKey) {
+      const site = siteRepository.getSiteSettings(prefixedSiteKey);
+      if (!site) {
+        return next();
+      }
+
+      const strippedPath = stripSitePrefix(req.path, prefixedSiteKey);
+      const { search } = splitUrlPathAndSearch(req.url);
+
+      req.site = site;
+      req.siteTheme = getThemeForSite(prefixedSiteKey);
+      req.siteBasePath = `/${prefixedSiteKey}`;
+      req.sitePath = createSiteLink(req.siteBasePath);
+      req.url = `${strippedPath}${search}`;
+      res.locals.site = site;
+      res.locals.siteTheme = req.siteTheme;
+      res.locals.siteBasePath = req.siteBasePath;
+      res.locals.sitePath = req.sitePath;
+
+      const frame = publicSiteService.getSiteFrame(req.site);
+      res.locals.navigation = frame.navigation;
+      res.locals.heroSection = frame.heroSection;
+      res.locals.publishedSections = frame.publishedSections;
+      return next();
+    }
+
+    const sitesList = siteRepository.listSiteSettings();
+    return res.status(200).render('public/landing', {
+      pageTitle: 'B8 多站点内容平台',
+      pageDescription: '选择 DMA 或 Bigfoot 站点继续访问。',
+      currentPath: req.path,
+      site: null,
+      theme: req.siteTheme,
+      sitePath: createSiteLink(''),
+      siteCards: sitesList.map((item) => ({
+        ...item,
+        path: `/${item.siteKey}/`,
+      })),
+    });
   });
 
   router.use((req, res, next) => {
@@ -55,7 +161,11 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
       pageTitle: buildPageTitle('未找到相关页面', req.site),
       pageDescription: req.site.seoDescription || '',
       currentPath: req.path,
+      site: req.site,
+      theme: req.siteTheme,
+      siteTheme: req.siteTheme,
       navigation: res.locals.navigation,
+      sitePath: req.sitePath || createSiteLink(req.siteBasePath || ''),
       hero: {
         eyebrow: req.site.brandName,
         title: '未找到相关页面',
@@ -68,10 +178,12 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
     return res.render(view, {
       site: req.site,
       theme: req.siteTheme,
+      siteBasePath: req.siteBasePath || '',
+      sitePath: req.sitePath || createSiteLink(req.siteBasePath || ''),
       navigation: res.locals.navigation,
       publishedSections: res.locals.publishedSections,
       heroSection: res.locals.heroSection,
-      currentPath: req.path,
+      currentPath: req.siteBasePath ? stripSitePrefix(req.path, req.site.siteKey) : req.path,
       ...payload,
     });
   }

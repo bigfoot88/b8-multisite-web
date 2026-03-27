@@ -2,14 +2,20 @@
 <%- include('../partials/hero', { hero, site }) %>
 
 <section class="section">
-  <div class="container card-grid card-grid--2">
-    <% solutions.forEach((solution) => { %>
-      <article class="card">
-        <h2><a href="/solutions/<%= solution.slug %>"><%= solution.title %></a></h2>
-        <p><%= solution.summary %></p>
-        <a href="/solutions/<%= solution.slug %>" class="text-link">查看方案</a>
-      </article>
-    <% }) %>
+  <div class="container">
+    <div class="card-grid card-grid--2">
+      <% solutions.forEach((solution) => { %>
+        <article class="card reveal">
+          <span class="card__icon">💡</span>
+          <p class="card__eyebrow">解决方案</p>
+          <h2 class="card__title"><a href="<%= sitePath('/solutions/' + solution.slug) %>"><%= solution.title %></a></h2>
+          <p><%= solution.summary %></p>
+          <div class="card__actions">
+            <a href="<%= sitePath('/solutions/' + solution.slug) %>" class="button button--secondary card-cta">查看方案 →</a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
   </div>
 </section>
 

@@ -1,0 +1,5 @@
+
+> b8-multisite-build@1.0.0 start
+> node --env-file-if-exists=.env src/server.js
+
+Server listening on port 3000 in development mode

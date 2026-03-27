@@ -1,6 +1,7 @@
 <section class="hero-panel">
+  <div class="hero-panel__bg"></div>
   <div class="container hero-panel__inner">
-    <div class="hero-copy">
+    <div class="hero-copy reveal">
       <% if (hero?.eyebrow) { %><p class="eyebrow"><%= hero.eyebrow %></p><% } %>
       <h1><%= hero?.title || site?.brandName || 'B8 Multisite' %></h1>
       <% if (hero?.summary) { %><p class="lead"><%= hero.summary %></p><% } %>
@@ -8,10 +9,21 @@
       <% if (hero?.actions?.length) { %>
         <div class="hero-actions">
           <% hero.actions.forEach((action) => { %>
-            <a href="<%= action.href %>" class="button button--<%= action.variant || 'secondary' %>"><%= action.label %></a>
+            <a href="<%= sitePath(action.href) %>" class="button <% if (action.variant === 'primary') { %>button--hero-primary<% } else if (action.variant === 'ghost') { %>button--ghost<% } else { %>button--ghost<% } %>"><%= action.label %></a>
           <% }) %>
         </div>
       <% } %>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-stat-card">
+        <div class="hero-stat-card__inner">
+          <% if (site) { %>
+          <div class="hero-stat-item"><span class="hero-stat-number">10+</span><span class="hero-stat-label">年行业经验</span></div>
+          <div class="hero-stat-item"><span class="hero-stat-number">500+</span><span class="hero-stat-label">服务客户</span></div>
+          <div class="hero-stat-item"><span class="hero-stat-number">99%</span><span class="hero-stat-label">客户满意度</span></div>
+          <% } %>
+        </div>
+      </div>
     </div>
   </div>
 </section>

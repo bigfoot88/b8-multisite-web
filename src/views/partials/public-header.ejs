@@ -14,15 +14,16 @@
   <body class="site-body">
     <a class="skip-link" href="#main-content">跳到正文</a>
     <div class="site-shell">
+      <div class="header-topbar"></div>
       <header class="site-header">
         <div class="container site-header__inner">
           <% const primaryCtaHref = site ? '/contact' : '/'; %>
           <% const primaryCtaLabel = site ? '预约咨询' : '返回首页'; %>
-          <a class="site-brand" href="/">
+          <a class="site-brand" href="<%= sitePath('/') %>">
             <span class="site-brand__mark"><%= theme?.label || 'B8' %></span>
             <span>
               <strong><%= site?.brandName || 'B8 Multisite' %></strong>
-              <small><%= theme?.accent || '多站点内容平台' %></small>
+              <small><%= site?.tagline || theme?.accent || '多站点内容平台' %></small>
             </span>
           </a>
 
@@ -32,8 +33,11 @@
             data-nav-toggle
             aria-expanded="false"
             aria-controls="site-navigation"
+            aria-label="切换导航菜单"
           >
-            导航
+            <span class="nav-toggle__bar"></span>
+            <span class="nav-toggle__bar"></span>
+            <span class="nav-toggle__bar"></span>
           </button>
 
           <nav class="site-nav" id="site-navigation" data-nav-menu>
@@ -41,7 +45,7 @@
               <% (navigation || []).forEach((item) => { %>
                 <li>
                   <a
-                    href="<%= item.href %>"
+                    href="<%= sitePath(item.href) %>"
                     class="<%= currentPath === item.href ? 'is-active' : '' %>"
                   ><%= item.label %></a>
                 </li>
@@ -51,12 +55,12 @@
 
           <div class="site-header__actions">
             <% if (site?.contactPhone) { %>
-              <a class="site-quick-contact" href="/contact">
+              <a class="site-quick-contact" href="tel:<%= site.contactPhone %>">
                 <span>咨询热线</span>
                 <strong><%= site.contactPhone %></strong>
               </a>
             <% } %>
-            <a href="<%= primaryCtaHref %>" class="button button--primary site-header__cta"><%= primaryCtaLabel %></a>
+            <a href="<%= sitePath(primaryCtaHref) %>" class="button button--primary site-header__cta"><%= primaryCtaLabel %></a>
           </div>
         </div>
       </header>
