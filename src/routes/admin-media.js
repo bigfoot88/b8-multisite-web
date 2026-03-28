@@ -5,7 +5,7 @@ const express = require('express');
 const { createAdminNotFoundError, isExpectedAdminError } = require('../lib/admin-errors');
 const { requireAdmin } = require('../lib/session');
 const { sites } = require('../config/sites');
-const { createUploader, removeUploadedFile, toPublicUploadPath } = require('../lib/uploads');
+const { createUploader, removeUploadedFile, toInlineUploadPath, toPublicUploadPath } = require('../lib/uploads');
 const { renderAdmin } = require('./admin-shared');
 
 function createAdminMediaRouter({ uploadRoot }) {
@@ -38,6 +38,21 @@ function createAdminMediaRouter({ uploadRoot }) {
 
   router.get('/media', (req, res) => {
     return renderMediaPage(req, res);
+  });
+
+  router.get('/media/list-json', (req, res) => {
+    const requestedSiteKey = req.query.siteKey || null;
+    const siteKey = requestedSiteKey && sites.includes(requestedSiteKey) ? requestedSiteKey : null;
+    const assets = req.app.locals.mediaRepository.listAssets({ siteKey });
+    const imageAssets = assets.filter((a) => a.mimeType && a.mimeType.startsWith('image/'));
+    return res.json({
+      assets: imageAssets.map((a) => ({
+        id: a.id,
+        publicUrl: a.publicUrl || a.sourceUrl,
+        filename: a.filename,
+        altText: a.altText,
+      })),
+    });
   });
 
   function handleUpload(req, res, next, options, onSuccess) {
@@ -131,6 +146,52 @@ function createAdminMediaRouter({ uploadRoot }) {
       }
 
       return res.redirect('/admin/media');
+    });
+  });
+
+  router.post('/media/inline-upload', (req, res, next) => {
+    upload(req, res, (error) => {
+      if (error) {
+        removeUploadedFile(req.file);
+        if (isExpectedAdminError(error)) {
+          return res.status(error.statusCode).json({ error: error.message });
+        }
+
+        return next(error);
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: '请先选择要上传的图片。' });
+      }
+
+      try {
+        const asset = req.app.locals.mediaRepository.createAsset({
+          assetKey: crypto.randomUUID(),
+          siteKey: req.body?.siteKey?.trim() || null,
+          sourceUrl: toInlineUploadPath(req.file),
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          storagePath: req.file.path,
+          altText: req.body?.altText?.trim() || null,
+          metadata: {
+            size: req.file.size,
+          },
+        });
+
+        return res.status(201).json({
+          assetKey: asset.assetKey,
+          url: asset.sourceUrl,
+          filename: asset.filename,
+          altText: asset.altText,
+        });
+      } catch (error) {
+        removeUploadedFile(req.file);
+        if (isExpectedAdminError(error)) {
+          return res.status(error.statusCode).json({ error: error.message });
+        }
+
+        return next(error);
+      }
     });
   });
 

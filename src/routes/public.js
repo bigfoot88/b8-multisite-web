@@ -303,6 +303,7 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
         title: article.title,
         summary: article.summary || '',
       },
+      heroAsset: article.heroAsset || null,
       article,
     });
   });

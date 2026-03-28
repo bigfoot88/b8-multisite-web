@@ -2,7 +2,12 @@
   <label>Slug<input type="text" name="slug" value="<%= currentRecord.slug || '' %>" required /></label>
   <label>方案标题<input type="text" name="title" value="<%= currentRecord.title || '' %>" required /></label>
   <label>摘要<textarea name="summary" rows="3"><%= currentRecord.summary || '' %></textarea></label>
-  <label>正文 HTML<textarea name="bodyHtml" rows="6"><%= currentRecord.bodyHtml || '' %></textarea></label>
+  <%- include('../partials/rich-text-editor', {
+    name: 'bodyHtml',
+    siteKey,
+    value: currentRecord.bodyHtml || '',
+    description: '支持标题、段落、字体样式、列表和图片插入。',
+  }) %>
   <label>附件媒体 ID<input type="number" name="attachmentMediaId" value="<%= currentRecord.attachmentMediaId || '' %>" /></label>
   <label>SEO 标题<input type="text" name="seoTitle" value="<%= currentRecord.seoTitle || '' %>" /></label>
   <label>SEO 描述<textarea name="seoDescription" rows="3"><%= currentRecord.seoDescription || '' %></textarea></label>

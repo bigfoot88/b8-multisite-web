@@ -1,5 +1,49 @@
 const sanitizeHtml = require('sanitize-html');
 
+const richTextSanitizeOptions = {
+  allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'figure', 'figcaption', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td']),
+  allowedAttributes: {
+    a: ['href', 'name', 'target', 'rel'],
+    img: ['src', 'alt', 'title', 'width', 'height', 'loading', 'decoding', 'class'],
+    figure: ['class'],
+    figcaption: ['class'],
+    span: ['class', 'style'],
+    p: ['class', 'style'],
+    div: ['class', 'style'],
+    blockquote: ['class', 'style'],
+    pre: ['class', 'style'],
+    code: ['class', 'style'],
+    h1: ['class', 'style'],
+    h2: ['class', 'style'],
+    h3: ['class', 'style'],
+    h4: ['class', 'style'],
+    h5: ['class', 'style'],
+    h6: ['class', 'style'],
+    ul: ['class', 'style'],
+    ol: ['class', 'style'],
+    li: ['class', 'style'],
+    table: ['class', 'style', 'border', 'cellpadding', 'cellspacing'],
+    thead: ['class', 'style'],
+    tbody: ['class', 'style'],
+    tr: ['class', 'style'],
+    th: ['class', 'style', 'colspan', 'rowspan'],
+    td: ['class', 'style', 'colspan', 'rowspan'],
+  },
+  allowedStyles: {
+    '*': {
+      color: [/^#[0-9a-fA-F]{3,8}$/, /^rgb\(/, /^rgba\(/],
+      'background-color': [/^#[0-9a-fA-F]{3,8}$/, /^rgb\(/, /^rgba\(/],
+      'font-family': [/^[^<>]+$/],
+      'font-size': [/^[0-9.]+(px|pt|em|rem|%)$/],
+      'text-align': [/^(left|right|center|justify)$/],
+      'line-height': [/^[0-9.]+$/],
+      width: [/^[0-9.]+(px|%|em|rem)?$/],
+      height: [/^[0-9.]+(px|%|em|rem)?$/],
+      'margin-left': [/^[0-9.]+(px|em|rem|%)?$/],
+    },
+  },
+};
+
 function createPublicSiteService({
   siteRepository,
   catalogRepository,
@@ -36,7 +80,7 @@ function createPublicSiteService({
 
     return {
       ...record,
-      bodyHtml: typeof record.bodyHtml === 'string' ? sanitizeHtml(record.bodyHtml) : record.bodyHtml,
+      bodyHtml: typeof record.bodyHtml === 'string' ? sanitizeHtml(record.bodyHtml, richTextSanitizeOptions) : record.bodyHtml,
       brochureAsset: record.brochureMediaId ? assets.get(record.brochureMediaId) || null : null,
       attachmentAsset: record.attachmentMediaId ? assets.get(record.attachmentMediaId) || null : null,
       heroAsset: record.heroMediaId ? assets.get(record.heroMediaId) || null : null,

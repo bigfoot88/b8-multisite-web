@@ -15,6 +15,7 @@ function createAdminNewsRouter() {
       summary: '',
       bodyHtml: '',
       heroMediaId: '',
+      heroAsset: null,
       seoTitle: '',
       seoDescription: '',
       sortOrder: 100,

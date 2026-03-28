@@ -71,6 +71,37 @@ test('media library uploads an asset and replaces it without changing asset iden
   assert.equal(uploadResponsePage.headers['x-content-type-options'], 'nosniff');
 });
 
+test('admin inline image upload returns a direct uploads URL that can be embedded in rich text', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-inline-upload-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .post('/admin/media/inline-upload')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA inline upload')
+    .attach('file', logoFixturePath);
+
+  assert.equal(response.status, 201);
+  assert.match(response.body.url, /^\/uploads\//);
+  assert.match(response.body.filename, /logo\.png/);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  assert.equal(asset.alt_text, 'DMA inline upload');
+
+  const uploadedFile = await agent.get(response.body.url);
+  assert.equal(uploadedFile.status, 200);
+  assert.equal(uploadedFile.headers['x-content-type-options'], 'nosniff');
+});
+
 test('media library ignores invalid site filters instead of failing', async (t) => {
   const paths = createSeededAppPaths('b8-admin-media-filter-');
   t.after(() => {

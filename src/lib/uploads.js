@@ -391,6 +391,19 @@ function toPublicUploadPath(file) {
   return buildPublicMediaPath(relativePath);
 }
 
+function toInlineUploadPath(file) {
+  const relativePath = resolveManagedMediaRelativePath({
+    storagePath: file?.path,
+    uploadRoot: file?.destination,
+  });
+
+  if (!relativePath) {
+    return null;
+  }
+
+  return `/uploads/${relativePath.split('/').map((segment) => encodeURIComponent(segment)).join('/')}`;
+}
+
 function removeUploadedFile(fileOrPath) {
   const filePath = typeof fileOrPath === 'string' ? fileOrPath : fileOrPath?.path;
   if (!filePath) {
@@ -406,6 +419,7 @@ module.exports = {
   isAllowedUploadFilename,
   removeUploadedFile,
   sanitizeFilename,
+  toInlineUploadPath,
   toPublicUploadPath,
   validateUploadedContent,
 };

@@ -54,6 +54,11 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   app.use(cookieParser(cookieSecret));
   app.use('/css', express.static(path.join(publicRoot, 'css')));
   app.use('/js', express.static(path.join(publicRoot, 'js')));
+  app.use('/uploads', express.static(uploadRoot, {
+    setHeaders(res) {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  }));
   app.use('/media', createMediaRouter({
     adminRepository: app.locals.adminRepository,
     mediaRepository: app.locals.mediaRepository,

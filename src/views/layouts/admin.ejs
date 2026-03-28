@@ -4,12 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
+    <script defer src="https://cdn.jsdelivr.net/npm/tinymce@7.6.0/tinymce.min.js"></script>
     <link rel="stylesheet" href="/css/admin.css" />
+    <script defer src="/js/admin.js"></script>
   </head>
   <body class="admin-shell <%= navLinks.length ? 'admin-shell--app' : 'admin-shell--auth' %>">
     <div class="admin-shell__frame">
       <% if (navLinks.length) { %>
         <aside class="admin-sidebar">
+          <button class="admin-sidebar__toggle" id="sidebarToggle" aria-label="收起/展开侧边栏" title="收起/展开侧边栏">☰</button>
           <div class="admin-sidebar__brand">
             <span class="admin-sidebar__eyebrow">B8 多站点</span>
             <strong>中文后台</strong>
@@ -47,6 +50,20 @@
           <%- include(bodyView) %>
         </section>
       </main>
+    </div>
+
+    <!-- Global media picker modal -->
+    <div class="media-picker-modal" id="mediaPickerModal" role="dialog" aria-modal="true" aria-label="选择媒体">
+      <div class="media-picker-modal__box">
+        <div class="media-picker-modal__head">
+          <h3>选择封面图</h3>
+          <button class="media-picker-modal__close" aria-label="关闭">✕</button>
+        </div>
+        <div class="media-picker-modal__body">
+          <div class="media-picker-modal__grid"></div>
+          <p class="media-picker-modal__empty" style="display:none">暂无媒体素材</p>
+        </div>
+      </div>
     </div>
   </body>
 </html>

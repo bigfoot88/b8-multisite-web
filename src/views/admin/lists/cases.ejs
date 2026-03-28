@@ -2,9 +2,12 @@
 <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
   <div class="admin-alert" role="alert"><%= errorMessage %></div>
 <% } %>
-<div class="admin-grid">
-  <section class="admin-panel">
-    <h2>案例列表</h2>
+<div class="admin-grid" data-collapsible>
+  <section class="admin-panel admin-panel--list">
+    <div class="admin-panel__toolbar">
+      <h2>案例列表</h2>
+      <button class="admin-panel-btn" data-action="collapse-list" title="展开编辑区">展开编辑 »</button>
+    </div>
     <form method="get" action="<%= basePath %>" class="admin-form admin-form--inline">
       <label>发布状态
         <select name="publishState">
@@ -45,7 +48,10 @@
     </table>
   </section>
   <section class="admin-panel">
-    <h2><%= record ? `编辑案例：${record.title}` : '新建案例' %></h2>
+    <div class="admin-panel__toolbar">
+      <h2><%= record ? `编辑案例：${record.title}` : '新建案例' %></h2>
+      <button class="admin-panel-btn" data-action="expand-list" title="返回列表">« 返回列表</button>
+    </div>
     <%- include('../forms/case', { currentRecord }) %>
   </section>
 </div>

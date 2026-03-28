@@ -1,0 +1,14 @@
+<%
+  const normalizedValue = typeof value === 'string' ? value : '';
+%>
+<div class="admin-rich-text">
+  <textarea
+    class="admin-rich-text__textarea"
+    name="<%= name %>"
+    data-rich-text-editor
+    data-site-key="<%= siteKey || '' %>"
+    data-upload-endpoint="/admin/media/inline-upload"
+    rows="18"
+  ><%= normalizedValue %></textarea>
+  <p class="admin-rich-text__hint"><%= description || '支持段落、字体样式和图片插入。' %></p>
+</div>

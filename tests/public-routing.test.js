@@ -237,6 +237,31 @@ test('public pages sanitize stored rich html before rendering', async (t) => {
   assert.doesNotMatch(genericPage.text, /javascript:/i);
 });
 
+test('public pages preserve editor images and paragraph classes after sanitization', async (t) => {
+  const { app } = withPublicApp(t, 'b8-public-rich-text-', ({ catalogRepository, paths, ...repositories }) => {
+    seedRepresentativePublicContent({ catalogRepository, paths, ...repositories });
+
+    catalogRepository.createProduct({
+      siteKey: 'dma',
+      slug: 'editor-rich-text',
+      title: '编辑器富文本',
+      summary: '验证图片和段落样式可以公开渲染。',
+      bodyHtml: '<p style="font-family: Georgia, serif; font-size: 18px;">这是一段正文 <img src="/uploads/editor-inline.png" alt="DMA editor upload" /></p>',
+      publishState: 'published',
+      sortOrder: 60,
+    });
+
+    writeUpload(paths.uploadRoot, 'editor-inline.png', 'inline image content');
+  });
+
+  const productDetail = await request(app)
+    .get('/products/editor-rich-text')
+    .set('host', 'dma.b8water.com');
+  assert.equal(productDetail.status, 200);
+  assert.match(productDetail.text, /<p[^>]*style="(?=[^"]*font-family:)(?=[^"]*font-size:)[^"]*">/);
+  assert.match(productDetail.text, /<img[^>]+src="\/uploads\/editor-inline\.png"[^>]+alt="DMA editor upload"/);
+});
+
 test('public asset downloads stay site-scoped, require published references, and support nested paths', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-assets-', ({ catalogRepository, mediaRepository, redirectRepository, siteRepository, paths }) => {
     seedRepresentativePublicContent({

@@ -2,8 +2,21 @@
   <label>Slug<input type="text" name="slug" value="<%= currentRecord.slug || '' %>" required /></label>
   <label>新闻标题<input type="text" name="title" value="<%= currentRecord.title || '' %>" required /></label>
   <label>摘要<textarea name="summary" rows="3"><%= currentRecord.summary || '' %></textarea></label>
-  <label>正文 HTML<textarea name="bodyHtml" rows="6"><%= currentRecord.bodyHtml || '' %></textarea></label>
-  <label>头图媒体 ID<input type="number" name="heroMediaId" value="<%= currentRecord.heroMediaId || '' %>" /></label>
+  <%- include('../partials/rich-text-editor', {
+    name: 'bodyHtml',
+    siteKey,
+    value: currentRecord.bodyHtml || '',
+    description: '支持标题、段落、字体样式、列表和图片插入。',
+  }) %>
+  <label>头图媒体 ID</label>
+  <%- include('../partials/media-picker', {
+    name: 'heroMediaId',
+    label: '封面图',
+    value: currentRecord.heroMediaId || '',
+    previewUrl: currentRecord.heroAsset?.publicUrl || '',
+    altText: currentRecord.heroAsset?.altText || '',
+    siteKey
+  }) %>
   <label>SEO 标题<input type="text" name="seoTitle" value="<%= currentRecord.seoTitle || '' %>" /></label>
   <label>SEO 描述<textarea name="seoDescription" rows="3"><%= currentRecord.seoDescription || '' %></textarea></label>
   <label>排序<input type="number" name="sortOrder" value="<%= currentRecord.sortOrder ?? 100 %>" /></label>

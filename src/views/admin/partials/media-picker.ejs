@@ -1,0 +1,24 @@
+<%
+  const pickerId = `media-picker-${name}`;
+  const hasPreview = previewUrl && previewUrl.length > 0;
+%>
+<div class="media-picker" data-media-picker="<%= name %>" data-site-key="<%= siteKey || '' %>">
+  <label><%= label || name %></label>
+  <input type="hidden" name="<%= name %>" value="<%= value || '' %>" />
+  <% if (hasPreview) { %>
+    <img
+      class="media-picker__preview"
+      src="<%= previewUrl %>"
+      alt="<%= altText || label || '' %>"
+    />
+  <% } else { %>
+    <div class="media-picker__placeholder" style="<%= hasPreview ? 'display:none' : '' %>">暂无封面图</div>
+  <% } %>
+  <% if (!hasPreview) { %>
+    <img class="media-picker__preview" src="" alt="" style="display:none" />
+  <% } %>
+  <div class="media-picker__actions">
+    <button type="button" class="admin-panel-btn admin-panel-btn--primary" data-action="open-media-picker">选择封面图</button>
+    <button type="button" class="admin-panel-btn" data-action="clear-media-picker">清除封面图</button>
+  </div>
+</div>

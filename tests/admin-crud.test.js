@@ -77,6 +77,19 @@ test('admin can create and update a product from the Chinese form', async (t) =>
   assert.match(listResponse.text, /DMA 中文版升级/);
 });
 
+test('admin content forms render the rich text editor and inline image upload affordance', async (t) => {
+  const { agent } = withApp(t, 'b8-admin-rich-text-form-');
+
+  await loginAsAdmin(agent);
+
+  const productForm = await agent.get('/admin/dma/products');
+  assert.equal(productForm.status, 200);
+  assert.match(productForm.text, /data-rich-text-editor/);
+  assert.match(productForm.text, /data-upload-endpoint="\/admin\/media\/inline-upload"/);
+  assert.match(productForm.text, /\/js\/admin\.js/);
+  assert.match(productForm.text, /tinymce\.min\.js/);
+});
+
 test('homepage sections respect publish state by host', async (t) => {
   const { app, agent } = withApp(t, 'b8-admin-sections-');
 

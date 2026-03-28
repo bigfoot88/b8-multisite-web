@@ -1,5 +1,26 @@
 <%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
-<%- include('../partials/hero', { hero, site }) %>
+
+<div class="article-header">
+  <% if (heroAsset && heroAsset.publicUrl) { %>
+    <div class="article-header__cover">
+      <img
+        class="article-header__cover-img"
+        src="<%= heroAsset.publicUrl %>"
+        alt="<%= heroAsset.altText || article.title %>"
+      />
+    </div>
+  <% } %>
+  <div class="container article-header__meta">
+    <p class="eyebrow">新闻详情</p>
+    <h1 class="article-header__title"><%= article.title %></h1>
+    <% if (article.summary) { %>
+      <p class="article-header__summary"><%= article.summary %></p>
+    <% } %>
+    <% if (article.publishedAt || article.createdAt) { %>
+      <p class="article-header__date"><%= new Date(article.publishedAt || article.createdAt).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+    <% } %>
+  </div>
+</div>
 
 <section class="section">
   <div class="container prose-shell">

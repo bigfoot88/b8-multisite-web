@@ -33,7 +33,15 @@ function createAdminCatalogRouter({
       sort: filters.sort,
     });
     const editId = record?.id ? Number.parseInt(record.id, 10) : (req.query.edit ? Number.parseInt(req.query.edit, 10) : null);
-    const currentRecord = record || (editId ? req.app.locals.catalogRepository.getRecord(collectionKey, req.params.siteKey, editId) : null);
+    let currentRecord = record || (editId ? req.app.locals.catalogRepository.getRecord(collectionKey, req.params.siteKey, editId) : null);
+
+    // Hydrate heroAsset for the edit form
+    if (currentRecord && currentRecord.heroMediaId && !currentRecord.heroAsset) {
+      const heroAsset = req.app.locals.mediaRepository.findById(currentRecord.heroMediaId);
+      currentRecord = { ...currentRecord, heroAsset: heroAsset || null };
+    } else if (currentRecord && !currentRecord.heroAsset) {
+      currentRecord = { ...currentRecord, heroAsset: null };
+    }
 
     res.status(status);
     return renderAdmin(req, res, {
