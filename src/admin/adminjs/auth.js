@@ -29,6 +29,7 @@ async function authenticate(identifier, password, adminRepository) {
   }
 
   return {
+    id: admin.id,
     email: admin.email || admin.username,
     title: admin.displayName || admin.username,
   };
@@ -37,6 +38,10 @@ async function authenticate(identifier, password, adminRepository) {
 function findAdminForAdminJsSession(adminUser, adminRepository) {
   if (!adminUser || !adminRepository) {
     return null;
+  }
+
+  if (adminUser.id && typeof adminRepository.findById === 'function') {
+    return adminRepository.findById(adminUser.id);
   }
 
   const normalizedIdentifier = typeof adminUser.email === 'string' ? adminUser.email.trim() : '';
@@ -55,6 +60,7 @@ function createAdminJsCurrentAdmin(admin) {
   }
 
   return {
+    id: admin.id,
     email: admin.email || admin.username,
     title: admin.displayName || admin.username,
   };
@@ -84,7 +90,11 @@ function createAdminJsSessionRevalidationMiddleware({ adminRepository, cookieNam
 
     const currentAdmin = createAdminJsCurrentAdmin(admin);
 
-    if (adminUser.email !== currentAdmin.email || adminUser.title !== currentAdmin.title) {
+    if (
+      adminUser.id !== currentAdmin.id
+      || adminUser.email !== currentAdmin.email
+      || adminUser.title !== currentAdmin.title
+    ) {
       req.session.adminUser = currentAdmin;
     }
 

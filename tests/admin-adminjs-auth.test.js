@@ -91,13 +91,16 @@ test('authenticate accepts username or email for active admins', async (t) => {
   ]);
 
   assert.deepEqual(byUsername, {
+    id: byUsername.id,
     email: 'admin@b8.local',
     title: '平台管理员',
   });
   assert.deepEqual(byEmail, {
+    id: byEmail.id,
     email: 'admin@b8.local',
     title: '平台管理员',
   });
+  assert.equal(byUsername.id, byEmail.id);
 });
 
 test('authenticate rejects inactive admins even with valid credentials', async (t) => {
