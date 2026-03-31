@@ -21,18 +21,27 @@ function createTestPaths() {
   };
 }
 
-test('GET /admin/login serves the AdminJS login screen instead of the legacy Chinese login form', async (t) => {
+test('GET /admin-next/login serves AdminJS while /admin/login remains on the legacy Chinese backend', async (t) => {
   const paths = createTestPaths();
   t.after(() => {
     fs.rmSync(paths.tempDir, { recursive: true, force: true });
   });
 
   const app = createApp({ databasePath: paths.databasePath });
-  const response = await request(app).get('/admin/login');
+  const [adminJsResponse, legacyResponse] = await Promise.all([
+    request(app).get('/admin-next/login'),
+    request(app).get('/admin/login'),
+  ]);
 
-  assert.equal(response.status, 200);
-  assert.match(response.headers['content-type'], /text\/html/);
-  assert.match(response.text, /AdminJS/i);
-  assert.doesNotMatch(response.text, /管理员登录/);
-  assert.doesNotMatch(response.text, /登录后进入中文后台总控台/);
+  assert.equal(adminJsResponse.status, 200);
+  assert.match(adminJsResponse.headers['content-type'], /text\/html/);
+  assert.match(adminJsResponse.text, /AdminJS/i);
+  assert.doesNotMatch(adminJsResponse.text, /管理员登录/);
+  assert.doesNotMatch(adminJsResponse.text, /登录后进入中文后台总控台/);
+
+  assert.equal(legacyResponse.status, 200);
+  assert.match(legacyResponse.headers['content-type'], /text\/html/);
+  assert.match(legacyResponse.text, /管理员登录/);
+  assert.match(legacyResponse.text, /登录后进入中文后台总控台/);
+  assert.doesNotMatch(legacyResponse.text, /AdminJS/i);
 });

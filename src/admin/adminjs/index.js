@@ -4,7 +4,10 @@ const { verifyPassword } = require('../../lib/passwords');
 const { resolveSessionSecret } = require('../../lib/session');
 const { createAdminJsDatabases } = require('./databases');
 
-const ADMINJS_ROOT_PATH = '/admin';
+const ADMINJS_ROOT_PATH = '/admin-next';
+const ADMINJS_LOGIN_PATH = `${ADMINJS_ROOT_PATH}/login`;
+const ADMINJS_LOGOUT_PATH = `${ADMINJS_ROOT_PATH}/logout`;
+const ADMINJS_REFRESH_TOKEN_PATH = `${ADMINJS_ROOT_PATH}/refresh-token`;
 const ADMINJS_COOKIE_NAME = 'b8_adminjs';
 const ADMINJS_COMPANY_NAME = 'B8 AdminJS';
 
@@ -69,6 +72,9 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
   const cookieSecret = sessionSecret || resolveSessionSecret();
   const admin = new AdminJS({
     rootPath: ADMINJS_ROOT_PATH,
+    loginPath: ADMINJS_LOGIN_PATH,
+    logoutPath: ADMINJS_LOGOUT_PATH,
+    refreshTokenPath: ADMINJS_REFRESH_TOKEN_PATH,
     databases,
     resources: [],
     branding: {
@@ -116,6 +122,9 @@ function createAdminJsRouter(options = {}) {
 
 module.exports = {
   ADMINJS_COOKIE_NAME,
+  ADMINJS_LOGIN_PATH,
+  ADMINJS_LOGOUT_PATH,
+  ADMINJS_REFRESH_TOKEN_PATH,
   ADMINJS_ROOT_PATH,
   createAdminJsRouter,
 };
