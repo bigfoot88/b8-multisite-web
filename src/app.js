@@ -11,7 +11,7 @@ const { createSiteRepository } = require('./repositories/site-repository');
 const { createCatalogRepository } = require('./repositories/catalog-repository');
 const { createMediaRepository } = require('./repositories/media-repository');
 const { createRedirectRepository } = require('./repositories/redirect-repository');
-const { createAdminJsRouter } = require('./admin/adminjs');
+const { ADMINJS_ROOT_PATH, createAdminJsRouter, isAdminJsPath } = require('./admin/adminjs');
 const { createMediaRouter } = require('./routes/media');
 const { createPublicSiteService } = require('./services/public-site-service');
 const { createPublicRouter } = require('./routes/public');
@@ -53,7 +53,7 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   app.locals.uploadRoot = uploadRoot;
 
   app.use((req, res, next) => {
-    if (req.path === '/admin-next' || req.path.startsWith('/admin-next/')) {
+    if (isAdminJsPath(req.path)) {
       return next();
     }
 
@@ -72,7 +72,7 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
     mediaRepository: app.locals.mediaRepository,
     siteRepository: app.locals.siteRepository,
   }));
-  app.use('/admin-next', createAdminJsRouter({
+  app.use(ADMINJS_ROOT_PATH, createAdminJsRouter({
     adminRepository: app.locals.adminRepository,
     databasePath,
     sessionSecret: cookieSecret,

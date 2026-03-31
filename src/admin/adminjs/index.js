@@ -1,14 +1,12 @@
 const express = require('express');
 
-const { verifyPassword } = require('../../lib/passwords');
-const { resolveSessionSecret } = require('../../lib/session');
+const { ADMINJS_COOKIE_NAME, buildAdminJsAuth } = require('./auth');
 const { createAdminJsDatabases } = require('./databases');
 
 const ADMINJS_ROOT_PATH = '/admin-next';
 const ADMINJS_LOGIN_PATH = `${ADMINJS_ROOT_PATH}/login`;
 const ADMINJS_LOGOUT_PATH = `${ADMINJS_ROOT_PATH}/logout`;
 const ADMINJS_REFRESH_TOKEN_PATH = `${ADMINJS_ROOT_PATH}/refresh-token`;
-const ADMINJS_COOKIE_NAME = 'b8_adminjs';
 const ADMINJS_COMPANY_NAME = 'B8 AdminJS';
 
 let adapterRegistered = false;
@@ -38,30 +36,8 @@ async function loadAdminJsModules() {
   };
 }
 
-async function authenticateAdmin(identifier, password, adminRepository) {
-  const normalizedIdentifier = identifier?.trim();
-
-  if (!normalizedIdentifier || !password || !adminRepository) {
-    return null;
-  }
-
-  const admin = adminRepository.findByUsername(normalizedIdentifier)
-    || adminRepository.findByEmail(normalizedIdentifier);
-
-  if (!admin || !admin.isActive) {
-    return null;
-  }
-
-  const passwordMatches = await verifyPassword(password, admin.passwordHash);
-
-  if (!passwordMatches) {
-    return null;
-  }
-
-  return {
-    email: admin.email || admin.username,
-    title: admin.displayName || admin.username,
-  };
+function isAdminJsPath(pathname) {
+  return pathname === ADMINJS_ROOT_PATH || pathname.startsWith(`${ADMINJS_ROOT_PATH}/`);
 }
 
 async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret } = {}) {
@@ -69,7 +45,10 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     loadAdminJsModules(),
     createAdminJsDatabases({ databasePath }),
   ]);
-  const cookieSecret = sessionSecret || resolveSessionSecret();
+  const { authentication, sessionOptions } = buildAdminJsAuth({
+    adminRepository,
+    sessionSecret,
+  });
   const admin = new AdminJS({
     rootPath: ADMINJS_ROOT_PATH,
     loginPath: ADMINJS_LOGIN_PATH,
@@ -85,21 +64,9 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
 
   return AdminJSExpress.buildAuthenticatedRouter(
     admin,
-    {
-      authenticate: (identifier, password) => authenticateAdmin(identifier, password, adminRepository),
-      cookieName: ADMINJS_COOKIE_NAME,
-      cookiePassword: cookieSecret,
-    },
+    authentication,
     undefined,
-    {
-      resave: false,
-      saveUninitialized: false,
-      secret: cookieSecret,
-      cookie: {
-        httpOnly: true,
-        sameSite: 'lax',
-      },
-    },
+    sessionOptions,
   );
 }
 
@@ -127,4 +94,5 @@ module.exports = {
   ADMINJS_REFRESH_TOKEN_PATH,
   ADMINJS_ROOT_PATH,
   createAdminJsRouter,
+  isAdminJsPath,
 };
