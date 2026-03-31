@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const bcrypt = require('bcryptjs');
@@ -11,23 +12,13 @@ const { createDatabase } = require('../src/lib/db');
 const { runMigrations } = require('../src/lib/migrations');
 const { createAdminRepository } = require('../src/repositories/admin-repository');
 
-const scratchDirectories = new Set();
-
-process.on('exit', () => {
-  for (const directory of scratchDirectories) {
-    fs.rmSync(directory, { recursive: true, force: true });
-  }
-});
-
 function createTestPaths() {
-  const tempDir = path.join(
-    __dirname,
-    '.scratch',
-    `admin-adminjs-auth-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  const tempDir = fs.mkdtempSync(
+    path.join(
+      os.tmpdir(),
+      'b8-admin-adminjs-auth-',
+    ),
   );
-
-  fs.mkdirSync(tempDir, { recursive: true });
-  scratchDirectories.add(tempDir);
 
   return {
     tempDir,
