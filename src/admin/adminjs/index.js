@@ -41,7 +41,7 @@ function isAdminJsPath(pathname) {
 }
 
 async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret } = {}) {
-  const [{ AdminJS, AdminJSExpress }, { databases }] = await Promise.all([
+  const [{ AdminJS, AdminJSExpress }, { databases, sessionStore }] = await Promise.all([
     loadAdminJsModules(),
     createAdminJsDatabases({ databasePath }),
   ]);
@@ -49,6 +49,7 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     adminRepository,
     sessionSecret,
   });
+  sessionOptions.store = sessionStore;
   const admin = new AdminJS({
     rootPath: ADMINJS_ROOT_PATH,
     loginPath: ADMINJS_LOGIN_PATH,

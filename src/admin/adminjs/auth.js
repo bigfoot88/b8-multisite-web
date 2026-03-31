@@ -3,7 +3,7 @@ const { resolveSessionSecret } = require('../../lib/session');
 
 const ADMINJS_COOKIE_NAME = 'b8_adminjs';
 
-async function authenticateAdmin(identifier, password, adminRepository) {
+async function authenticate(identifier, password, adminRepository) {
   const normalizedIdentifier = identifier?.trim();
 
   if (!normalizedIdentifier || !password || !adminRepository) {
@@ -34,7 +34,7 @@ function buildAdminJsAuth({ adminRepository, sessionSecret } = {}) {
 
   return {
     authentication: {
-      authenticate: (identifier, password) => authenticateAdmin(identifier, password, adminRepository),
+      authenticate: (identifier, password) => authenticate(identifier, password, adminRepository),
       cookieName: ADMINJS_COOKIE_NAME,
       cookiePassword: cookieSecret,
     },
@@ -42,6 +42,7 @@ function buildAdminJsAuth({ adminRepository, sessionSecret } = {}) {
       resave: false,
       saveUninitialized: false,
       secret: cookieSecret,
+      unset: 'destroy',
       cookie: {
         httpOnly: true,
         sameSite: 'lax',
@@ -52,6 +53,7 @@ function buildAdminJsAuth({ adminRepository, sessionSecret } = {}) {
 
 module.exports = {
   ADMINJS_COOKIE_NAME,
-  authenticateAdmin,
+  authenticate,
+  authenticateAdmin: authenticate,
   buildAdminJsAuth,
 };

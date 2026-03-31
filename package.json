@@ -24,6 +24,7 @@
     "adminjs": "^7.8.17",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.8.0",
+    "connect-sqlite3": "^0.9.16",
     "cookie-parser": "^1.4.7",
     "ejs": "^5.0.1",
     "express": "^5.2.1",
