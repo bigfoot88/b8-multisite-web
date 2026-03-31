@@ -1,6 +1,5 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const bcrypt = require('bcryptjs');
@@ -13,17 +12,27 @@ const { runMigrations } = require('../src/lib/migrations');
 const { createAdminRepository } = require('../src/repositories/admin-repository');
 
 function createTestPaths() {
-  const tempDir = fs.mkdtempSync(
-    path.join(
-      os.tmpdir(),
-      'b8-admin-adminjs-auth-',
-    ),
+  const tempDir = path.join(
+    __dirname,
+    '.scratch',
+    `admin-adminjs-auth-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   );
+
+  fs.mkdirSync(tempDir, { recursive: true });
 
   return {
     tempDir,
     databasePath: path.join(tempDir, 'content.db'),
   };
+}
+
+async function closeApp(app) {
+  if (typeof app?.close === 'function') {
+    await app.close();
+    return;
+  }
+
+  app?.locals?.db?.close?.();
 }
 
 function createSeededAdminDb(paths) {
@@ -106,6 +115,10 @@ test('authenticate rejects inactive admins even with valid credentials', async (
 
 test('GET /admin-next/login serves AdminJS while /admin/login remains on the legacy Chinese backend', async (t) => {
   const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
 
   const app = createApp({ databasePath: paths.databasePath });
   const [adminJsResponse, legacyResponse] = await Promise.all([
@@ -128,6 +141,10 @@ test('GET /admin-next/login serves AdminJS while /admin/login remains on the leg
 
 test('POST /admin-next/login authenticates with AdminJS while /admin/login remains on the legacy backend', async (t) => {
   const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
 
   createSeededAdminDb(paths);
 
@@ -157,6 +174,10 @@ test('POST /admin-next/login authenticates with AdminJS while /admin/login remai
 
 test('POST /admin-next/login accepts email credentials for AdminJS', async (t) => {
   const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
 
   createSeededAdminDb(paths);
 
@@ -173,6 +194,10 @@ test('POST /admin-next/login accepts email credentials for AdminJS', async (t) =
 
 test('POST /admin-next/login rejects inactive admins', async (t) => {
   const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
 
   const { close } = createAdminRepositoryWithSeededAdmins(paths);
   close();
@@ -190,6 +215,10 @@ test('POST /admin-next/login rejects inactive admins', async (t) => {
 
 test('GET /admin-next/logout destroys the AdminJS session', async (t) => {
   const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
 
   createSeededAdminDb(paths);
 
@@ -213,4 +242,67 @@ test('GET /admin-next/logout destroys the AdminJS session', async (t) => {
   const postLogoutResponse = await agent.get('/admin-next');
   assert.equal(postLogoutResponse.status, 302);
   assert.equal(postLogoutResponse.headers.location, '/admin-next/login');
+});
+
+test('GET /admin-next revalidates active admins on every request', async (t) => {
+  const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  createSeededAdminDb(paths);
+
+  const app = createApp({ databasePath: paths.databasePath });
+  const agent = request.agent(app);
+
+  const loginResponse = await agent
+    .post('/admin-next/login')
+    .type('form')
+    .send({ email: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+
+  const preDisableResponse = await agent.get('/admin-next');
+  assert.notEqual(preDisableResponse.headers.location, '/admin-next/login');
+
+  app.locals.db.prepare('UPDATE admins SET is_active = 0 WHERE username = ?').run('admin');
+
+  const disabledResponse = await agent.get('/admin-next');
+  assert.equal(disabledResponse.status, 302);
+  assert.equal(disabledResponse.headers.location, '/admin-next/login');
+
+  const afterDisableResponse = await agent.get('/admin-next');
+  assert.equal(afterDisableResponse.status, 302);
+  assert.equal(afterDisableResponse.headers.location, '/admin-next/login');
+});
+
+test('createApp exposes AdminJS cleanup for in-memory session artifacts', async (t) => {
+  const app = createApp({ databasePath: ':memory:' });
+  t.after(async () => {
+    await closeApp(app);
+  });
+
+  app.locals.adminRepository.createAdmin({
+    username: 'admin',
+    email: 'admin@b8.local',
+    passwordHash: bcrypt.hashSync('ChangeMe123!', 10),
+    displayName: '平台管理员',
+  });
+
+  const loginResponse = await request(app)
+    .post('/admin-next/login')
+    .type('form')
+    .send({ email: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+  assert.equal(typeof app.close, 'function');
+  assert.equal(typeof app.locals.adminJs?.sessionDatabasePath, 'string');
+  assert.equal(fs.existsSync(app.locals.adminJs.sessionDatabasePath), true);
+
+  const sessionDirectory = path.dirname(app.locals.adminJs.sessionDatabasePath);
+
+  await app.close();
+
+  assert.equal(fs.existsSync(sessionDirectory), false);
 });

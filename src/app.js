@@ -51,6 +51,7 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
     redirectRepository: app.locals.redirectRepository,
   });
   app.locals.uploadRoot = uploadRoot;
+  app.locals.adminJs = null;
 
   app.use((req, res, next) => {
     if (isAdminJsPath(req.path)) {
@@ -72,11 +73,13 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
     mediaRepository: app.locals.mediaRepository,
     siteRepository: app.locals.siteRepository,
   }));
-  app.use(ADMINJS_ROOT_PATH, createAdminJsRouter({
+  const adminJsRouter = createAdminJsRouter({
     adminRepository: app.locals.adminRepository,
     databasePath,
     sessionSecret: cookieSecret,
-  }));
+  });
+  app.locals.adminJs = adminJsRouter.adminJs;
+  app.use(ADMINJS_ROOT_PATH, adminJsRouter);
   app.use('/admin', createAdminAuthRouter({ adminRepository: app.locals.adminRepository }));
   app.use('/admin', createAdminSitesRouter());
   app.use('/admin', createAdminSectionsRouter());
@@ -136,6 +139,33 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
     siteRepository: app.locals.siteRepository,
     publicSiteService: app.locals.publicSiteService,
   }));
+
+  let isClosed = false;
+  app.close = async () => {
+    if (isClosed) {
+      return;
+    }
+
+    isClosed = true;
+    const errors = [];
+
+    try {
+      await app.locals.adminJs?.close?.();
+    } catch (error) {
+      errors.push(error);
+    }
+
+    try {
+      app.locals.db.close();
+    } catch (error) {
+      errors.push(error);
+    }
+
+    if (errors[0]) {
+      throw errors[0];
+    }
+  };
+  app.locals.close = app.close;
 
   return app;
 }

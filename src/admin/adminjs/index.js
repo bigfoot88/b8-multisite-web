@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { ADMINJS_COOKIE_NAME, buildAdminJsAuth } = require('./auth');
+const { ADMINJS_COOKIE_NAME, buildAdminJsAuth, createAdminJsSessionRevalidationMiddleware } = require('./auth');
 const { createAdminJsDatabases } = require('./databases');
 
 const ADMINJS_ROOT_PATH = '/admin-next';
@@ -41,7 +41,7 @@ function isAdminJsPath(pathname) {
 }
 
 async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret } = {}) {
-  const [{ AdminJS, AdminJSExpress }, { databases, sessionStore }] = await Promise.all([
+  const [{ AdminJS, AdminJSExpress }, { close, databases, sessionDatabasePath, sessionStore }] = await Promise.all([
     loadAdminJsModules(),
     createAdminJsDatabases({ databasePath }),
   ]);
@@ -63,27 +63,67 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     },
   });
 
-  return AdminJSExpress.buildAuthenticatedRouter(
+  const router = AdminJSExpress.buildAuthenticatedRouter(
     admin,
     authentication,
     undefined,
     sessionOptions,
   );
+
+  const protectedRoutesLayerIndex = router.stack.findIndex(
+    (layer) => layer?.handle?.name === 'authorizedRoutesMiddleware',
+  );
+
+  if (protectedRoutesLayerIndex >= 0) {
+    const middlewareRouter = express.Router();
+    middlewareRouter.use(createAdminJsSessionRevalidationMiddleware({ adminRepository }));
+    router.stack.splice(protectedRoutesLayerIndex, 0, middlewareRouter.stack[0]);
+  }
+
+  return {
+    close,
+    router,
+    sessionDatabasePath,
+  };
 }
 
 function createAdminJsRouter(options = {}) {
   const router = express.Router();
   let adminRouterPromise;
+  let sessionDatabasePath = null;
+  const lifecycle = {
+    async close() {
+      if (!adminRouterPromise) {
+        return;
+      }
+
+      const adminJs = await adminRouterPromise;
+      await adminJs.close?.();
+    },
+  };
+
+  Object.defineProperty(lifecycle, 'sessionDatabasePath', {
+    enumerable: true,
+    get() {
+      return sessionDatabasePath;
+    },
+  });
 
   router.use((req, res, next) => {
     if (!adminRouterPromise) {
-      adminRouterPromise = buildAdminJsRouter(options);
+      adminRouterPromise = buildAdminJsRouter(options)
+        .then((adminJs) => {
+          sessionDatabasePath = adminJs.sessionDatabasePath;
+          return adminJs;
+        });
     }
 
     adminRouterPromise
-      .then((adminRouter) => adminRouter(req, res, next))
+      .then((adminJs) => adminJs.router(req, res, next))
       .catch(next);
   });
+
+  router.adminJs = lifecycle;
 
   return router;
 }

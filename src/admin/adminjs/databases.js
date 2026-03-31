@@ -46,9 +46,21 @@ function installSqliteWalRuntimeHook(sequelize) {
   };
 }
 
+function createEphemeralAdminJsSessionDirectory() {
+  const scratchRoot = path.join(process.cwd(), '.scratch');
+
+  fs.mkdirSync(scratchRoot, { recursive: true });
+
+  return fs.mkdtempSync(path.join(scratchRoot, 'adminjs-session-'));
+}
+
 function resolveAdminJsSessionDatabasePath(databasePath) {
-  if (!databasePath || databasePath === ':memory:') {
+  if (!databasePath) {
     return resolveDatabasePath(path.join('data', 'sessions.db'));
+  }
+
+  if (databasePath === ':memory:') {
+    return path.join(createEphemeralAdminJsSessionDirectory(), 'sessions.db');
   }
 
   return path.join(path.dirname(resolveDatabasePath(databasePath)), 'sessions.db');
@@ -57,17 +69,78 @@ function resolveAdminJsSessionDatabasePath(databasePath) {
 function createAdminJsSessionStore({ databasePath } = {}) {
   const sessionDatabasePath = resolveAdminJsSessionDatabasePath(databasePath);
   const SQLiteStore = SqliteStoreFactory(session);
+  const sessionArtifactsPath = databasePath === ':memory:'
+    ? path.dirname(sessionDatabasePath)
+    : null;
 
   fs.mkdirSync(path.dirname(sessionDatabasePath), { recursive: true });
 
+  const sessionStore = new SQLiteStore({
+    db: path.basename(sessionDatabasePath),
+    dir: path.dirname(sessionDatabasePath),
+    concurrentDb: true,
+    createDirIfNotExists: true,
+  });
+
   return {
     sessionDatabasePath,
-    sessionStore: new SQLiteStore({
-      db: path.basename(sessionDatabasePath),
-      dir: path.dirname(sessionDatabasePath),
-      concurrentDb: true,
-      createDirIfNotExists: true,
-    }),
+    sessionArtifactsPath,
+    sessionStore,
+  };
+}
+
+function closeSqliteConnection(connection) {
+  return new Promise((resolve, reject) => {
+    if (!connection || typeof connection.close !== 'function') {
+      resolve();
+      return;
+    }
+
+    connection.close((error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+function createAdminJsDatabasesCloser({ sequelize, sessionStore, sessionArtifactsPath }) {
+  let isClosed = false;
+
+  return async function closeAdminJsDatabases() {
+    if (isClosed) {
+      return;
+    }
+
+    isClosed = true;
+    const errors = [];
+
+    try {
+      await closeSqliteConnection(sessionStore?.db);
+    } catch (error) {
+      errors.push(error);
+    }
+
+    try {
+      await sequelize.close();
+    } catch (error) {
+      errors.push(error);
+    }
+
+    if (sessionArtifactsPath) {
+      try {
+        fs.rmSync(sessionArtifactsPath, { recursive: true, force: true });
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+
+    if (errors[0]) {
+      throw errors[0];
+    }
   };
 }
 
@@ -94,11 +167,13 @@ async function createAdminJsDatabases({ databasePath } = {}) {
   });
 
   installSqliteWalRuntimeHook(sequelize);
-  const { sessionDatabasePath, sessionStore } = createAdminJsSessionStore({ databasePath });
+  const { sessionDatabasePath, sessionArtifactsPath, sessionStore } = createAdminJsSessionStore({ databasePath });
 
   return {
     databases: [sequelize],
+    close: createAdminJsDatabasesCloser({ sequelize, sessionStore, sessionArtifactsPath }),
     sequelize,
+    sessionArtifactsPath,
     sessionDatabasePath,
     sessionStore,
   };
@@ -107,6 +182,7 @@ async function createAdminJsDatabases({ databasePath } = {}) {
 module.exports = {
   createAdminJsSessionStore,
   createAdminJsDatabases,
+  createAdminJsDatabasesCloser,
   enableSqliteWal,
   installSqliteWalRuntimeHook,
   resolveAdminJsSessionDatabasePath,

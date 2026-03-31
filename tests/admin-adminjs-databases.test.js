@@ -36,3 +36,22 @@ test('createAdminJsDatabases leaves SQLite in WAL mode at runtime', async (t) =>
 
   assert.equal(rows[0]?.journal_mode, 'wal');
 });
+
+test('createAdminJsDatabases isolates AdminJS session storage for in-memory databases', async () => {
+  const first = await createAdminJsDatabases({ databasePath: ':memory:' });
+  const second = await createAdminJsDatabases({ databasePath: ':memory:' });
+  const firstSessionDir = path.dirname(first.sessionDatabasePath);
+  const secondSessionDir = path.dirname(second.sessionDatabasePath);
+
+  try {
+    assert.notEqual(first.sessionDatabasePath, second.sessionDatabasePath);
+    assert.notEqual(path.basename(first.sessionDatabasePath), '');
+    assert.notEqual(path.basename(second.sessionDatabasePath), '');
+  } finally {
+    await first.close();
+    await second.close();
+  }
+
+  assert.equal(fs.existsSync(firstSessionDir), false);
+  assert.equal(fs.existsSync(secondSessionDir), false);
+});
