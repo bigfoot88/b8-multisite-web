@@ -11,19 +11,10 @@ const { createSiteRepository } = require('./repositories/site-repository');
 const { createCatalogRepository } = require('./repositories/catalog-repository');
 const { createMediaRepository } = require('./repositories/media-repository');
 const { createRedirectRepository } = require('./repositories/redirect-repository');
+const { createAdminJsRouter } = require('./admin/adminjs');
 const { createMediaRouter } = require('./routes/media');
 const { createPublicSiteService } = require('./services/public-site-service');
 const { createPublicRouter } = require('./routes/public');
-const { createAdminAuthRouter } = require('./routes/admin-auth');
-const { createAdminDashboardRouter } = require('./routes/admin-dashboard');
-const { createAdminSitesRouter } = require('./routes/admin-sites');
-const { createAdminSectionsRouter } = require('./routes/admin-sections');
-const { createAdminNavigationRouter } = require('./routes/admin-navigation');
-const { createAdminPagesRouter } = require('./routes/admin-pages');
-const { createAdminCatalogRouter } = require('./routes/admin-catalog');
-const { createAdminNewsRouter } = require('./routes/admin-news');
-const { createAdminCasesRouter } = require('./routes/admin-cases');
-const { createAdminMediaRouter } = require('./routes/admin-media');
 
 function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot } = {}) {
   const app = express();
@@ -31,6 +22,7 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   const db = openDatabase(databasePath);
   const publicRoot = path.join(__dirname, '..', 'public');
   const uploadRoot = explicitUploadRoot || path.join(publicRoot, 'uploads');
+  const publicUrlEncoded = express.urlencoded({ extended: false });
 
   runMigrations(db);
 
@@ -50,7 +42,13 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   });
   app.locals.uploadRoot = uploadRoot;
 
-  app.use(express.urlencoded({ extended: false }));
+  app.use((req, res, next) => {
+    if (req.path === '/admin' || req.path.startsWith('/admin/')) {
+      return next();
+    }
+
+    return publicUrlEncoded(req, res, next);
+  });
   app.use(cookieParser(cookieSecret));
   app.use('/css', express.static(path.join(publicRoot, 'css')));
   app.use('/js', express.static(path.join(publicRoot, 'js')));
@@ -64,56 +62,11 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
     mediaRepository: app.locals.mediaRepository,
     siteRepository: app.locals.siteRepository,
   }));
-  app.use('/admin', createAdminAuthRouter({ adminRepository: app.locals.adminRepository }));
-  app.use('/admin', createAdminSitesRouter());
-  app.use('/admin', createAdminSectionsRouter());
-  app.use('/admin', createAdminNavigationRouter());
-  app.use('/admin', createAdminPagesRouter());
-  app.use('/admin', createAdminCatalogRouter({
-    collectionKey: 'products',
-    pathSegment: 'products',
-    pageTitle: '产品管理',
-    pageDescription: '维护产品标题、摘要、正文与发布状态。',
-    listView: '../admin/lists/products',
-    formView: '../admin/forms/product',
-    emptyRecord: {
-      id: null,
-      slug: '',
-      title: '',
-      summary: '',
-      bodyHtml: '',
-      brochureMediaId: '',
-      attachmentMediaId: '',
-      seoTitle: '',
-      seoDescription: '',
-      sortOrder: 100,
-      publishState: 'draft',
-    },
+  app.use('/admin', createAdminJsRouter({
+    adminRepository: app.locals.adminRepository,
+    databasePath,
+    sessionSecret: cookieSecret,
   }));
-  app.use('/admin', createAdminCatalogRouter({
-    collectionKey: 'solutions',
-    pathSegment: 'solutions',
-    pageTitle: '解决方案管理',
-    pageDescription: '维护解决方案内容、摘要与发布状态。',
-    listView: '../admin/lists/solutions',
-    formView: '../admin/forms/solution',
-    emptyRecord: {
-      id: null,
-      slug: '',
-      title: '',
-      summary: '',
-      bodyHtml: '',
-      attachmentMediaId: '',
-      seoTitle: '',
-      seoDescription: '',
-      sortOrder: 100,
-      publishState: 'draft',
-    },
-  }));
-  app.use('/admin', createAdminNewsRouter());
-  app.use('/admin', createAdminCasesRouter());
-  app.use('/admin', createAdminMediaRouter({ uploadRoot }));
-  app.use('/admin', createAdminDashboardRouter());
 
   app.get('/health', (req, res) => {
     res.json({ ok: true, sites });
