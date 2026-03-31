@@ -2,6 +2,7 @@ const express = require('express');
 
 const { ADMINJS_COOKIE_NAME, buildAdminJsAuth, createAdminJsSessionRevalidationMiddleware } = require('./auth');
 const { createAdminJsDatabases } = require('./databases');
+const { createNewsArticleResource } = require('./news-article-resource');
 
 const ADMINJS_ROOT_PATH = '/admin-next';
 const ADMINJS_LOGIN_PATH = `${ADMINJS_ROOT_PATH}/login`;
@@ -41,8 +42,9 @@ function isAdminJsPath(pathname) {
 }
 
 async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret } = {}) {
-  const [{ AdminJS, AdminJSExpress }, { close, databases, sessionDatabasePath, sessionStore }] = await Promise.all([
+  const [{ AdminJS, AdminJSExpress }, { DataTypes }, { close, databases, sequelize, sessionDatabasePath, sessionStore }] = await Promise.all([
     loadAdminJsModules(),
+    import('sequelize'),
     createAdminJsDatabases({ databasePath }),
   ]);
   const { authentication, sessionOptions } = buildAdminJsAuth({
@@ -50,13 +52,16 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     sessionSecret,
   });
   sessionOptions.store = sessionStore;
+  const resources = [
+    createNewsArticleResource(sequelize, DataTypes),
+  ];
   const admin = new AdminJS({
     rootPath: ADMINJS_ROOT_PATH,
     loginPath: ADMINJS_LOGIN_PATH,
     logoutPath: ADMINJS_LOGOUT_PATH,
     refreshTokenPath: ADMINJS_REFRESH_TOKEN_PATH,
     databases,
-    resources: [],
+    resources,
     branding: {
       companyName: ADMINJS_COMPANY_NAME,
       withMadeWithLove: false,
