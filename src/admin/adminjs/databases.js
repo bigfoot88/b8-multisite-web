@@ -28,6 +28,22 @@ function enableSqliteWal(connection) {
   });
 }
 
+function installSqliteWalRuntimeHook(sequelize) {
+  const configuredConnections = new WeakSet();
+  const originalGetConnection = sequelize.connectionManager.getConnection.bind(sequelize.connectionManager);
+
+  sequelize.connectionManager.getConnection = async function getConnectionWithWal(...args) {
+    const connection = await originalGetConnection(...args);
+
+    if (!configuredConnections.has(connection)) {
+      await enableSqliteWal(connection);
+      configuredConnections.add(connection);
+    }
+
+    return connection;
+  };
+}
+
 async function createAdminJsDatabases({ databasePath } = {}) {
   const { Sequelize } = await import('sequelize');
   const storage = databasePath === ':memory:' ? ':memory:' : resolveDatabasePath(databasePath);
@@ -50,6 +66,8 @@ async function createAdminJsDatabases({ databasePath } = {}) {
     },
   });
 
+  installSqliteWalRuntimeHook(sequelize);
+
   return {
     databases: [sequelize],
     sequelize,
@@ -59,4 +77,5 @@ async function createAdminJsDatabases({ databasePath } = {}) {
 module.exports = {
   createAdminJsDatabases,
   enableSqliteWal,
+  installSqliteWalRuntimeHook,
 };
