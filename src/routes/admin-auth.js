@@ -32,11 +32,7 @@ function createAdminAuthRouter({ adminRepository }) {
     try {
       const identifier = req.body?.username?.trim() || '';
       const password = req.body?.password || '';
-      let admin = null;
-      if (identifier) {
-        // allow login by username or email for convenience
-        admin = adminRepository.findByUsername(identifier) || adminRepository.findByEmail(identifier);
-      }
+      const admin = identifier ? adminRepository.findByUsername(identifier) : null;
       const passwordMatches = admin ? await verifyPassword(password, admin.passwordHash) : false;
 
       if (!admin || !admin.isActive || !passwordMatches) {
