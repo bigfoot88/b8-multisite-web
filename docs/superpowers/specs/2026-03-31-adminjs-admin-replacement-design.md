@@ -46,11 +46,24 @@
 
 ---
 
+## 数据库映射
+
+本项目使用两个 SQLite 文件，需配置两个独立的 Sequelize 连接：
+
+| 文件 | 表 |
+|------|----|
+| `app.db` | `admins` |
+| `content.db` | `site_settings`, `media_assets`, `pages`, `products`, `solutions`, `news_articles`, `case_studies`, `navigation_items`, `site_sections`, `redirect_rules` |
+
+WAL 模式：两个连接均通过 `PRAGMA journal_mode=WAL` 开启 WAL，避免 `better-sqlite3`（公开路由）与 `Sequelize + sqlite3`（AdminJS）并发写入时出现 `SQLITE_BUSY` 错误。
+
+`redirect_rules` 表：**本次实施范围外**，不在 AdminJS 中暴露该 Resource（功能极少用，维持原有重定向规则即可）。
+
 ## 内容资源（9 张表）
 
 | Resource     | 表名              | 关键字段                         | 说明               |
 |--------------|-------------------|----------------------------------|--------------------|
-| 站点设置     | site_settings     | site_key, brand_name, domain     | 只允许编辑，不可新建 |
+| 站点设置     | site_settings     | site_key, brand_name, domain     | 禁用 New/Delete 操作，只允许编辑 |
 | 媒体库       | media_assets      | filename, mime_type, alt_text    | 图片预览 + 上传    |
 | 页面         | pages             | title, body_html, publish_state  | 富文本编辑器       |
 | 产品         | products          | title, body_html, brochure_media_id | 富文本 + 媒体关联 |
@@ -60,21 +73,43 @@
 | 导航菜单     | navigation_items  | label, href, parent_id           | 层级结构           |
 | 首页板块     | site_sections     | section_key, heading, config_json | JSON 配置         |
 
+**发布状态**：`publish_state` 字段支持三个值 `draft`（草稿）、`published`（已发布）、`archived`（已归档），对应数据库 CHECK 约束。AdminJS 下拉列表需枚举全部三个值。
+
 ---
 
 ## 多站点方案
 
-- AdminJS session 中存储当前 `site_key`（dma / bigfoot）
-- 每个 Resource 的 `listProperties` 和创建操作通过 `before` hook 注入 `WHERE site_key = ?`
-- 顶部导航栏提供站点切换链接（`/admin?site=dma`、`/admin?site=bigfoot`）
+- AdminJS session 中存储当前 `site_key`（`dma` 或 `bigfoot`，**首次登录默认为 `dma`**）
+- 每个 Resource 通过 `before` action hook 向 Sequelize `where` 子句注入 `{ site_key: currentSite }`（`listProperties`、`new`、`show` 均适用）
+- 顶部导航栏提供站点切换链接（`/admin/switch-site?site=dma`），写入 session 后重定向回列表
+
+## 软删除
+
+现有 schema 使用 `deleted_at IS NOT NULL` 实现软删除。AdminJS 默认执行硬删除，**必须覆盖**。所有支持软删除的 Resource（`pages`, `products`, `solutions`, `news_articles`, `case_studies`, `navigation_items`, `site_sections`）需配置自定义 delete action：
+
+```js
+actions: {
+  delete: {
+    handler: async (req, res, ctx) => {
+      await ctx.record.update({ deleted_at: new Date().toISOString() });
+      return { record: ctx.record.toJSON(ctx.currentAdmin) };
+    }
+  }
+}
+```
 
 ---
 
 ## 认证
 
 - 使用 `@adminjs/express` 的 `buildAuthenticatedRouter`
-- `authenticate(email, password)` 函数查询 `admins` 表，`bcryptjs.compare` 验证密码
-- Session 存储：`express-session` + `connect-sqlite3`（本地文件，无需 Redis）
+- `authenticate(email, password)` 函数：
+  1. 查询 `app.db` 中 `admins` 表，按 `username` 或 `email` 匹配
+  2. 验证 `is_active = 1`（不活跃账号直接拒绝）
+  3. 用 `bcryptjs.compare(password, row.password_hash)` 验证密码（字段名为 `password_hash`）
+  4. 成功则返回 `{ email, username }` 用于 session；失败返回 `null`
+- Session 存储：`express-session` + `connect-sqlite3`，存储文件为独立的 `sessions.db`（不使用 `app.db` 或 `content.db`，避免写入冲突）
+- Cookie 配置：`httpOnly: true, sameSite: 'lax'`，提供基础 CSRF 防护（`sameSite: lax` 阻止跨站 POST，满足当前场景需求）
 - 路由保护：所有 `/admin/*` 请求需通过 AdminJS 内置认证中间件
 
 ---
@@ -82,15 +117,16 @@
 ## 文件上传
 
 - 使用 `@adminjs/upload` 本地磁盘 provider
-- 上传目录沿用 `uploads/` 现有结构（`{site_key}/images/`、`{site_key}/docs/`）
+- 上传目录沿用 `public/uploads/` 现有结构（`{site_key}/images/`、`{site_key}/docs/`）
+- `storagePath` 使用绝对路径：`path.join(process.cwd(), 'public/uploads')`
 - 上传后写入 `media_assets` 表，`asset_key` 字段与现有 `/media/:assetKey` 公开路由兼容
 
 ---
 
 ## 富文本编辑器
 
-- AdminJS 内置 **Quill**（纯本地，无外部 CDN）
-- `body_html` 等 HTML 字段标注为 `type: 'richtext'`
+- 使用 `@adminjs/rich-text`（需单独安装）提供 Quill 编辑器，所有资源均为本地加载，无外部 CDN
+- `body_html` 等 HTML 字段标注为 `type: 'richtext'`（通过 `@adminjs/rich-text` 组件渲染）
 
 ---
 
@@ -102,12 +138,15 @@
   "@adminjs/express": "^6.x",
   "@adminjs/sequelize": "^4.x",
   "@adminjs/upload": "^4.x",
+  "@adminjs/rich-text": "^4.x",
   "sequelize": "^6.x",
   "sqlite3": "^5.x",
   "express-session": "^1.x",
   "connect-sqlite3": "^0.x"
 }
 ```
+
+> **注意**：AdminJS 7.x 中 Quill 富文本编辑器需要单独安装 `@adminjs/rich-text`，并非内置。`body_html` 等字段必须配合此包才能渲染富文本组件。
 
 ---
 
