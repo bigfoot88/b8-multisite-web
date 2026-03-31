@@ -4,6 +4,26 @@ const assert = require('node:assert/strict');
 const APP_MODULE_PATH = require.resolve('../src/app');
 const SESSION_MODULE_PATH = require.resolve('../src/lib/session');
 
+test('admin cookie options are secure in production', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  delete require.cache[SESSION_MODULE_PATH];
+  process.env.NODE_ENV = 'production';
+
+  try {
+    const { createAdminCookieOptions } = require('../src/lib/session');
+    assert.equal(createAdminCookieOptions().secure, true);
+  } finally {
+    delete require.cache[SESSION_MODULE_PATH];
+
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  }
+});
+
 test('requires ADMIN_SESSION_SECRET in production', () => {
   assert.throws(
     () => {

@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const request = require('supertest');
 
 const { createApp } = require('../src/app');
-const { authenticate } = require('../src/admin/adminjs/auth');
+const { authenticate, createAdminJsSessionCookieOptions } = require('../src/admin/adminjs/auth');
 const { createDatabase } = require('../src/lib/db');
 const { runMigrations } = require('../src/lib/migrations');
 const { createAdminRepository } = require('../src/repositories/admin-repository');
@@ -114,6 +114,22 @@ test('authenticate rejects inactive admins even with valid credentials', async (
   const result = await authenticate('disabled', 'Blocked123!', adminRepository);
 
   assert.equal(result, null);
+});
+
+test('AdminJS session cookie options are secure in production', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  process.env.NODE_ENV = 'production';
+
+  try {
+    assert.equal(createAdminJsSessionCookieOptions().secure, true);
+  } finally {
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  }
 });
 
 test('GET /admin-next/login serves AdminJS while /admin/login remains on the legacy Chinese backend', async (t) => {

@@ -2,11 +2,15 @@ const { verifyPassword } = require('../../lib/passwords');
 const { resolveSessionSecret } = require('../../lib/session');
 
 const ADMINJS_COOKIE_NAME = 'b8_adminjs';
-const ADMINJS_SESSION_COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: 'lax',
-  path: '/',
-};
+
+function createAdminJsSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+  };
+}
 
 async function authenticate(identifier, password, adminRepository) {
   const normalizedIdentifier = identifier?.trim();
@@ -78,12 +82,12 @@ function createAdminJsSessionRevalidationMiddleware({ adminRepository, cookieNam
 
     if (!admin || !admin.isActive) {
       if (!req.session) {
-        res.clearCookie(cookieName, ADMINJS_SESSION_COOKIE_OPTIONS);
+        res.clearCookie(cookieName, createAdminJsSessionCookieOptions());
         return res.redirect('/admin-next/login');
       }
 
       return req.session.destroy(() => {
-        res.clearCookie(cookieName, ADMINJS_SESSION_COOKIE_OPTIONS);
+        res.clearCookie(cookieName, createAdminJsSessionCookieOptions());
         res.redirect('/admin-next/login');
       });
     }
@@ -117,7 +121,7 @@ function buildAdminJsAuth({ adminRepository, sessionSecret } = {}) {
       secret: cookieSecret,
       unset: 'destroy',
       cookie: {
-        ...ADMINJS_SESSION_COOKIE_OPTIONS,
+        ...createAdminJsSessionCookieOptions(),
       },
     },
   };
@@ -125,10 +129,11 @@ function buildAdminJsAuth({ adminRepository, sessionSecret } = {}) {
 
 module.exports = {
   ADMINJS_COOKIE_NAME,
-  ADMINJS_SESSION_COOKIE_OPTIONS,
+  ADMINJS_SESSION_COOKIE_OPTIONS: createAdminJsSessionCookieOptions(),
   authenticate,
   authenticateAdmin: authenticate,
   buildAdminJsAuth,
+  createAdminJsSessionCookieOptions,
   createAdminJsCurrentAdmin,
   createAdminJsSessionRevalidationMiddleware,
   findAdminForAdminJsSession,

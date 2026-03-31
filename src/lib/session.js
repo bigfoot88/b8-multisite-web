@@ -1,12 +1,16 @@
 const crypto = require('node:crypto');
 
 const ADMIN_COOKIE_NAME = 'b8_admin';
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: 'lax',
-  signed: true,
-  path: '/',
-};
+
+function createAdminCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    signed: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+  };
+}
 
 function resolveSessionSecret() {
   if (process.env.ADMIN_SESSION_SECRET) {
@@ -30,11 +34,11 @@ function buildAdminSession(admin) {
 }
 
 function writeAdminSession(res, admin) {
-  res.cookie(ADMIN_COOKIE_NAME, buildAdminSession(admin), COOKIE_OPTIONS);
+  res.cookie(ADMIN_COOKIE_NAME, buildAdminSession(admin), createAdminCookieOptions());
 }
 
 function clearAdminSession(res) {
-  res.clearCookie(ADMIN_COOKIE_NAME, COOKIE_OPTIONS);
+  res.clearCookie(ADMIN_COOKIE_NAME, createAdminCookieOptions());
 }
 
 function readAdminSession(req) {
@@ -72,7 +76,8 @@ function requireAdmin(req, res, next) {
 
 module.exports = {
   ADMIN_COOKIE_NAME,
-  COOKIE_OPTIONS,
+  COOKIE_OPTIONS: createAdminCookieOptions(),
+  createAdminCookieOptions,
   buildAdminSession,
   clearAdminSession,
   readAdminSession,
