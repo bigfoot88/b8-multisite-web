@@ -158,6 +158,33 @@ test('GET /admin-next/login serves AdminJS while /admin/login remains on the leg
   assert.doesNotMatch(legacyResponse.text, /AdminJS/i);
 });
 
+test('GET /admin-next frontend javascript assets serve executable javascript for the login page', async (t) => {
+  const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath });
+  const [appBundleResponse, globalBundleResponse, designSystemResponse] = await Promise.all([
+    request(app).get('/admin-next/frontend/assets/app.bundle.js'),
+    request(app).get('/admin-next/frontend/assets/global.bundle.js'),
+    request(app).get('/admin-next/frontend/assets/design-system.bundle.js'),
+  ]);
+
+  assert.equal(appBundleResponse.status, 200);
+  assert.match(appBundleResponse.headers['content-type'], /javascript/);
+  assert.match(appBundleResponse.text, /createRoot|ReactDOM/i);
+
+  assert.equal(globalBundleResponse.status, 200);
+  assert.match(globalBundleResponse.headers['content-type'], /javascript/);
+  assert.match(globalBundleResponse.text, /window|globalThis|process/i);
+
+  assert.equal(designSystemResponse.status, 200);
+  assert.match(designSystemResponse.headers['content-type'], /javascript/);
+  assert.match(designSystemResponse.text, /styled|DesignSystem/i);
+});
+
 test('POST /admin-next/login authenticates with AdminJS while /admin/login remains on the legacy backend', async (t) => {
   const paths = createTestPaths();
   t.after(async () => {

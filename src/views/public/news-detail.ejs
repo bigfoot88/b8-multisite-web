@@ -1,12 +1,13 @@
 <%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
 
+<% const coverAsset = article?.heroAsset || (typeof heroAsset !== 'undefined' ? heroAsset : null); %>
 <div class="article-header">
-  <% if (heroAsset && heroAsset.publicUrl) { %>
+  <% if (coverAsset && coverAsset.publicUrl) { %>
     <div class="article-header__cover">
       <img
         class="article-header__cover-img"
-        src="<%= heroAsset.publicUrl %>"
-        alt="<%= heroAsset.altText || article.title %>"
+        src="<%= coverAsset.publicUrl %>"
+        alt="<%= coverAsset.altText || article.title %>"
       />
     </div>
   <% } %>

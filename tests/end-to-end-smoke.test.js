@@ -121,6 +121,21 @@ test('core pages and admin dashboard all work from one seeded database', async (
     assert.match(response.text, pattern, `${host} ${requestPath} should include imported content`);
   }
 
+  const importedHeroAsset = await request(app)
+    .get('/media/seeds/dma/dma-news-mnf.png')
+    .set('host', 'dma.b8water.com');
+  assert.equal(importedHeroAsset.status, 200);
+  assert.equal(importedHeroAsset.headers['x-content-type-options'], 'nosniff');
+  assert.match(importedHeroAsset.headers['content-type'], /^image\/png\b/);
+
+  const importedHeroAssetViaPrefixedSite = await request(app)
+    .get('/media/seeds/dma/dma-news-mnf.png')
+    .set('host', '127.0.0.1')
+    .set('referer', 'http://127.0.0.1/dma/news/mnf-observation');
+  assert.equal(importedHeroAssetViaPrefixedSite.status, 200);
+  assert.equal(importedHeroAssetViaPrefixedSite.headers['x-content-type-options'], 'nosniff');
+  assert.match(importedHeroAssetViaPrefixedSite.headers['content-type'], /^image\/png\b/);
+
   const agent = request.agent(app);
   const loginResponse = await loginAsAdmin(agent);
   assert.equal(loginResponse.status, 302);

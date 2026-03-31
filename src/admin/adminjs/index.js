@@ -1,4 +1,6 @@
 const express = require('express');
+const path = require('node:path');
+const { createRequire } = require('node:module');
 
 const { ADMINJS_COOKIE_NAME, buildAdminJsAuth, createAdminJsSessionRevalidationMiddleware } = require('./auth');
 const { createAdminJsDatabases } = require('./databases');
@@ -11,6 +13,39 @@ const ADMINJS_REFRESH_TOKEN_PATH = `${ADMINJS_ROOT_PATH}/refresh-token`;
 const ADMINJS_COMPANY_NAME = 'B8 AdminJS';
 
 let adapterRegistered = false;
+const requireFromHere = createRequire(__filename);
+
+function getAdminJsCoreAssetMappings() {
+  const nodeEnv = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+  const adminJsPackageRoot = path.dirname(requireFromHere.resolve('adminjs'));
+  const designSystemEntry = requireFromHere.resolve('@adminjs/design-system');
+  const designSystemRoot = path.dirname(path.dirname(designSystemEntry));
+  const assetRoot = path.join(adminJsPackageRoot, 'lib', 'frontend', 'assets');
+
+  return [
+    { requestPath: '/frontend/assets/app.bundle.js', filePath: path.join(assetRoot, 'scripts', `app-bundle.${nodeEnv}.js`) },
+    { requestPath: '/frontend/assets/global.bundle.js', filePath: path.join(assetRoot, 'scripts', `global-bundle.${nodeEnv}.js`) },
+    { requestPath: '/frontend/assets/design-system.bundle.js', filePath: path.join(designSystemRoot, `bundle.${nodeEnv}.js`) },
+    { requestPath: '/frontend/assets/icomoon.css', filePath: path.join(assetRoot, 'styles', 'icomoon.css') },
+    { requestPath: '/frontend/assets/icomoon.eot', filePath: path.join(assetRoot, 'fonts', 'icomoon.eot') },
+    { requestPath: '/frontend/assets/icomoon.svg', filePath: path.join(assetRoot, 'fonts', 'icomoon.svg') },
+    { requestPath: '/frontend/assets/icomoon.ttf', filePath: path.join(assetRoot, 'fonts', 'icomoon.ttf') },
+    { requestPath: '/frontend/assets/icomoon.woff', filePath: path.join(assetRoot, 'fonts', 'icomoon.woff') },
+    { requestPath: '/frontend/assets/logo.svg', filePath: path.join(assetRoot, 'images', 'logo.svg') },
+    { requestPath: '/frontend/assets/logo-mini.svg', filePath: path.join(assetRoot, 'images', 'logo-mini.svg') },
+  ];
+}
+
+function registerAdminJsCoreAssets(router) {
+  getAdminJsCoreAssetMappings().forEach(({ requestPath, filePath }) => {
+    router.get(requestPath, (_req, res) => {
+      res.sendFile(path.basename(filePath), {
+        root: path.dirname(filePath),
+        dotfiles: 'allow',
+      });
+    });
+  });
+}
 
 async function loadAdminJsModules() {
   const [adminJsModule, adminJsExpressModule, adminJsSequelizeModule] = await Promise.all([
@@ -68,10 +103,12 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     },
   });
 
+  const predefinedRouter = express.Router();
+  registerAdminJsCoreAssets(predefinedRouter);
   const router = AdminJSExpress.buildAuthenticatedRouter(
     admin,
     authentication,
-    undefined,
+    predefinedRouter,
     sessionOptions,
   );
 

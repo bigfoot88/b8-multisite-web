@@ -1,8 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const { promisify } = require('node:util');
 const request = require('supertest');
+const ejs = require('ejs');
 
 const { seedRepresentativePublicContent, withPublicApp, writeUpload } = require('./helpers/public-fixtures');
+
+const renderFile = promisify(ejs.renderFile);
 
 test('public routes render host-specific site pages and collection detail pages', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-routes-');
@@ -336,4 +341,40 @@ test('public asset downloads stay site-scoped, require published references, and
     .get('/media/nested/guides/dma-guide.pdf')
     .set('host', 'www.chinabigfoot.com');
   assert.equal(wrongHostForNestedDownload.status, 404);
+});
+
+test('news detail template falls back to article.heroAsset when top-level heroAsset is absent', async () => {
+  const templatePath = path.join(__dirname, '../src/views/public/news-detail.ejs');
+  const html = await renderFile(templatePath, {
+    pageTitle: '新闻详情 · 智灵科技',
+    pageDescription: '新闻摘要',
+    site: {
+      brandName: '智灵科技',
+      seoDescription: '聚焦智慧水务',
+      tagline: '夜间最小流量监测',
+      contactPhone: '400-660-3328',
+    },
+    theme: {
+      name: 'dma',
+      label: 'DMA',
+      accent: '智慧水务',
+    },
+    navigation: [],
+    currentPath: '/news/example',
+    sitePath: (target = '/') => target,
+    article: {
+      title: '模板回归测试',
+      summary: '应该优先使用 article.heroAsset。',
+      bodyHtml: '<p>正文内容正常渲染。</p>',
+      createdAt: '2026-03-28T00:00:00.000Z',
+      heroAsset: {
+        publicUrl: '/media/template-cover.png',
+        altText: '模板封面图',
+      },
+    },
+  });
+
+  assert.match(html, /template-cover\.png/);
+  assert.match(html, /正文内容正常渲染/);
+  assert.doesNotMatch(html, /ReferenceError/);
 });
