@@ -1,9 +1,79 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const session = require('express-session');
-const SqliteStoreFactory = require('connect-sqlite3');
+const Database = require('better-sqlite3');
 
 const { resolveDatabasePath } = require('../../lib/db');
+
+/**
+ * Minimal express-session store backed by better-sqlite3.
+ * Avoids the connect-sqlite3 dependency which requires GLIBC 2.38+.
+ */
+function createBetterSqliteStore(SessionStore) {
+  class BetterSqliteStore extends SessionStore {
+    constructor({ db: dbPath, dir, ttl = 86400 } = {}) {
+      super();
+      this.ttl = ttl;
+      const fullPath = dir ? path.join(dir, dbPath) : dbPath;
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+      this.db = new Database(fullPath);
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          sid TEXT PRIMARY KEY,
+          sess TEXT NOT NULL,
+          expired INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_sessions_expired ON sessions(expired);
+      `);
+      // Prune expired sessions periodically
+      this._pruneTimer = setInterval(() => this._prune(), 60_000).unref();
+    }
+
+    _prune() {
+      this.db.prepare('DELETE FROM sessions WHERE expired <= ?').run(Date.now());
+    }
+
+    get(sid, cb) {
+      try {
+        const row = this.db.prepare('SELECT sess FROM sessions WHERE sid=? AND expired > ?').get(sid, Date.now());
+        cb(null, row ? JSON.parse(row.sess) : null);
+      } catch (e) { cb(e); }
+    }
+
+    set(sid, sess, cb) {
+      try {
+        const ttl = (sess.cookie?.maxAge ?? this.ttl) * 1000;
+        const expired = Date.now() + ttl;
+        const json = JSON.stringify(sess);
+        this.db.prepare('INSERT OR REPLACE INTO sessions (sid, sess, expired) VALUES (?,?,?)').run(sid, json, expired);
+        cb(null);
+      } catch (e) { cb(e); }
+    }
+
+    destroy(sid, cb) {
+      try {
+        this.db.prepare('DELETE FROM sessions WHERE sid=?').run(sid);
+        cb(null);
+      } catch (e) { cb(e); }
+    }
+
+    touch(sid, sess, cb) {
+      try {
+        const ttl = (sess.cookie?.maxAge ?? this.ttl) * 1000;
+        const expired = Date.now() + ttl;
+        this.db.prepare('UPDATE sessions SET expired=? WHERE sid=?').run(expired, sid);
+        cb(null);
+      } catch (e) { cb(e); }
+    }
+
+    close() {
+      clearInterval(this._pruneTimer);
+      this.db.close();
+    }
+  }
+
+  return BetterSqliteStore;
+}
 
 function enableSqliteWal(connection) {
   return new Promise((resolve, reject) => {
@@ -68,7 +138,7 @@ function resolveAdminJsSessionDatabasePath(databasePath) {
 
 function createAdminJsSessionStore({ databasePath } = {}) {
   const sessionDatabasePath = resolveAdminJsSessionDatabasePath(databasePath);
-  const SQLiteStore = SqliteStoreFactory(session);
+  const SQLiteStore = createBetterSqliteStore(session.Store);
   const sessionArtifactsPath = databasePath === ':memory:'
     ? path.dirname(sessionDatabasePath)
     : null;
@@ -78,8 +148,6 @@ function createAdminJsSessionStore({ databasePath } = {}) {
   const sessionStore = new SQLiteStore({
     db: path.basename(sessionDatabasePath),
     dir: path.dirname(sessionDatabasePath),
-    concurrentDb: true,
-    createDirIfNotExists: true,
   });
 
   return {
@@ -119,7 +187,7 @@ function createAdminJsDatabasesCloser({ sequelize, sessionStore, sessionArtifact
     const errors = [];
 
     try {
-      await closeSqliteConnection(sessionStore?.db);
+      sessionStore?.close?.();
     } catch (error) {
       errors.push(error);
     }
