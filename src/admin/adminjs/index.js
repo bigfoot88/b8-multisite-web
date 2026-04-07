@@ -67,11 +67,30 @@ function getAdminJsCoreAssetMappings() {
   ];
 }
 
-function registerAdminJsCoreAssets(router) {
+function registerAdminJsCoreAssets(router, extraTranslations) {
   const tinymceRoot = path.dirname(requireFromHere.resolve('tinymce/tinymce.min.js'));
   const tinymceScriptPath = requireFromHere.resolve('tinymce/tinymce.min.js');
 
   getAdminJsCoreAssetMappings().forEach(({ requestPath, filePath }) => {
+    // Inject a small runtime merger into the global.bundle.js so that resource-level
+    // translations (zh-CN) are merged into window.REDUX_STATE before AdminJS bootstraps.
+    if (requestPath === '/frontend/assets/global.bundle.js' && extraTranslations) {
+      router.get(requestPath, (_req, res) => {
+        try {
+          const injection = `(function(){try{if(window && window.REDUX_STATE && window.REDUX_STATE.locale && window.REDUX_STATE.locale.translations){window.REDUX_STATE.locale.translations['zh-CN']=Object.assign({}, window.REDUX_STATE.locale.translations['zh-CN']||{}, ${JSON.stringify({ resources: extraTranslations || {} })});}}catch(e){console.error('adminjs-i18n merge failed', e);} })();\n`;
+          const content = injection + fs.readFileSync(filePath, 'utf8');
+          res.type('application/javascript').send(content);
+        } catch (e) {
+          // Fallback to serving file directly if injection fails
+          res.sendFile(path.basename(filePath), {
+            root: path.dirname(filePath),
+            dotfiles: 'allow',
+          });
+        }
+      });
+      return;
+    }
+
     router.get(requestPath, (_req, res) => {
       res.sendFile(path.basename(filePath), {
         root: path.dirname(filePath),
@@ -423,7 +442,7 @@ async function buildAdminJsRouter({
   clearAdminJsComponentBundleCache(componentLoader);
 
   const predefinedRouter = express.Router();
-  registerAdminJsCoreAssets(predefinedRouter);
+  registerAdminJsCoreAssets(predefinedRouter, mergedLocale.resources || {});
   const router = AdminJSExpress.buildAuthenticatedRouter(
     admin,
     authentication,
