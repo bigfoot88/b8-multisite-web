@@ -363,6 +363,14 @@ async function buildAdminJsRouter({
       withBackend: false,
     },
   });
+
+  // Ensure merged resource-level translations are present on the AdminJS instance
+  // Some AdminJS internals may normalize or rehydrate locale/translations; set them explicitly here.
+  admin.options = admin.options || {};
+  admin.options.locale = admin.options.locale || {};
+  admin.options.locale.translations = admin.options.locale.translations || {};
+  admin.options.locale.translations['zh-CN'] = mergedLocale;
+
   clearAdminJsComponentBundleCache(componentLoader);
 
   const predefinedRouter = express.Router();
