@@ -371,6 +371,58 @@ async function buildAdminJsRouter({
   admin.options.locale.translations = admin.options.locale.translations || {};
   admin.options.locale.translations['zh-CN'] = mergedLocale;
 
+  // Map mergedLocale entries to AdminJS decorated resource IDs so frontend list headers and column labels resolve correctly
+  try {
+    const zh = admin.options.locale.translations['zh-CN'] || {};
+    zh.resources = zh.resources || {};
+
+    for (const decorated of admin.resources || []) {
+      let decoratedId;
+
+      try {
+        if (typeof decorated._decorated?.id === 'function') {
+          decoratedId = decorated._decorated.id();
+        } else if (typeof decorated.id === 'function') {
+          decoratedId = decorated.id();
+        } else {
+          decoratedId = decorated.id || decorated.name || (decorated.resource && (decorated.resource.tableName || decorated.resource.name));
+        }
+      } catch (e) {
+        decoratedId = decorated.id || decorated.name || (decorated.resource && (decorated.resource.tableName || decorated.resource.name));
+      }
+
+      const candidateKeys = [];
+      if (decorated.resource && decorated.resource.tableName) candidateKeys.push(decorated.resource.tableName);
+      if (decorated.options && decorated.options.id) candidateKeys.push(decorated.options.id);
+      if (decorated.name) candidateKeys.push(decorated.name);
+
+      let mapped = null;
+      for (const k of candidateKeys) {
+        if (k && mergedLocale.resources && mergedLocale.resources[k]) {
+          mapped = mergedLocale.resources[k];
+          break;
+        }
+      }
+
+      if (!mapped && mergedLocale.resources && mergedLocale.resources[decorated.name]) {
+        mapped = mergedLocale.resources[decorated.name];
+      }
+
+      if (mapped) {
+        zh.resources[decoratedId] = zh.resources[decoratedId] || {};
+        if (mapped.name) zh.resources[decoratedId].name = mapped.name;
+        if (mapped.properties) {
+          zh.resources[decoratedId].properties = zh.resources[decoratedId].properties || {};
+          Object.assign(zh.resources[decoratedId].properties, mapped.properties);
+        }
+      }
+    }
+
+    admin.options.locale.translations['zh-CN'] = zh;
+  } catch (err) {
+    console.error('Failed to map resource translations to decorated ids', err);
+  }
+
   clearAdminJsComponentBundleCache(componentLoader);
 
   const predefinedRouter = express.Router();
