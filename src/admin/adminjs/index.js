@@ -408,12 +408,19 @@ async function buildAdminJsRouter({
         mapped = mergedLocale.resources[decorated.name];
       }
 
+      console.log('[adminjs-i18n] resource', {
+        decoratedId,
+        candidateKeys,
+        found: !!mapped,
+      });
+
       if (mapped) {
         zh.resources[decoratedId] = zh.resources[decoratedId] || {};
         if (mapped.name) zh.resources[decoratedId].name = mapped.name;
         if (mapped.properties) {
           zh.resources[decoratedId].properties = zh.resources[decoratedId].properties || {};
           Object.assign(zh.resources[decoratedId].properties, mapped.properties);
+          console.log('[adminjs-i18n] mapped properties for', decoratedId, Object.keys(mapped.properties || {}).join(','));
         }
       }
     }
