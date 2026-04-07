@@ -434,6 +434,34 @@ async function buildAdminJsRouter({
   registerInlineUploadRoute(router, { mediaRepository, uploadRoot });
   registerMediaPickerRoute(router, { mediaRepository });
 
+  // Debug endpoint: expose resource decorated ids and the zh-CN translations currently attached.
+  // Temporary: used to verify that resource-level translations are keyed by the same ids the frontend expects.
+  router.get('/api/i18n-debug', (req, res) => {
+    try {
+      const zh = admin.options?.locale?.translations?.['zh-CN'] || {};
+      const resources = (admin.resources || []).map((r) => {
+        let id;
+        try {
+          if (typeof r._decorated?.id === 'function') id = r._decorated.id();
+          else if (typeof r.id === 'function') id = r.id();
+          else id = r.id || r.name || (r.resource && (r.resource.tableName || r.resource.name));
+        } catch (e) {
+          id = r.id || r.name || (r.resource && (r.resource.tableName || r.resource.name));
+        }
+
+        return {
+          decoratedId: id,
+          options: r.options || {},
+          resourceName: r.resource && (r.resource.name || r.resource.tableName),
+        };
+      });
+
+      return res.json({ zh, resources });
+    } catch (err) {
+      return res.status(500).json({ error: String(err) });
+    }
+  });
+
   const protectedRoutesLayerIndex = router.stack.findIndex(
     (layer) => layer?.handle?.name === 'authorizedRoutesMiddleware',
   );
