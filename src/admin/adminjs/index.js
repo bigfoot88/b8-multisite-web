@@ -336,6 +336,8 @@ async function buildAdminJsRouter({
   // Merge resource-level labels and property labels into the AdminJS zh-CN translations so list headers and column labels display correctly
   const mergedLocale = loadAdminJsLocale('zh-CN') || {};
   mergedLocale.resources = mergedLocale.resources || {};
+  // labels.{resourceId} is what AdminJS translateLabel() uses for sidebar/breadcrumb display
+  mergedLocale.labels = mergedLocale.labels || {};
 
   for (const resDef of resources) {
     const tableName = resDef?.resource?.tableName || (resDef?.resource && resDef.resource.getTableName && resDef.resource.getTableName()) || undefined;
@@ -347,6 +349,8 @@ async function buildAdminJsRouter({
 
     if (resDef.options && resDef.options.label) {
       mergedLocale.resources[resourceKey].name = resDef.options.label;
+      // Also set labels.{id} so translateLabel() (sidebar/breadcrumb) resolves the Chinese name
+      mergedLocale.labels[resourceKey] = resDef.options.label;
     }
 
     if (resDef.options && resDef.options.properties) {
