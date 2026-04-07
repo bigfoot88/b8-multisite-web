@@ -1,42 +1,76 @@
+const crypto = require('node:crypto');
+const fs = require('node:fs');
 const express = require('express');
 const path = require('node:path');
 const { createRequire } = require('node:module');
 
 const { ADMINJS_COOKIE_NAME, buildAdminJsAuth, createAdminJsSessionRevalidationMiddleware } = require('./auth');
+const { buildComponentLoader } = require('./component-loader');
 const { createAdminJsDatabases } = require('./databases');
-const { createNewsArticleResource } = require('./news-article-resource');
+const { buildResources } = require('./resources/build-resources');
+const { createAdminValidationError, isExpectedAdminError } = require('../../lib/admin-errors');
+const {
+  ensureUploadRoot,
+  isAllowedUploadFilename,
+  removeUploadedFile,
+  sanitizeFilename,
+  toInlineUploadPath,
+  validateUploadedContent,
+} = require('../../lib/uploads');
+const { getCurrentAdminSiteKey, normalizeSiteKey } = require('./site-context');
 
 const ADMINJS_ROOT_PATH = '/admin-next';
 const ADMINJS_LOGIN_PATH = `${ADMINJS_ROOT_PATH}/login`;
 const ADMINJS_LOGOUT_PATH = `${ADMINJS_ROOT_PATH}/logout`;
 const ADMINJS_REFRESH_TOKEN_PATH = `${ADMINJS_ROOT_PATH}/refresh-token`;
-const ADMINJS_COMPANY_NAME = 'B8 AdminJS';
+const ADMINJS_COMPANY_NAME = 'B8 网站管理后台';
+const ADMIN_JS_TMP_DIR = process.env.ADMIN_JS_TMP_DIR || path.join(process.cwd(), '.adminjs');
+const ADMINJS_CORE_BUNDLE_ENV = process.env.ADMINJS_CORE_BUNDLE_ENV === 'development' ? 'development' : 'production';
 
 let adapterRegistered = false;
 const requireFromHere = createRequire(__filename);
 
+function loadAdminJsLocale(language) {
+  const adminJsPackageRoot = path.dirname(requireFromHere.resolve('adminjs'));
+  const localeFilePath = path.join(adminJsPackageRoot, 'lib', 'locale', language, 'translation.json');
+
+  return JSON.parse(fs.readFileSync(localeFilePath, 'utf8'));
+}
+
 function getAdminJsCoreAssetMappings() {
-  const nodeEnv = process.env.NODE_ENV === 'production' ? 'production' : 'development';
   const adminJsPackageRoot = path.dirname(requireFromHere.resolve('adminjs'));
   const designSystemEntry = requireFromHere.resolve('@adminjs/design-system');
   const designSystemRoot = path.dirname(path.dirname(designSystemEntry));
   const assetRoot = path.join(adminJsPackageRoot, 'lib', 'frontend', 'assets');
 
   return [
-    { requestPath: '/frontend/assets/app.bundle.js', filePath: path.join(assetRoot, 'scripts', `app-bundle.${nodeEnv}.js`) },
-    { requestPath: '/frontend/assets/global.bundle.js', filePath: path.join(assetRoot, 'scripts', `global-bundle.${nodeEnv}.js`) },
-    { requestPath: '/frontend/assets/design-system.bundle.js', filePath: path.join(designSystemRoot, `bundle.${nodeEnv}.js`) },
+    {
+      requestPath: '/frontend/assets/app.bundle.js',
+      filePath: path.join(assetRoot, 'scripts', `app-bundle.${ADMINJS_CORE_BUNDLE_ENV}.js`),
+    },
+    {
+      requestPath: '/frontend/assets/global.bundle.js',
+      filePath: path.join(assetRoot, 'scripts', `global-bundle.${ADMINJS_CORE_BUNDLE_ENV}.js`),
+    },
+    {
+      requestPath: '/frontend/assets/design-system.bundle.js',
+      filePath: path.join(designSystemRoot, `bundle.${ADMINJS_CORE_BUNDLE_ENV}.js`),
+    },
     { requestPath: '/frontend/assets/icomoon.css', filePath: path.join(assetRoot, 'styles', 'icomoon.css') },
     { requestPath: '/frontend/assets/icomoon.eot', filePath: path.join(assetRoot, 'fonts', 'icomoon.eot') },
     { requestPath: '/frontend/assets/icomoon.svg', filePath: path.join(assetRoot, 'fonts', 'icomoon.svg') },
     { requestPath: '/frontend/assets/icomoon.ttf', filePath: path.join(assetRoot, 'fonts', 'icomoon.ttf') },
     { requestPath: '/frontend/assets/icomoon.woff', filePath: path.join(assetRoot, 'fonts', 'icomoon.woff') },
+    { requestPath: '/frontend/assets/tinymce/langs/zh_CN.js', filePath: path.join(__dirname, 'assets', 'tinymce', 'langs', 'zh_CN.js') },
     { requestPath: '/frontend/assets/logo.svg', filePath: path.join(assetRoot, 'images', 'logo.svg') },
     { requestPath: '/frontend/assets/logo-mini.svg', filePath: path.join(assetRoot, 'images', 'logo-mini.svg') },
   ];
 }
 
 function registerAdminJsCoreAssets(router) {
+  const tinymceRoot = path.dirname(requireFromHere.resolve('tinymce/tinymce.min.js'));
+  const tinymceScriptPath = requireFromHere.resolve('tinymce/tinymce.min.js');
+
   getAdminJsCoreAssetMappings().forEach(({ requestPath, filePath }) => {
     router.get(requestPath, (_req, res) => {
       res.sendFile(path.basename(filePath), {
@@ -45,6 +79,188 @@ function registerAdminJsCoreAssets(router) {
       });
     });
   });
+
+  router.get('/frontend/assets/tinymce/tinymce.min.js', (_req, res) => {
+    res.sendFile(path.basename(tinymceScriptPath), {
+      root: path.dirname(tinymceScriptPath),
+      dotfiles: 'allow',
+    });
+  });
+
+  for (const tinymceDir of ['icons', 'models', 'plugins', 'skins', 'themes']) {
+    const tinymceDirPath = path.join(tinymceRoot, tinymceDir);
+
+    if (!fs.existsSync(tinymceDirPath)) {
+      continue;
+    }
+
+    router.use(`/frontend/assets/tinymce/${tinymceDir}`, express.static(tinymceDirPath, {
+      dotfiles: 'allow',
+      fallthrough: false,
+    }));
+  }
+
+  router.use('/frontend/assets/tinymce', (_req, res) => {
+    res.sendStatus(404);
+  });
+}
+
+function isSafeAdminRedirectUrl(redirectUrl) {
+  return typeof redirectUrl === 'string'
+    && (redirectUrl === ADMINJS_ROOT_PATH || redirectUrl.startsWith(`${ADMINJS_ROOT_PATH}/`));
+}
+
+function registerSiteSwitchRoute(router) {
+  router.post('/switch-site', (req, res, next) => {
+    if (!req.session?.adminUser) {
+      return res.redirect(ADMINJS_LOGIN_PATH);
+    }
+
+    const siteKey = normalizeSiteKey(req.fields?.siteKey || req.query?.siteKey);
+    const redirectUrl = isSafeAdminRedirectUrl(req.fields?.redirectTo)
+      ? req.fields.redirectTo
+      : ADMINJS_ROOT_PATH;
+
+    req.session.adminUser = {
+      ...req.session.adminUser,
+      siteKey,
+    };
+
+    return req.session.save((error) => {
+      if (error) {
+        return next(error);
+      }
+
+      if ((req.get('accept') || '').includes('application/json')) {
+        return res.json({ redirectUrl, siteKey });
+      }
+
+      return res.redirect(redirectUrl);
+    });
+  });
+}
+
+function normalizeInlineUploadFile(uploadRoot, file) {
+  const originalFilename = file?.originalFilename || file?.name || file?.originalname || '';
+
+  if (!originalFilename || !isAllowedUploadFilename(originalFilename)) {
+    throw createAdminValidationError('不支持上传的文件类型，请上传图片或文档。', 'unsafe-upload-type');
+  }
+
+  const validatedFile = validateUploadedContent({
+    path: file?.filepath || file?.path,
+    originalname: originalFilename,
+    mimetype: file?.mimetype || file?.type || 'application/octet-stream',
+    size: file?.size || 0,
+  });
+
+  ensureUploadRoot(uploadRoot);
+  const storagePath = path.join(
+    uploadRoot,
+    `${Date.now()}-${crypto.randomUUID()}-${sanitizeFilename(originalFilename)}`,
+  );
+
+  fs.renameSync(validatedFile.path, storagePath);
+
+  return {
+    destination: uploadRoot,
+    mimetype: validatedFile.mimetype,
+    originalname: originalFilename,
+    path: storagePath,
+    size: validatedFile.size,
+  };
+}
+
+function registerInlineUploadRoute(router, { mediaRepository, uploadRoot }) {
+  router.post('/api/media/inline-upload', (req, res) => {
+    const rawFile = Array.isArray(req.files?.file) ? req.files.file[0] : req.files?.file;
+    if (!rawFile) {
+      return res.status(400).json({ error: '请先选择要上传的图片。' });
+    }
+
+    let uploadedFile = null;
+
+    try {
+      uploadedFile = normalizeInlineUploadFile(uploadRoot, rawFile);
+
+      const asset = mediaRepository.createAsset({
+        assetKey: crypto.randomUUID(),
+        siteKey: getCurrentAdminSiteKey(req.session?.adminUser),
+        sourceUrl: toInlineUploadPath(uploadedFile),
+        filename: uploadedFile.originalname,
+        mimeType: uploadedFile.mimetype,
+        storagePath: uploadedFile.path,
+        altText: path.basename(uploadedFile.originalname, path.extname(uploadedFile.originalname)) || null,
+        metadata: {
+          size: uploadedFile.size,
+        },
+      });
+
+      return res.status(201).json({
+        assetKey: asset.assetKey,
+        altText: asset.altText,
+        filename: asset.filename,
+        url: asset.sourceUrl,
+      });
+    } catch (error) {
+      removeUploadedFile(uploadedFile?.path || rawFile?.filepath || rawFile?.path);
+
+      if (isExpectedAdminError(error)) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
+
+      throw error;
+    }
+  });
+}
+
+function serializeMediaPickerAsset(asset) {
+  if (!asset) {
+    return null;
+  }
+
+  return {
+    id: asset.id,
+    siteKey: asset.siteKey,
+    filename: asset.filename,
+    mimeType: asset.mimeType,
+    altText: asset.altText,
+    publicUrl: asset.publicUrl || asset.sourceUrl || null,
+    sourceUrl: asset.sourceUrl || null,
+  };
+}
+
+function registerMediaPickerRoute(router, { mediaRepository }) {
+  router.get('/api/media/options', (req, res) => {
+    const siteKey = getCurrentAdminSiteKey(req.session?.adminUser);
+    const selectedId = Number.parseInt(req.query?.selectedId, 10);
+    const includeAssets = String(req.query?.includeAssets || '1') !== '0';
+    const assets = includeAssets
+      ? mediaRepository.listAssets({ siteKey }).map(serializeMediaPickerAsset)
+      : [];
+    const selectedAsset = Number.isInteger(selectedId) && selectedId > 0
+      ? mediaRepository.findById(selectedId)
+      : null;
+
+    return res.json({
+      assets,
+      selectedAsset: selectedAsset && (selectedAsset.siteKey === null || selectedAsset.siteKey === siteKey)
+        ? serializeMediaPickerAsset(selectedAsset)
+        : null,
+    });
+  });
+}
+
+function clearAdminJsComponentBundleCache(componentLoader) {
+  const components = componentLoader?.getComponents?.() || {};
+
+  if (!Object.keys(components).length) {
+    return;
+  }
+
+  for (const fileName of ['entry.js', 'bundle.js']) {
+    fs.rmSync(path.join(ADMIN_JS_TMP_DIR, fileName), { force: true });
+  }
 }
 
 async function loadAdminJsModules() {
@@ -57,6 +273,7 @@ async function loadAdminJsModules() {
   const AdminJS = adminJsModule.default || adminJsModule;
   const AdminJSExpress = adminJsExpressModule.default || adminJsExpressModule;
   const AdminJSSequelize = adminJsSequelizeModule.default || adminJsSequelizeModule;
+  const ComponentLoader = adminJsModule.ComponentLoader;
 
   if (!adapterRegistered) {
     AdminJS.registerAdapter({
@@ -69,6 +286,7 @@ async function loadAdminJsModules() {
   return {
     AdminJS,
     AdminJSExpress,
+    ComponentLoader,
   };
 }
 
@@ -76,8 +294,14 @@ function isAdminJsPath(pathname) {
   return pathname === ADMINJS_ROOT_PATH || pathname.startsWith(`${ADMINJS_ROOT_PATH}/`);
 }
 
-async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret } = {}) {
-  const [{ AdminJS, AdminJSExpress }, { DataTypes }, { close, databases, sequelize, sessionDatabasePath, sessionStore }] = await Promise.all([
+async function buildAdminJsRouter({
+  adminRepository,
+  databasePath,
+  mediaRepository,
+  sessionSecret,
+  uploadRoot,
+} = {}) {
+  const [{ AdminJS, AdminJSExpress, ComponentLoader }, { DataTypes }, { close, databases, sequelize, sessionDatabasePath, sessionStore }] = await Promise.all([
     loadAdminJsModules(),
     import('sequelize'),
     createAdminJsDatabases({ databasePath }),
@@ -87,9 +311,36 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     sessionSecret,
   });
   sessionOptions.store = sessionStore;
-  const resources = [
-    createNewsArticleResource(sequelize, DataTypes),
-  ];
+  const componentLoader = buildComponentLoader(ComponentLoader);
+  const resources = buildResources(sequelize, DataTypes);
+
+  // Merge resource-level labels and property labels into the AdminJS zh-CN translations so list headers and column labels display correctly
+  const mergedLocale = loadAdminJsLocale('zh-CN') || {};
+  mergedLocale.resources = mergedLocale.resources || {};
+
+  for (const resDef of resources) {
+    const tableName = resDef?.resource?.tableName || (resDef?.resource && resDef.resource.getTableName && resDef.resource.getTableName()) || undefined;
+    const resourceKey = (resDef.options && resDef.options.id) || tableName || (resDef.resource && (resDef.resource.name || resDef.resource.tableName));
+
+    if (!resourceKey) continue;
+
+    mergedLocale.resources[resourceKey] = mergedLocale.resources[resourceKey] || {};
+
+    if (resDef.options && resDef.options.label) {
+      mergedLocale.resources[resourceKey].name = resDef.options.label;
+    }
+
+    if (resDef.options && resDef.options.properties) {
+      mergedLocale.resources[resourceKey].properties = mergedLocale.resources[resourceKey].properties || {};
+
+      for (const [propName, propOptions] of Object.entries(resDef.options.properties)) {
+        if (propOptions && propOptions.label) {
+          mergedLocale.resources[resourceKey].properties[propName] = propOptions.label;
+        }
+      }
+    }
+  }
+
   const admin = new AdminJS({
     rootPath: ADMINJS_ROOT_PATH,
     loginPath: ADMINJS_LOGIN_PATH,
@@ -97,11 +348,22 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     refreshTokenPath: ADMINJS_REFRESH_TOKEN_PATH,
     databases,
     resources,
+    componentLoader,
     branding: {
       companyName: ADMINJS_COMPANY_NAME,
       withMadeWithLove: false,
     },
+    locale: {
+      language: 'zh-CN',
+      translations: {
+        'zh-CN': mergedLocale,
+      },
+      availableLanguages: ['zh-CN'],
+      partialBundledLanguages: false,
+      withBackend: false,
+    },
   });
+  clearAdminJsComponentBundleCache(componentLoader);
 
   const predefinedRouter = express.Router();
   registerAdminJsCoreAssets(predefinedRouter);
@@ -111,6 +373,9 @@ async function buildAdminJsRouter({ adminRepository, databasePath, sessionSecret
     predefinedRouter,
     sessionOptions,
   );
+  registerSiteSwitchRoute(router);
+  registerInlineUploadRoute(router, { mediaRepository, uploadRoot });
+  registerMediaPickerRoute(router, { mediaRepository });
 
   const protectedRoutesLayerIndex = router.stack.findIndex(
     (layer) => layer?.handle?.name === 'authorizedRoutesMiddleware',
