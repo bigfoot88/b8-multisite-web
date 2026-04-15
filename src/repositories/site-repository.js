@@ -19,6 +19,9 @@ function mapSiteSettings(row) {
     contactEmail: row.contact_email,
     contactPhone: row.contact_phone,
     contactAddress: row.contact_address,
+    homeBannerMediaId: row.home_banner_media_id ?? null,
+    homeBannerSecondaryMediaId: row.home_banner_secondary_media_id ?? null,
+    homeFeatureMediaId: row.home_feature_media_id ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -109,8 +112,32 @@ function translateSiteSettingsWriteError(error) {
 function createSiteRepository(db) {
   const { ensureSite, assertValidSiteKey } = createSiteBootstrap(db);
   const upsertSiteSettingsStatement = db.prepare(`
-    INSERT INTO site_settings (site_key, brand_name, domain, seo_title, seo_description, contact_email, contact_phone, contact_address)
-    VALUES (@siteKey, @brandName, @domain, @seoTitle, @seoDescription, @contactEmail, @contactPhone, @contactAddress)
+    INSERT INTO site_settings (
+      site_key,
+      brand_name,
+      domain,
+      seo_title,
+      seo_description,
+      contact_email,
+      contact_phone,
+      contact_address,
+      home_banner_media_id,
+      home_banner_secondary_media_id,
+      home_feature_media_id
+    )
+    VALUES (
+      @siteKey,
+      @brandName,
+      @domain,
+      @seoTitle,
+      @seoDescription,
+      @contactEmail,
+      @contactPhone,
+      @contactAddress,
+      @homeBannerMediaId,
+      @homeBannerSecondaryMediaId,
+      @homeFeatureMediaId
+    )
     ON CONFLICT(site_key) DO UPDATE SET
       brand_name = excluded.brand_name,
       domain = excluded.domain,
@@ -119,6 +146,9 @@ function createSiteRepository(db) {
       contact_email = excluded.contact_email,
       contact_phone = excluded.contact_phone,
       contact_address = excluded.contact_address,
+      home_banner_media_id = excluded.home_banner_media_id,
+      home_banner_secondary_media_id = excluded.home_banner_secondary_media_id,
+      home_feature_media_id = excluded.home_feature_media_id,
       updated_at = CURRENT_TIMESTAMP
   `);
   const upsertSectionStatement = db.prepare(`
@@ -227,9 +257,43 @@ function createSiteRepository(db) {
     }
   }
 
+  function validateSiteSettingsMediaReference(siteKey, mediaAssetId, label) {
+    if (mediaAssetId === null || mediaAssetId === undefined || mediaAssetId === '') {
+      return;
+    }
+
+    const media = selectMediaById.get(mediaAssetId);
+    if (!media) {
+      throw createAdminValidationError(`${label}不存在，请重新选择。`, 'missing-site-settings-media-asset');
+    }
+    if (media.site_key !== null && media.site_key !== siteKey) {
+      throw createAdminValidationError(`${label}必须属于当前站点或全局素材，请重新选择。`, 'cross-site-site-settings-media-asset');
+    }
+  }
+
   return {
-    upsertSiteSettings({ siteKey, brandName, domain, seoTitle = null, seoDescription = null, contactEmail = null, contactPhone = null, contactAddress = null }) {
+    upsertSiteSettings({
+      siteKey,
+      brandName,
+      domain,
+      seoTitle = null,
+      seoDescription = null,
+      contactEmail = null,
+      contactPhone = null,
+      contactAddress = null,
+      homeBannerMediaId = null,
+      homeBannerSecondaryMediaId = null,
+      homeFeatureMediaId = null,
+    }) {
       assertValidSiteKey(siteKey);
+      const normalizedHomeBannerMediaId = normalizeInteger(homeBannerMediaId);
+      const normalizedHomeBannerSecondaryMediaId = normalizeInteger(homeBannerSecondaryMediaId);
+      const normalizedHomeFeatureMediaId = normalizeInteger(homeFeatureMediaId);
+
+      validateSiteSettingsMediaReference(siteKey, normalizedHomeBannerMediaId, '首页全宽图（第一张）');
+      validateSiteSettingsMediaReference(siteKey, normalizedHomeBannerSecondaryMediaId, '首页全宽图（第二张）');
+      validateSiteSettingsMediaReference(siteKey, normalizedHomeFeatureMediaId, '首页解决方案主图');
+
       try {
         upsertSiteSettingsStatement.run({
           siteKey,
@@ -240,6 +304,9 @@ function createSiteRepository(db) {
           contactEmail,
           contactPhone,
           contactAddress,
+          homeBannerMediaId: normalizedHomeBannerMediaId,
+          homeBannerSecondaryMediaId: normalizedHomeBannerSecondaryMediaId,
+          homeFeatureMediaId: normalizedHomeFeatureMediaId,
         });
       } catch (error) {
         throw translateSiteSettingsWriteError(error);

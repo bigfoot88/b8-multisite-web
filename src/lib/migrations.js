@@ -68,6 +68,14 @@ function listTableColumns(db, tableName) {
   return db.prepare(`PRAGMA table_info(${tableName})`).all().map((column) => column.name);
 }
 
+function ensureColumn(db, tableName, columnSql) {
+  const [columnName] = columnSql.trim().split(/\s+/, 1);
+  const columns = new Set(listTableColumns(db, tableName));
+  if (!columns.has(columnName)) {
+    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnSql}`);
+  }
+}
+
 function ensureNoDuplicateNormalizedSiteDomains(db) {
   const siteSettingsTable = db.prepare(`
     SELECT name
@@ -116,6 +124,9 @@ function runMigrations(db) {
   db.exec(schemaSql);
   ensureSiteSettingsValidationTriggers(db);
   ensureRedirectRulesDefault(db);
+  ensureColumn(db, 'site_settings', 'home_banner_media_id INTEGER REFERENCES media_assets(id) ON DELETE SET NULL');
+  ensureColumn(db, 'site_settings', 'home_banner_secondary_media_id INTEGER REFERENCES media_assets(id) ON DELETE SET NULL');
+  ensureColumn(db, 'site_settings', 'home_feature_media_id INTEGER REFERENCES media_assets(id) ON DELETE SET NULL');
   return db;
 }
 

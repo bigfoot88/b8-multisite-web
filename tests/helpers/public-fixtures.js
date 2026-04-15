@@ -17,6 +17,30 @@ function writeUpload(uploadRoot, filename, contents = filename) {
 }
 
 function seedRepresentativePublicContent({ catalogRepository, mediaRepository, redirectRepository, siteRepository, paths }) {
+  const dmaHomePrimary = mediaRepository.createAsset({
+    assetKey: 'dma-home-primary',
+    siteKey: 'dma',
+    filename: 'dma-home-primary.png',
+    mimeType: 'image/png',
+    storagePath: writeUpload(paths.uploadRoot, 'dma-home-primary.png', 'png'),
+    altText: 'DMA 首页全宽图 1',
+  });
+  const dmaHomeSecondary = mediaRepository.createAsset({
+    assetKey: 'dma-home-secondary',
+    siteKey: 'dma',
+    filename: 'dma-home-secondary.png',
+    mimeType: 'image/png',
+    storagePath: writeUpload(paths.uploadRoot, 'dma-home-secondary.png', 'png'),
+    altText: 'DMA 首页全宽图 2',
+  });
+  const dmaFeature = mediaRepository.createAsset({
+    assetKey: 'dma-home-feature',
+    siteKey: 'dma',
+    filename: 'dma-home-feature.png',
+    mimeType: 'image/png',
+    storagePath: writeUpload(paths.uploadRoot, 'dma-home-feature.png', 'png'),
+    altText: 'DMA 首页解决方案主图',
+  });
   const dmaBrochure = mediaRepository.createAsset({
     assetKey: 'dma-lite-brochure',
     siteKey: 'dma',
@@ -64,6 +88,21 @@ function seedRepresentativePublicContent({ catalogRepository, mediaRepository, r
     mimeType: 'application/pdf',
     storagePath: writeUpload(paths.uploadRoot, 'bigfoot-b8erp-pack.pdf', 'Bigfoot pack'),
     altText: 'B8ERP pack',
+  });
+  const currentDmaSettings = siteRepository.getSiteSettings('dma');
+
+  siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: currentDmaSettings?.brandName || 'DMA',
+    domain: currentDmaSettings?.domain || 'dma.b8water.com',
+    seoTitle: currentDmaSettings?.seoTitle || null,
+    seoDescription: currentDmaSettings?.seoDescription || null,
+    contactEmail: currentDmaSettings?.contactEmail || null,
+    contactPhone: currentDmaSettings?.contactPhone || null,
+    contactAddress: currentDmaSettings?.contactAddress || null,
+    homeBannerMediaId: dmaHomePrimary.id,
+    homeBannerSecondaryMediaId: dmaHomeSecondary.id,
+    homeFeatureMediaId: dmaFeature.id,
   });
 
   catalogRepository.createProduct({

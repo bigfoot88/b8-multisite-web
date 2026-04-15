@@ -9,7 +9,23 @@
       <li>站点域名：<strong><%= settings?.domain || '未设置' %></strong></li>
       <li>联系邮箱：<strong><%= settings?.contactEmail || '未设置' %></strong></li>
       <li>SEO 标题：<strong><%= settings?.seoTitle || '未设置' %></strong></li>
+      <li>首页全宽图（第一张）：<strong><%= settings?.homeBannerAsset?.filename || '未设置' %></strong></li>
+      <li>首页全宽图（第二张）：<strong><%= settings?.homeBannerSecondaryAsset?.filename || '未设置' %></strong></li>
+      <li>首页解决方案主图：<strong><%= settings?.homeFeatureAsset?.filename || '未设置' %></strong></li>
     </ul>
+    <% if (settings?.homeBannerAsset || settings?.homeBannerSecondaryAsset || settings?.homeFeatureAsset) { %>
+      <div class="admin-stack">
+        <% if (settings?.homeBannerAsset) { %>
+          <img src="<%= settings.homeBannerAsset.publicUrl %>" alt="<%= settings.homeBannerAsset.altText || '首页全宽图（第一张）' %>" style="max-width: 100%; height: auto;" />
+        <% } %>
+        <% if (settings?.homeBannerSecondaryAsset) { %>
+          <img src="<%= settings.homeBannerSecondaryAsset.publicUrl %>" alt="<%= settings.homeBannerSecondaryAsset.altText || '首页全宽图（第二张）' %>" style="max-width: 100%; height: auto;" />
+        <% } %>
+        <% if (settings?.homeFeatureAsset) { %>
+          <img src="<%= settings.homeFeatureAsset.publicUrl %>" alt="<%= settings.homeFeatureAsset.altText || '首页解决方案主图' %>" style="max-width: 100%; height: auto;" />
+        <% } %>
+      </div>
+    <% } %>
   </section>
 
   <section class="admin-panel">

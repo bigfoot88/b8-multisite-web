@@ -92,6 +92,29 @@ function createPublicSiteService({
     return records.map((record) => attachAssets(record, assetMap));
   }
 
+  function attachSiteSettingsAssets(site) {
+    if (!site) {
+      return null;
+    }
+
+    const assetMap = new Map(
+      mediaRepository.findByIds([
+        site.homeBannerMediaId,
+        site.homeBannerSecondaryMediaId,
+        site.homeFeatureMediaId,
+      ]).map((asset) => [asset.id, asset]),
+    );
+
+    return {
+      ...site,
+      homeHeroSlides: [site.homeBannerMediaId, site.homeBannerSecondaryMediaId]
+        .filter(Boolean)
+        .map((mediaId) => assetMap.get(mediaId) || null)
+        .filter(Boolean),
+      homeFeatureAsset: site.homeFeatureMediaId ? assetMap.get(site.homeFeatureMediaId) || null : null,
+    };
+  }
+
   function listVisibleNavigation(siteKey) {
     return siteRepository
       .listNavigation(siteKey)
@@ -99,12 +122,13 @@ function createPublicSiteService({
   }
 
   function getSiteFrame(site) {
-    const siteKey = site.siteKey;
+    const hydratedSite = attachSiteSettingsAssets(site);
+    const siteKey = hydratedSite.siteKey;
     const publishedSections = siteRepository.listPublishedSections(siteKey);
     const heroSection = publishedSections.find((section) => section.sectionKey === 'hero' || section.sectionKey === 'hero-banner') || null;
 
     return {
-      site,
+      site: hydratedSite,
       navigation: listVisibleNavigation(siteKey),
       publishedSections,
       heroSection,

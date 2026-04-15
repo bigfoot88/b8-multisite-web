@@ -765,6 +765,44 @@ test('media rebind rejects moving an asset referenced by another site section', 
   assert.equal(unchanged.alt_text, 'DMA 模块素材');
 });
 
+test('media rebind rejects moving an asset referenced by homepage feature settings', async (t) => {
+  const paths = createSeededAppPaths('b8-admin-media-rebind-home-feature-');
+  t.after(() => {
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: paths.databasePath, sessionSecret: 'task4-secret', uploadRoot: paths.uploadRoot });
+  const agent = request.agent(app);
+  const db = createDatabase(paths.databasePath);
+  t.after(() => db.close());
+
+  await loginAsAdmin(agent);
+
+  await agent
+    .post('/admin/media')
+    .field('siteKey', 'dma')
+    .field('altText', 'DMA 首页主图')
+    .attach('file', logoFixturePath);
+
+  const asset = db.prepare('SELECT * FROM media_assets WHERE site_key = ?').get('dma');
+  db.prepare('UPDATE site_settings SET home_feature_media_id = ? WHERE site_key = ?').run(asset.id, 'dma');
+
+  const response = await agent
+    .post(`/admin/media/${asset.asset_key}/rebind`)
+    .type('form')
+    .send({
+      siteKey: 'bigfoot',
+      altText: '尝试跨站重绑首页主图',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /当前素材已被其他站点内容引用，不能迁移到该站点。/);
+
+  const unchanged = db.prepare('SELECT * FROM media_assets WHERE asset_key = ?').get(asset.asset_key);
+  assert.equal(unchanged.site_key, 'dma');
+  assert.equal(unchanged.alt_text, 'DMA 首页主图');
+});
+
 test('media replacement rejects moving a referenced asset to another site and cleans up uploaded files', async (t) => {
   const paths = createSeededAppPaths('b8-admin-media-replace-reference-');
   t.after(() => {

@@ -21,8 +21,14 @@ CREATE TABLE IF NOT EXISTS site_settings (
   contact_email TEXT,
   contact_phone TEXT,
   contact_address TEXT,
+  home_banner_media_id INTEGER,
+  home_banner_secondary_media_id INTEGER,
+  home_feature_media_id INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(home_banner_media_id) REFERENCES media_assets(id) ON DELETE SET NULL,
+  FOREIGN KEY(home_banner_secondary_media_id) REFERENCES media_assets(id) ON DELETE SET NULL,
+  FOREIGN KEY(home_feature_media_id) REFERENCES media_assets(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS navigation_items (

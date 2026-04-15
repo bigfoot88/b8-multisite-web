@@ -95,3 +95,72 @@ test('unknown admin site keys redirect to the admin dashboard', async (t) => {
   assert.equal(response.status, 302);
   assert.equal(response.headers.location, '/admin');
 });
+
+test('admin site settings form accepts homepage media ids', async (t) => {
+  const { tempDir, testDbPath } = createSeededAdminDb();
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: testDbPath });
+  const agent = request.agent(app);
+
+  const primaryBanner = app.locals.mediaRepository.createAsset({
+    assetKey: 'dma-home-primary',
+    siteKey: 'dma',
+    filename: 'dma-home-primary.png',
+    mimeType: 'image/png',
+    storagePath: path.join(app.locals.uploadRoot, 'dma-home-primary.png'),
+  });
+  const secondaryBanner = app.locals.mediaRepository.createAsset({
+    assetKey: 'dma-home-secondary',
+    siteKey: 'dma',
+    filename: 'dma-home-secondary.png',
+    mimeType: 'image/png',
+    storagePath: path.join(app.locals.uploadRoot, 'dma-home-secondary.png'),
+  });
+  const featureAsset = app.locals.mediaRepository.createAsset({
+    assetKey: 'dma-home-feature',
+    siteKey: 'dma',
+    filename: 'dma-home-feature.png',
+    mimeType: 'image/png',
+    storagePath: path.join(app.locals.uploadRoot, 'dma-home-feature.png'),
+  });
+
+  const loginResponse = await agent
+    .post('/admin/login')
+    .type('form')
+    .send({ username: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+
+  const response = await agent
+    .post('/admin/dma/settings')
+    .type('form')
+    .send({
+      brandName: 'DMA',
+      domain: 'dma.b8water.com',
+      homeBannerMediaId: String(primaryBanner.id),
+      homeBannerSecondaryMediaId: String(secondaryBanner.id),
+      homeFeatureMediaId: String(featureAsset.id),
+    });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.location, '/admin/dma/settings');
+
+  const row = app.locals.db.prepare(`
+    SELECT home_banner_media_id, home_banner_secondary_media_id, home_feature_media_id
+    FROM site_settings
+    WHERE site_key = ?
+  `).get('dma');
+  assert.equal(row.home_banner_media_id, primaryBanner.id);
+  assert.equal(row.home_banner_secondary_media_id, secondaryBanner.id);
+  assert.equal(row.home_feature_media_id, featureAsset.id);
+
+  const page = await agent.get('/admin/dma/settings');
+  assert.equal(page.status, 200);
+  assert.match(page.text, /name="homeBannerMediaId"/);
+  assert.match(page.text, /name="homeBannerSecondaryMediaId"/);
+  assert.match(page.text, /name="homeFeatureMediaId"/);
+  assert.match(page.text, /dma-home-feature\.png/);
+});

@@ -51,13 +51,19 @@ function createMediaRepository(db, { uploadRoot = null } = {}) {
   const selectById = db.prepare('SELECT * FROM media_assets WHERE id = ?');
   const selectAll = db.prepare('SELECT * FROM media_assets ORDER BY id ASC');
   const selectReferenceSites = db.prepare(`
-    SELECT DISTINCT site_key
-    FROM (
-      SELECT site_key, brochure_media_id AS media_id FROM products WHERE deleted_at IS NULL
-      UNION ALL
-      SELECT site_key, attachment_media_id AS media_id FROM products WHERE deleted_at IS NULL
-      UNION ALL
-      SELECT site_key, attachment_media_id AS media_id FROM solutions WHERE deleted_at IS NULL
+      SELECT DISTINCT site_key
+      FROM (
+        SELECT site_key, home_banner_media_id AS media_id FROM site_settings
+        UNION ALL
+        SELECT site_key, home_banner_secondary_media_id AS media_id FROM site_settings
+        UNION ALL
+        SELECT site_key, home_feature_media_id AS media_id FROM site_settings
+        UNION ALL
+        SELECT site_key, brochure_media_id AS media_id FROM products WHERE deleted_at IS NULL
+        UNION ALL
+        SELECT site_key, attachment_media_id AS media_id FROM products WHERE deleted_at IS NULL
+        UNION ALL
+        SELECT site_key, attachment_media_id AS media_id FROM solutions WHERE deleted_at IS NULL
       UNION ALL
       SELECT site_key, attachment_media_id AS media_id FROM pages WHERE deleted_at IS NULL
       UNION ALL
@@ -84,6 +90,11 @@ function createMediaRepository(db, { uploadRoot = null } = {}) {
   const selectPublishedPublicReference = db.prepare(`
     SELECT 1
     FROM (
+      SELECT site_key FROM site_settings
+      WHERE home_banner_media_id = @assetId
+         OR home_banner_secondary_media_id = @assetId
+         OR home_feature_media_id = @assetId
+      UNION
       SELECT site_key FROM products WHERE deleted_at IS NULL AND publish_state = 'published' AND (brochure_media_id = @assetId OR attachment_media_id = @assetId)
       UNION
       SELECT site_key FROM solutions WHERE deleted_at IS NULL AND publish_state = 'published' AND attachment_media_id = @assetId

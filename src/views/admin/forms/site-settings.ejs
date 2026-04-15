@@ -1,6 +1,30 @@
 <form method="post" action="/admin/<%= siteKey %>/settings" class="admin-form">
   <label>品牌名称<input type="text" name="brandName" value="<%= settings?.brandName || '' %>" required /></label>
   <label>站点域名<input type="text" name="domain" value="<%= settings?.domain || '' %>" required /></label>
+  <%- include('../partials/media-picker', {
+    name: 'homeBannerMediaId',
+    label: '首页全宽图（第一张）',
+    value: settings?.homeBannerMediaId || '',
+    previewUrl: settings?.homeBannerAsset?.publicUrl || '',
+    altText: settings?.homeBannerAsset?.altText || '',
+    siteKey
+  }) %>
+  <%- include('../partials/media-picker', {
+    name: 'homeBannerSecondaryMediaId',
+    label: '首页全宽图（第二张）',
+    value: settings?.homeBannerSecondaryMediaId || '',
+    previewUrl: settings?.homeBannerSecondaryAsset?.publicUrl || '',
+    altText: settings?.homeBannerSecondaryAsset?.altText || '',
+    siteKey
+  }) %>
+  <%- include('../partials/media-picker', {
+    name: 'homeFeatureMediaId',
+    label: '首页解决方案主图',
+    value: settings?.homeFeatureMediaId || '',
+    previewUrl: settings?.homeFeatureAsset?.publicUrl || '',
+    altText: settings?.homeFeatureAsset?.altText || '',
+    siteKey
+  }) %>
   <label>SEO 标题<input type="text" name="seoTitle" value="<%= settings?.seoTitle || '' %>" /></label>
   <label>SEO 描述<textarea name="seoDescription" rows="3"><%= settings?.seoDescription || '' %></textarea></label>
   <label>联系邮箱<input type="email" name="contactEmail" value="<%= settings?.contactEmail || '' %>" /></label>

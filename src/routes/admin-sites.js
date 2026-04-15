@@ -4,84 +4,98 @@ const { isExpectedAdminError } = require('../lib/admin-errors');
 const { requireAdmin } = require('../lib/session');
 const { renderAdmin, requireKnownSite } = require('./admin-shared');
 
+function normalizeOptionalText(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function buildSiteSettingsInput(siteKey, body = {}) {
+  return {
+    siteKey,
+    brandName: normalizeOptionalText(body.brandName) || siteKey.toUpperCase(),
+    domain: (body?.domain?.trim() || `${siteKey}.local`).toLowerCase(),
+    seoTitle: normalizeOptionalText(body.seoTitle),
+    seoDescription: normalizeOptionalText(body.seoDescription),
+    contactEmail: normalizeOptionalText(body.contactEmail),
+    contactPhone: normalizeOptionalText(body.contactPhone),
+    contactAddress: normalizeOptionalText(body.contactAddress),
+    homeBannerMediaId: normalizeOptionalText(body.homeBannerMediaId),
+    homeBannerSecondaryMediaId: normalizeOptionalText(body.homeBannerSecondaryMediaId),
+    homeFeatureMediaId: normalizeOptionalText(body.homeFeatureMediaId),
+  };
+}
+
+function decorateSiteSettingsForAdmin(settings, mediaRepository) {
+  if (!settings) {
+    return settings;
+  }
+
+  const ids = [
+    settings.homeBannerMediaId,
+    settings.homeBannerSecondaryMediaId,
+    settings.homeFeatureMediaId,
+  ].filter(Boolean);
+  const assets = new Map(mediaRepository.findByIds(ids).map((asset) => [asset.id, asset]));
+
+  return {
+    ...settings,
+    homeBannerAsset: settings.homeBannerMediaId ? assets.get(Number(settings.homeBannerMediaId)) || null : null,
+    homeBannerSecondaryAsset: settings.homeBannerSecondaryMediaId ? assets.get(Number(settings.homeBannerSecondaryMediaId)) || null : null,
+    homeFeatureAsset: settings.homeFeatureMediaId ? assets.get(Number(settings.homeFeatureMediaId)) || null : null,
+  };
+}
+
+function renderSiteSettingsPage(req, res, { siteKey, settings, errorMessage = null }) {
+  return renderAdmin(req, res, {
+    title: '站点设置 · 中文后台',
+    pageTitle: '站点设置',
+    pageDescription: '维护站点品牌、联系方式与 SEO 字段。',
+    bodyView: '../admin/lists/site-settings',
+    currentPath: `/admin/${siteKey}/settings`,
+    siteKey,
+    settings: decorateSiteSettingsForAdmin(settings, req.app.locals.mediaRepository),
+    errorMessage,
+  });
+}
+
 function createAdminSitesRouter() {
   const router = express.Router();
 
   router.use(requireAdmin);
 
   router.get('/:siteKey/settings', requireKnownSite, (req, res) => {
-    const settings = req.app.locals.siteRepository.getSiteSettings(req.params.siteKey);
-
-    return renderAdmin(req, res, {
-      title: '站点设置 · 中文后台',
-      pageTitle: '站点设置',
-      pageDescription: '维护站点品牌、联系方式与 SEO 字段。',
-      bodyView: '../admin/lists/site-settings',
-      currentPath: `/admin/${req.params.siteKey}/settings`,
+    return renderSiteSettingsPage(req, res, {
       siteKey: req.params.siteKey,
-      settings,
+      settings: req.app.locals.siteRepository.getSiteSettings(req.params.siteKey),
     });
   });
 
   router.post('/:siteKey/settings', requireKnownSite, (req, res, next) => {
     const siteKey = req.params.siteKey;
-    const nextDomain = (req.body?.domain?.trim() || `${siteKey}.local`).toLowerCase();
-    const existingSite = req.app.locals.siteRepository.getSiteSettingsByDomain(nextDomain);
+    const nextSettings = buildSiteSettingsInput(siteKey, req.body);
+    const existingSite = req.app.locals.siteRepository.getSiteSettingsByDomain(nextSettings.domain);
 
     if (existingSite && existingSite.siteKey !== siteKey) {
       res.status(400);
-      return renderAdmin(req, res, {
-        title: '站点设置 · 中文后台',
-        pageTitle: '站点设置',
-        pageDescription: '维护站点品牌、联系方式与 SEO 字段。',
-        bodyView: '../admin/lists/site-settings',
-        currentPath: `/admin/${siteKey}/settings`,
+      return renderSiteSettingsPage(req, res, {
         siteKey,
-        settings: {
-          siteKey,
-          brandName: req.body?.brandName?.trim() || siteKey.toUpperCase(),
-          domain: nextDomain,
-          seoTitle: req.body?.seoTitle?.trim() || null,
-          seoDescription: req.body?.seoDescription?.trim() || null,
-          contactEmail: req.body?.contactEmail?.trim() || null,
-          contactPhone: req.body?.contactPhone?.trim() || null,
-          contactAddress: req.body?.contactAddress?.trim() || null,
-        },
+        settings: nextSettings,
         errorMessage: '域名已被其他站点使用，请更换后重试。',
       });
     }
 
     try {
-      req.app.locals.siteRepository.upsertSiteSettings({
-        siteKey,
-        brandName: req.body?.brandName?.trim() || siteKey.toUpperCase(),
-        domain: nextDomain,
-        seoTitle: req.body?.seoTitle?.trim() || null,
-        seoDescription: req.body?.seoDescription?.trim() || null,
-        contactEmail: req.body?.contactEmail?.trim() || null,
-        contactPhone: req.body?.contactPhone?.trim() || null,
-        contactAddress: req.body?.contactAddress?.trim() || null,
-      });
+      req.app.locals.siteRepository.upsertSiteSettings(nextSettings);
     } catch (error) {
       if (isExpectedAdminError(error)) {
         res.status(error.statusCode);
-        return renderAdmin(req, res, {
-          title: '站点设置 · 中文后台',
-          pageTitle: '站点设置',
-          pageDescription: '维护站点品牌、联系方式与 SEO 字段。',
-          bodyView: '../admin/lists/site-settings',
-          currentPath: `/admin/${siteKey}/settings`,
+        return renderSiteSettingsPage(req, res, {
           siteKey,
-          settings: {
-            siteKey,
-            brandName: req.body?.brandName?.trim() || siteKey.toUpperCase(),
-            domain: nextDomain,
-            seoTitle: req.body?.seoTitle?.trim() || null,
-            seoDescription: req.body?.seoDescription?.trim() || null,
-            contactEmail: req.body?.contactEmail?.trim() || null,
-            contactPhone: req.body?.contactPhone?.trim() || null,
-            contactAddress: req.body?.contactAddress?.trim() || null,
-          },
+          settings: nextSettings,
           errorMessage: error.message,
         });
       }

@@ -97,6 +97,69 @@ test('site repository normalizes site domains on write and lookup below the rout
   assert.equal(sites.getSiteSettingsByDomain('FOO.LOCAL')?.siteKey, 'dma');
 });
 
+test('site repository persists homepage media settings and media rebinding protects site settings references', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const siteRepository = createSiteRepository(db);
+  const mediaRepository = createMediaRepository(db);
+
+  const primaryBanner = mediaRepository.createAsset({
+    assetKey: 'dma-home-primary',
+    siteKey: 'dma',
+    filename: 'dma-home-primary.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-home-primary.png',
+  });
+  const secondaryBanner = mediaRepository.createAsset({
+    assetKey: 'dma-home-secondary',
+    siteKey: 'dma',
+    filename: 'dma-home-secondary.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-home-secondary.png',
+  });
+  const featureAsset = mediaRepository.createAsset({
+    assetKey: 'dma-home-feature',
+    siteKey: 'dma',
+    filename: 'dma-home-feature.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-home-feature.png',
+  });
+
+  const updated = siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.b8water.com',
+    homeBannerMediaId: primaryBanner.id,
+    homeBannerSecondaryMediaId: secondaryBanner.id,
+    homeFeatureMediaId: featureAsset.id,
+  });
+
+  assert.equal(updated.homeBannerMediaId, primaryBanner.id);
+  assert.equal(updated.homeBannerSecondaryMediaId, secondaryBanner.id);
+  assert.equal(updated.homeFeatureMediaId, featureAsset.id);
+  assert.equal(
+    db.prepare(`
+      SELECT home_banner_media_id, home_banner_secondary_media_id, home_feature_media_id
+      FROM site_settings
+      WHERE site_key = ?
+    `).get('dma').home_feature_media_id,
+    featureAsset.id,
+  );
+
+  assert.throws(
+    () => mediaRepository.updateAsset(featureAsset.assetKey, {
+      siteKey: 'bigfoot',
+      sourceUrl: featureAsset.sourceUrl,
+      filename: featureAsset.filename,
+      mimeType: featureAsset.mimeType,
+      storagePath: featureAsset.storagePath,
+      altText: featureAsset.altText,
+      metadata: featureAsset.metadata,
+    }),
+    /media-site-assignment-conflict/,
+  );
+});
+
 test('media and redirect repositories support site-scoped queries with global fallbacks', () => {
   const db = createTestDb();
   runMigrations(db);
