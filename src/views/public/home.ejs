@@ -87,9 +87,9 @@
   <div class="container">
     <div class="section-heading">
       <div>
-        <h2>解决方案与最新资讯</h2>
+        <h2>最新资讯与交付信息</h2>
       </div>
-      <p>以配置化首页主图搭配重点方案与新闻内容，形成更轻量的首页信息编排。</p>
+      <p>通过首页主图与新闻信息模块，保持首页内容更新并突出近期交付动态。</p>
     </div>
     <div class="split-grid split-grid--home">
       <div class="panel home-feature-media<%= site.homeFeatureAsset?.publicUrl ? '' : ' home-feature-media--empty' %>">
@@ -109,25 +109,8 @@
       <div class="panel panel--stack">
         <div class="panel__block">
           <div class="panel__intro">
-            <h2>场景化解决方案</h2>
-            <p>把产品能力串联成可落地的实施路径，降低客户理解与决策成本。</p>
-          </div>
-          <ul class="stack-list stack-list--linked">
-            <% featuredSolutions.forEach((solution, i) => { %>
-              <li>
-                <a href="<%= sitePath('/solutions/' + solution.slug) %>">
-                  <span class="item-num">0<%= i + 1 %></span>
-                  <strong><%= solution.title %></strong>
-                  <span><%= solution.summary %></span>
-                </a>
-              </li>
-            <% }) %>
-          </ul>
-        </div>
-        <div class="panel__block">
-          <div class="panel__intro">
             <h2>新闻动态</h2>
-            <p>持续更新行业活动、方案发布与项目进展，保持首页内容的新鲜度。</p>
+            <p>持续更新行业活动、方案发布与项目进展，让首页右侧聚焦最新信息。</p>
           </div>
           <ul class="stack-list stack-list--linked">
             <% latestNews.forEach((article) => { %>

@@ -193,12 +193,15 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
   }
 
   function buildHomeHeroActions(page) {
-    const configuredLabel = page.heroSection?.config?.ctaLabel;
     const configuredHref = page.heroSection?.config?.ctaHref;
+    const configuredLabel = page.heroSection?.config?.ctaLabel;
+    if (!configuredHref || !configuredLabel) {
+      return [];
+    }
 
     return [{
-      href: configuredHref || '/contact',
-      label: configuredLabel || '联系我们',
+      href: configuredHref,
+      label: configuredLabel,
       variant: 'primary',
     }];
   }

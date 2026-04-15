@@ -336,6 +336,26 @@ function seedRepresentativePublicContentWithMissingHeroCtaHref(repositories) {
   });
 }
 
+function seedRepresentativePublicContentWithMissingHeroCtaLabel(repositories) {
+  seedRepresentativePublicContent(repositories);
+  const currentHeroSection = repositories.siteRepository.getSection('dma', 'hero');
+
+  repositories.siteRepository.saveSection({
+    siteKey: 'dma',
+    sectionKey: 'hero',
+    heading: currentHeroSection.heading,
+    subheading: currentHeroSection.subheading,
+    body: currentHeroSection.body,
+    mediaAssetId: currentHeroSection.mediaAssetId,
+    config: {
+      ctaHref: currentHeroSection.config?.ctaHref || '/contact',
+    },
+    isPublished: currentHeroSection.isPublished,
+    publishedAt: currentHeroSection.publishedAt,
+    sortOrder: currentHeroSection.sortOrder,
+  });
+}
+
 function withPublicApp(t, prefix = 'b8-public-', seed = seedRepresentativePublicContent) {
   const paths = createSeededAppPaths(prefix);
   t.after(() => {
@@ -371,6 +391,7 @@ module.exports = {
   seedRepresentativePublicContent,
   seedRepresentativePublicContentWithEmptyFeatureImage,
   seedRepresentativePublicContentWithMissingHeroCtaHref,
+  seedRepresentativePublicContentWithMissingHeroCtaLabel,
   seedRepresentativePublicContentWithNoHomeImages,
   seedRepresentativePublicContentWithSingleHomeImage,
   writeUpload,

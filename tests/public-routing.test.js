@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { promisify } = require('node:util');
 const express = require('express');
@@ -11,6 +12,7 @@ const {
   seedRepresentativePublicContent,
   seedRepresentativePublicContentWithEmptyFeatureImage,
   seedRepresentativePublicContentWithMissingHeroCtaHref,
+  seedRepresentativePublicContentWithMissingHeroCtaLabel,
   seedRepresentativePublicContentWithNoHomeImages,
   seedRepresentativePublicContentWithSingleHomeImage,
   withPublicApp,
@@ -244,6 +246,11 @@ test('public homepage renders the redesigned media composition and configured ho
     'b8-public-home-missing-hero-cta-',
     seedRepresentativePublicContentWithMissingHeroCtaHref,
   );
+  const { app: missingHeroCtaLabelApp } = withPublicApp(
+    t,
+    'b8-public-home-missing-hero-cta-label-',
+    seedRepresentativePublicContentWithMissingHeroCtaLabel,
+  );
 
   const homeResponse = await request(app)
     .get('/')
@@ -260,8 +267,11 @@ test('public homepage renders the redesigned media composition and configured ho
   assert.match(homeHtml, /DMA 首页解决方案主图/);
   assert.match(homeHtml, /home-feature-media/);
   assert.match(homeHtml, /hero-panel hero-panel--text-only/);
+  assert.match(homeHtml, /<div class="hero-actions">/);
   assert.match(homeHtml, /预约演示/);
-  assert.match(homeHtml, /href="\/contact"/);
+  assert.match(homeHtml, /class="button button--hero-primary">预约演示<\/a>/);
+  assert.doesNotMatch(homeHtml, /场景化解决方案/);
+  assert.doesNotMatch(homeHtml, /分区计量解决方案/);
   assert.doesNotMatch(homeHtml, /<p class="eyebrow">产品矩阵<\/p>/);
   assert.doesNotMatch(homeHtml, /card__eyebrow/);
   assert.doesNotMatch(homeHtml, /footer-cta/);
@@ -292,8 +302,31 @@ test('public homepage renders the redesigned media composition and configured ho
     .get('/')
     .set('host', 'dma.b8water.com');
   assert.equal(missingHeroCtaHrefHome.status, 200);
-  assert.match(missingHeroCtaHrefHome.text, /预约演示/);
-  assert.match(missingHeroCtaHrefHome.text, /href="\/contact"/);
+  assert.doesNotMatch(missingHeroCtaHrefHome.text, /<div class="hero-actions">/);
+  assert.doesNotMatch(missingHeroCtaHrefHome.text, /预约演示/);
+  assert.doesNotMatch(missingHeroCtaHrefHome.text, /button--hero-primary/);
+
+  const missingHeroCtaLabelHome = await request(missingHeroCtaLabelApp)
+    .get('/')
+    .set('host', 'dma.b8water.com');
+  assert.equal(missingHeroCtaLabelHome.status, 200);
+  assert.doesNotMatch(missingHeroCtaLabelHome.text, /<div class="hero-actions">/);
+  assert.doesNotMatch(missingHeroCtaLabelHome.text, /button--hero-primary/);
+});
+
+test('public shared stylesheet keeps homepage tweaks without widening header breakpoint scope', () => {
+  const cssPath = path.join(__dirname, '..', 'public', 'css', 'public.css');
+  const stylesheet = fs.readFileSync(cssPath, 'utf8');
+
+  assert.match(stylesheet, /\.split-grid--home\s*\{\s*grid-template-columns:\s*0\.8fr 1\.2fr;/);
+  assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-nav ul\s*\{\s*display: flex;\s*gap: 5em;/);
+  assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-footer__grid\s*\{\s*grid-template-columns:\s*1\.5fr 1\.5fr 1fr;/);
+  assert.doesNotMatch(stylesheet, /\.rich-text img\s*\{/);
+  assert.match(stylesheet, /\.home-feature-media__placeholder\s*\{/);
+  assert.doesNotMatch(stylesheet, /@media \(min-width: 1100px\)/);
+  assert.doesNotMatch(stylesheet, /\.site-header__inner\s*\{\s*flex-wrap:\s*wrap;/);
+  assert.doesNotMatch(stylesheet, /\.site-nav\s*\{\s*flex-basis:\s*100%;/);
+  assert.doesNotMatch(stylesheet, /\.site-header__actions\s*\{[\s\S]*?margin-left:\s*auto;/);
 });
 
 test('generic public pages support hierarchical paths, stay behind specific routes, and hide drafts', async (t) => {
