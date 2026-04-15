@@ -11,6 +11,8 @@ const { createDatabase } = require('../src/lib/db');
 const { runMigrations } = require('../src/lib/migrations');
 const { createAdminRepository } = require('../src/repositories/admin-repository');
 
+const logoFixturePath = path.join(__dirname, 'fixtures', 'logo.png');
+
 function createTestPaths() {
   const tempDir = path.join(
     __dirname,
@@ -236,6 +238,44 @@ test('POST /admin-next/login accepts email credentials for AdminJS', async (t) =
   assert.equal(response.status, 302);
   assert.equal(response.headers.location, '/admin-next');
   assert.match(response.headers['set-cookie'][0], /b8_adminjs=/);
+});
+
+test('POST /admin-next/api/media/inline-upload returns the uploaded asset id for AdminJS media picker selection', async (t) => {
+  const paths = createTestPaths();
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  createSeededAdminDb(paths);
+
+  const app = createApp({
+    databasePath: paths.databasePath,
+    uploadRoot: path.join(paths.tempDir, 'uploads'),
+  });
+  const agent = request.agent(app);
+
+  const loginResponse = await agent
+    .post('/admin-next/login')
+    .type('form')
+    .send({ email: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+
+  const uploadResponse = await agent
+    .post('/admin-next/api/media/inline-upload')
+    .field('altText', 'AdminJS uploaded logo')
+    .attach('file', logoFixturePath);
+
+  assert.equal(uploadResponse.status, 201);
+  assert.equal(typeof uploadResponse.body.id, 'number');
+  assert.match(uploadResponse.body.assetKey, /./);
+  assert.equal(uploadResponse.body.altText, 'AdminJS uploaded logo');
+  assert.match(uploadResponse.body.url, /^\/uploads\//);
+
+  const asset = app.locals.db.prepare('SELECT * FROM media_assets WHERE id = ?').get(uploadResponse.body.id);
+  assert.equal(asset.filename, 'logo.png');
+  assert.equal(asset.alt_text, 'AdminJS uploaded logo');
 });
 
 test('POST /admin-next/login rejects inactive admins', async (t) => {

@@ -1,0 +1,95 @@
+const {
+  applyContentHooks,
+  buildContentResourceOptions,
+  buildMediaPickerProperty,
+  buildRichTextProperty,
+  createModel,
+  createPublishStateAttribute,
+  createSiteKeyAttribute,
+  createTimestampAttribute,
+} = require('./shared');
+
+function createNewsArticleModel(sequelize, DataTypes) {
+  return createModel(sequelize, 'AdminJsNewsArticle', {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    site_key: createSiteKeyAttribute(DataTypes),
+    slug: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    summary: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    body_html: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    hero_media_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    banner_media_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    seo_title: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    seo_description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    sort_order: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 100,
+    },
+    publish_state: createPublishStateAttribute(DataTypes),
+    published_at: createTimestampAttribute(DataTypes, { allowNull: true }),
+    deleted_at: createTimestampAttribute(DataTypes, { allowNull: true }),
+    created_at: createTimestampAttribute(DataTypes),
+    updated_at: createTimestampAttribute(DataTypes),
+  }, {
+    tableName: 'news_articles',
+    excludeDeleted: true,
+    hooks: {
+      beforeValidate: applyContentHooks,
+    },
+  });
+}
+
+function createNewsArticlesResource(sequelize, DataTypes) {
+  const NewsArticle = createNewsArticleModel(sequelize, DataTypes);
+
+  return {
+    resource: NewsArticle,
+    options: buildContentResourceOptions({
+      label: '新闻中心',
+      listProperties: ['id', 'site_key', 'slug', 'title', 'publish_state', 'published_at', 'updated_at'],
+      editProperties: ['site_key', 'slug', 'title', 'summary', 'body_html', 'hero_media_id', 'banner_media_id', 'seo_title', 'seo_description', 'sort_order', 'publish_state', 'published_at'],
+      filterProperties: ['site_key', 'slug', 'title', 'publish_state', 'published_at', 'updated_at'],
+      showProperties: ['id', 'site_key', 'slug', 'title', 'summary', 'body_html', 'hero_media_id', 'banner_media_id', 'seo_title', 'seo_description', 'sort_order', 'publish_state', 'published_at', 'created_at', 'updated_at'],
+      propertyOverrides: {
+        summary: { type: 'textarea' },
+        body_html: buildRichTextProperty(),
+        hero_media_id: buildMediaPickerProperty({ description: '为新闻头图选择当前站点素材。' }),
+        banner_media_id: buildMediaPickerProperty({ description: '为新闻详情页顶部 Banner 选择当前站点素材。' }),
+        seo_description: { type: 'textarea' },
+      },
+    }),
+  };
+}
+
+module.exports = {
+  createNewsArticlesResource,
+};
