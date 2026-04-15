@@ -162,7 +162,7 @@ test('public routes render host-specific site pages and collection detail pages'
   const productDetailHtml = productDetail.text;
   assert.match(productDetailHtml, /帮助水司快速定位漏损风险并形成闭环治理/);
   assert.doesNotMatch(productDetailHtml, /detail-aside/);
-  assert.match(productDetailHtml, /detail-layout--fullwidth/);
+  assert.match(productDetailHtml, /class="container detail-layout" style="max-width: 100%; padding: 0rem;"/);
 
   const solutions = await request(app)
     .get('/solutions')
@@ -177,7 +177,7 @@ test('public routes render host-specific site pages and collection detail pages'
   const solutionDetailHtml = solutionDetail.text;
   assert.match(solutionDetailHtml, /完整流程/);
   assert.doesNotMatch(solutionDetailHtml, /detail-aside/);
-  assert.match(solutionDetailHtml, /detail-layout--fullwidth/);
+  assert.match(solutionDetailHtml, /class="container detail-layout" style="max-width: 100%; padding: 0rem;"/);
 
   const newsIndex = await request(app)
     .get('/news')
@@ -204,7 +204,7 @@ test('public routes render host-specific site pages and collection detail pages'
   const caseDetailHtml = caseDetail.text;
   assert.match(caseDetailHtml, /六个月内完成多轮夜间最小流量分析与整改/);
   assert.doesNotMatch(caseDetailHtml, /detail-aside/);
-  assert.match(caseDetailHtml, /detail-layout--fullwidth/);
+  assert.match(caseDetailHtml, /class="container detail-layout" style="max-width: 100%; padding: 0rem;"/);
 
   const aboutPage = await request(app)
     .get('/about')
@@ -212,7 +212,7 @@ test('public routes render host-specific site pages and collection detail pages'
   assert.equal(aboutPage.status, 200);
   const aboutHtml = aboutPage.text;
   assert.match(aboutHtml, /关于智灵科技/);
-  assert.match(aboutHtml, /prose-shell prose-shell--fullwidth/);
+  assert.match(aboutHtml, /class="container detail-layout" style="max-width: 100%; padding: 0rem;"/);
 
   const contactPage = await request(app)
     .get('/contact')
@@ -359,10 +359,6 @@ test('public shared stylesheet keeps homepage tweaks without widening header bre
   assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-footer__grid\s*\{\s*grid-template-columns:\s*1\.5fr 1\.5fr 1fr;/);
   assert.doesNotMatch(stylesheet, /\.rich-text img\s*\{/);
   assert.match(stylesheet, /\.home-feature-media__placeholder\s*\{/);
-  assert.match(
-    stylesheet,
-    /\.detail-layout--fullwidth,\s*\.prose-shell--fullwidth\s*\{[\s\S]*?max-width:\s*100%;[\s\S]*?padding-left:\s*0;[\s\S]*?padding-right:\s*0;/,
-  );
   assert.match(
     stylesheet,
     /\.prose-card--fullwidth\s*\{[\s\S]*?width:\s*100%;/,
@@ -535,7 +531,7 @@ test('public pages sanitize stored rich html before rendering', async (t) => {
   const genericPageHtml = genericPage.text;
   assert.match(genericPageHtml, /<p>安全说明<\/p>/);
   assert.doesNotMatch(genericPageHtml, /detail-aside/);
-  assert.match(genericPageHtml, /detail-layout--fullwidth/);
+  assert.match(genericPageHtml, /class="container detail-layout" style="max-width: 100%; padding: 0rem;"/);
   assert.doesNotMatch(genericPageHtml, /<div class="rich-text">[\s\S]*<script/i);
   assert.doesNotMatch(genericPageHtml, /onmouseover=/i);
   assert.doesNotMatch(genericPageHtml, /javascript:/i);

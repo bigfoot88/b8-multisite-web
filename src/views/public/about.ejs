@@ -2,7 +2,7 @@
 <%- include('../partials/hero', { hero, site }) %>
 
 <section class="section">
-  <div class="container prose-shell prose-shell--fullwidth">
+  <div class="container detail-layout" style="max-width: 100%; padding: 0rem;">
     <article class="prose-card prose-card--fullwidth">
       <% if (page.summary) { %><p class="lead lead--compact"><%= page.summary %></p><% } %>
       <div class="rich-text"><%- page.bodyHtml || '' %></div>
