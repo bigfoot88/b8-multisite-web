@@ -11,6 +11,7 @@ const { createSiteRepository } = require('../src/repositories/site-repository');
 const { createMediaRepository } = require('../src/repositories/media-repository');
 const { createRedirectRepository } = require('../src/repositories/redirect-repository');
 const { createAdminRepository } = require('../src/repositories/admin-repository');
+const { createPublicSiteService } = require('../src/services/public-site-service');
 
 test('repository layer can create a dma product and list it by site', () => {
   const db = createTestDb();
@@ -275,6 +276,66 @@ test('media repository can batch load assets by id for public rendering', () => 
       { assetKey: 'dma-brochure', publicUrl: '/media/dma-lite.pdf' },
     ],
   );
+});
+
+test('public site service ignores cross-site homepage media from corrupted site settings rows', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const siteRepository = createSiteRepository(db);
+  const mediaRepository = createMediaRepository(db);
+  const publicSiteService = createPublicSiteService({
+    siteRepository,
+    mediaRepository,
+    catalogRepository: {},
+    redirectRepository: {},
+  });
+
+  const dmaBanner = mediaRepository.createAsset({
+    assetKey: 'dma-home-primary',
+    siteKey: 'dma',
+    filename: 'dma-home-primary.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-home-primary.png',
+  });
+  const globalFeature = mediaRepository.createAsset({
+    assetKey: 'global-home-feature',
+    siteKey: null,
+    filename: 'global-home-feature.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/global-home-feature.png',
+  });
+  const bigfootBanner = mediaRepository.createAsset({
+    assetKey: 'bigfoot-home-secondary',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot-home-secondary.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/bigfoot-home-secondary.png',
+  });
+
+  siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.b8water.com',
+    homeBannerMediaId: dmaBanner.id,
+    homeFeatureMediaId: globalFeature.id,
+  });
+
+  db.prepare(`
+    UPDATE site_settings
+    SET home_banner_secondary_media_id = @homeBannerSecondaryMediaId
+    WHERE site_key = @siteKey
+  `).run({
+    siteKey: 'dma',
+    homeBannerSecondaryMediaId: bigfootBanner.id,
+  });
+
+  const frame = publicSiteService.getSiteFrame(siteRepository.getSiteSettings('dma'));
+
+  assert.deepEqual(
+    frame.site.homeHeroSlides.map((asset) => asset.assetKey),
+    ['dma-home-primary'],
+  );
+  assert.equal(frame.site.homeFeatureAsset?.assetKey, 'global-home-feature');
 });
 
 test('media repository preserves nested upload paths in public urls', (t) => {

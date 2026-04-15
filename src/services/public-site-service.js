@@ -50,6 +50,10 @@ function createPublicSiteService({
   mediaRepository,
   redirectRepository,
 }) {
+  function isSiteOwnedOrGlobalAsset(siteKey, asset) {
+    return asset && (asset.siteKey === null || asset.siteKey === siteKey);
+  }
+
   function mapAssetsById(records) {
     const mediaIds = new Set();
 
@@ -102,7 +106,9 @@ function createPublicSiteService({
         site.homeBannerMediaId,
         site.homeBannerSecondaryMediaId,
         site.homeFeatureMediaId,
-      ]).map((asset) => [asset.id, asset]),
+      ])
+        .filter((asset) => isSiteOwnedOrGlobalAsset(site.siteKey, asset))
+        .map((asset) => [asset.id, asset]),
     );
 
     return {
