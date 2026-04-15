@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { isExpectedAdminError } = require('../lib/admin-errors');
+const { createAdminValidationError, isExpectedAdminError } = require('../lib/admin-errors');
 const { requireAdmin } = require('../lib/session');
 const { renderAdmin, requireKnownSite } = require('./admin-shared');
 
@@ -27,6 +27,27 @@ function buildSiteSettingsInput(siteKey, body = {}) {
     homeBannerSecondaryMediaId: normalizeOptionalText(body.homeBannerSecondaryMediaId),
     homeFeatureMediaId: normalizeOptionalText(body.homeFeatureMediaId),
   };
+}
+
+function assertScalarHomepageMediaId(value, label) {
+  if (value === undefined || value === null) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '' || /^\d+$/.test(trimmed)) {
+      return;
+    }
+  } else if (Number.isInteger(value)) {
+    return;
+  }
+
+  throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
 }
 
 function decorateSiteSettingsForAdmin(settings, mediaRepository) {
@@ -89,6 +110,9 @@ function createAdminSitesRouter() {
     }
 
     try {
+      assertScalarHomepageMediaId(req.body.homeBannerMediaId, '首页全宽图（第一张）');
+      assertScalarHomepageMediaId(req.body.homeBannerSecondaryMediaId, '首页全宽图（第二张）');
+      assertScalarHomepageMediaId(req.body.homeFeatureMediaId, '首页解决方案主图');
       req.app.locals.siteRepository.upsertSiteSettings(nextSettings);
     } catch (error) {
       if (isExpectedAdminError(error)) {
