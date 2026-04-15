@@ -94,6 +94,34 @@ function buildRecoverableSiteSettingsForRender(body, nextSettings, existingSetti
   };
 }
 
+function assertValidSiteSettingsMediaAsset(mediaRepository, siteKey, mediaId, label) {
+  if (!mediaId) {
+    return;
+  }
+
+  const asset = mediaRepository.findById(mediaId);
+  if (!asset) {
+    throw createAdminValidationError(`${label}不存在，请重新选择。`, 'missing-site-settings-media-asset');
+  }
+  if (asset.siteKey !== null && asset.siteKey !== siteKey) {
+    throw createAdminValidationError(`${label}必须属于当前站点或全局素材，请重新选择。`, 'cross-site-site-settings-media-asset');
+  }
+}
+
+function assertValidSiteSettingsMediaAssets(mediaRepository, siteKey, settings) {
+  assertValidSiteSettingsMediaAsset(mediaRepository, siteKey, settings.homeBannerMediaId, '首页全宽图（第一张）');
+  assertValidSiteSettingsMediaAsset(mediaRepository, siteKey, settings.homeBannerSecondaryMediaId, '首页全宽图（第二张）');
+  assertValidSiteSettingsMediaAsset(mediaRepository, siteKey, settings.homeFeatureMediaId, '首页解决方案主图');
+}
+
+function assertUniqueSiteDomain(siteRepository, siteKey, domain) {
+  const existingSettings = siteRepository.getSiteSettingsByDomain(domain);
+
+  if (existingSettings && existingSettings.siteKey !== siteKey) {
+    throw createAdminValidationError('域名已被其他站点使用，请更换后重试。', 'duplicate-site-domain');
+  }
+}
+
 function renderSiteSettingsPage(req, res, { siteKey, settings, errorMessage = null }) {
   return renderAdmin(req, res, {
     title: '站点设置 · 中文后台',
@@ -121,14 +149,18 @@ function createAdminSitesRouter() {
 
   router.post('/:siteKey/settings', requireKnownSite, (req, res, next) => {
     const siteKey = req.params.siteKey;
-    const existingSettings = req.app.locals.siteRepository.getSiteSettings(siteKey);
+    const siteRepository = req.app.locals.siteRepository;
+    const mediaRepository = req.app.locals.mediaRepository;
+    const existingSettings = siteRepository.getSiteSettings(siteKey);
     const nextSettings = buildSiteSettingsInput(siteKey, req.body);
 
     try {
       assertScalarHomepageMediaId(req.body.homeBannerMediaId, '首页全宽图（第一张）');
       assertScalarHomepageMediaId(req.body.homeBannerSecondaryMediaId, '首页全宽图（第二张）');
       assertScalarHomepageMediaId(req.body.homeFeatureMediaId, '首页解决方案主图');
-      req.app.locals.siteRepository.upsertSiteSettings(nextSettings);
+      assertValidSiteSettingsMediaAssets(mediaRepository, siteKey, nextSettings);
+      assertUniqueSiteDomain(siteRepository, siteKey, nextSettings.domain);
+      siteRepository.upsertSiteSettings(nextSettings);
     } catch (error) {
       if (isExpectedAdminError(error)) {
         res.status(error.statusCode);
