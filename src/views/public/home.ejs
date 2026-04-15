@@ -1,6 +1,16 @@
 <%- include('../partials/public-header', { pageTitle, pageDescription, site, theme, navigation, currentPath }) %>
 <%- include('../partials/hero', { hero, site }) %>
 
+<% if ((site.homeHeroSlides || []).length > 0) { %>
+  <section class="home-media-band" aria-label="首页展示图片">
+    <% (site.homeHeroSlides || []).forEach((asset) => { %>
+      <div class="home-media-band__item">
+        <img src="<%= asset.publicUrl %>" alt="<%= asset.altText || site.brandName %>" />
+      </div>
+    <% }) %>
+  </section>
+<% } %>
+
 <section class="section section--dark-tint section--metrics">
   <div class="container">
     <div class="metrics-strip">
@@ -32,7 +42,6 @@
   <div class="container">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">产品矩阵</p>
         <h2>支撑日常营收运营与专项治理落地</h2>
       </div>
       <p>首页直接呈现重点产品入口，便于快速跳转到详情页与后续商机沟通链路。</p>
@@ -40,7 +49,6 @@
     <div class="card-grid card-grid--3">
       <% featuredProducts.forEach((product) => { %>
         <article class="card reveal">
-          <p class="card__eyebrow">核心产品</p>
           <h2 class="card__title"><a href="<%= sitePath('/products/' + product.slug) %>"><%= product.title %></a></h2>
           <p class="card__copy"><%= product.summary %></p>
           <div class="card__actions">
@@ -52,74 +60,87 @@
   </div>
 </section>
 
+<% if (featuredCases.length > 0) { %>
+  <div class="home-case-list">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>项目案例与客户成果</h2>
+        </div>
+        <p>以真实客户案例展示交付成果，让首页先呈现可验证的落地证明。</p>
+      </div>
+      <ul class="home-case-list__items stack-list stack-list--linked">
+        <% featuredCases.forEach((item) => { %>
+          <li>
+            <a href="<%= sitePath('/cases/' + item.slug) %>">
+              <strong><%= item.title %></strong>
+              <span><%= item.summary %></span>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+<% } %>
+
 <section class="section section--muted">
   <div class="container">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">方案与实践</p>
-        <h2>用解决方案、项目案例与新闻形成闭环叙事</h2>
+        <h2>解决方案与最新资讯</h2>
       </div>
-      <p>从“我们能做什么”到“我们已经做成什么”，公开内容围绕客户最关心的业务问题和实施结果来组织。</p>
+      <p>以配置化首页主图搭配重点方案与新闻内容，形成更轻量的首页信息编排。</p>
     </div>
-    <div class="split-grid">
-      <div class="panel panel--stack">
-        <div class="panel__intro">
-          <p class="card__eyebrow">解决方案</p>
-          <h2>场景化交付能力</h2>
-          <p>把产品能力串联成可落地的实施路径，降低客户理解与决策成本。</p>
-        </div>
-        <ul class="stack-list stack-list--linked">
-          <% featuredSolutions.forEach((solution, i) => { %>
-            <li>
-              <a href="<%= sitePath('/solutions/' + solution.slug) %>">
-                <span class="item-num">0<%= i + 1 %></span>
-                <strong><%= solution.title %></strong>
-                <span><%= solution.summary %></span>
-              </a>
-            </li>
-          <% }) %>
-        </ul>
+    <div class="split-grid split-grid--home">
+      <div class="panel home-feature-media<%= site.homeFeatureAsset?.publicUrl ? '' : ' home-feature-media--empty' %>">
+        <% if (site.homeFeatureAsset?.publicUrl) { %>
+          <img
+            class="home-feature-media__image"
+            src="<%= site.homeFeatureAsset.publicUrl %>"
+            alt="<%= site.homeFeatureAsset.altText || site.brandName %>"
+          />
+        <% } else { %>
+          <div class="home-feature-media__placeholder">
+            <strong><%= site.brandName %></strong>
+            <span>首页解决方案主图暂未配置</span>
+          </div>
+        <% } %>
       </div>
       <div class="panel panel--stack">
-        <div class="panel__intro">
-          <p class="card__eyebrow">项目与资讯</p>
-          <h2>持续更新的落地证明</h2>
-          <p>新闻与案例并行展示，让品牌介绍从静态说明升级为可持续运营的内容阵地。</p>
+        <div class="panel__block">
+          <div class="panel__intro">
+            <h2>场景化解决方案</h2>
+            <p>把产品能力串联成可落地的实施路径，降低客户理解与决策成本。</p>
+          </div>
+          <ul class="stack-list stack-list--linked">
+            <% featuredSolutions.forEach((solution, i) => { %>
+              <li>
+                <a href="<%= sitePath('/solutions/' + solution.slug) %>">
+                  <span class="item-num">0<%= i + 1 %></span>
+                  <strong><%= solution.title %></strong>
+                  <span><%= solution.summary %></span>
+                </a>
+              </li>
+            <% }) %>
+          </ul>
         </div>
-        <ul class="stack-list stack-list--linked">
-          <% latestNews.forEach((article) => { %>
-            <li>
-              <a href="<%= sitePath('/news/' + article.slug) %>">
-                <small class="badge badge--news">新闻</small>
-                <strong><%= article.title %></strong>
-                <span><%= article.summary %></span>
-              </a>
-            </li>
-          <% }) %>
-          <% featuredCases.forEach((item) => { %>
-            <li>
-              <a href="<%= sitePath('/cases/' + item.slug) %>">
-                <small class="badge badge--case">案例</small>
-                <strong><%= item.title %></strong>
-                <span><%= item.summary %></span>
-              </a>
-            </li>
-          <% }) %>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section--cta">
-  <div class="container">
-    <div class="cta-box">
-      <p class="eyebrow">立即行动</p>
-      <h2>准备好开始数字化转型了吗？</h2>
-      <p>联系我们的专家团队，获取针对您业务场景的解决方案。</p>
-      <div class="button-stack">
-        <a href="<%= sitePath('/contact') %>" class="button button--primary">预约方案咨询</a>
-        <a href="<%= sitePath('/products') %>" class="button button--secondary">浏览产品矩阵</a>
+        <div class="panel__block">
+          <div class="panel__intro">
+            <h2>新闻动态</h2>
+            <p>持续更新行业活动、方案发布与项目进展，保持首页内容的新鲜度。</p>
+          </div>
+          <ul class="stack-list stack-list--linked">
+            <% latestNews.forEach((article) => { %>
+              <li>
+                <a href="<%= sitePath('/news/' + article.slug) %>">
+                  <small class="badge badge--news">新闻</small>
+                  <strong><%= article.title %></strong>
+                  <span><%= article.summary %></span>
+                </a>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

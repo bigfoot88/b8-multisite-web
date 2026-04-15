@@ -143,13 +143,14 @@ function createPublicSiteService({
 
   function getHomePage(site) {
     const frame = getSiteFrame(site);
+    const siteKey = frame.site.siteKey;
 
     return {
       ...frame,
-      featuredProducts: attachAssetList(catalogRepository.listPublishedProducts(site.siteKey, { limit: 3 })),
-      featuredSolutions: attachAssetList(catalogRepository.listPublishedSolutions(site.siteKey, { limit: 3 })),
-      latestNews: attachAssetList(catalogRepository.listPublishedNewsArticles(site.siteKey, { limit: 3 })),
-      featuredCases: attachAssetList(catalogRepository.listPublishedCaseStudies(site.siteKey, { limit: 3 })),
+      featuredProducts: attachAssetList(catalogRepository.listPublishedProducts(siteKey, { limit: 3 })),
+      featuredSolutions: attachAssetList(catalogRepository.listPublishedSolutions(siteKey, { limit: 3 })),
+      latestNews: attachAssetList(catalogRepository.listPublishedNewsArticles(siteKey, { limit: 3 })),
+      featuredCases: attachAssetList(catalogRepository.listPublishedCaseStudies(siteKey, { limit: 3 })),
     };
   }
 

@@ -7,7 +7,15 @@ const request = require('supertest');
 const ejs = require('ejs');
 
 const { createPublicRouter } = require('../src/routes/public');
-const { seedRepresentativePublicContent, withPublicApp, writeUpload } = require('./helpers/public-fixtures');
+const {
+  seedRepresentativePublicContent,
+  seedRepresentativePublicContentWithEmptyFeatureImage,
+  seedRepresentativePublicContentWithMissingHeroCtaHref,
+  seedRepresentativePublicContentWithNoHomeImages,
+  seedRepresentativePublicContentWithSingleHomeImage,
+  withPublicApp,
+  writeUpload,
+} = require('./helpers/public-fixtures');
 
 const renderFile = promisify(ejs.renderFile);
 
@@ -205,12 +213,87 @@ test('public routes render host-specific site pages and collection detail pages'
     .set('host', 'www.chinabigfoot.com');
   assert.equal(bigfootHome.status, 200);
   assert.match(bigfootHome.text, /选择B8ERP，开启智能水务新纪元/);
+  assert.doesNotMatch(bigfootHome.text, /home-case-list/);
 
   const notFound = await request(app)
     .get('/missing-page')
     .set('host', 'dma.b8water.com');
   assert.equal(notFound.status, 404);
   assert.match(notFound.text, /未找到相关页面/);
+});
+
+test('public homepage renders the redesigned media composition and configured homepage assets', async (t) => {
+  const { app } = withPublicApp(t, 'b8-public-home-default-');
+  const { app: singleImageApp } = withPublicApp(
+    t,
+    'b8-public-home-single-',
+    seedRepresentativePublicContentWithSingleHomeImage,
+  );
+  const { app: emptyFeatureApp } = withPublicApp(
+    t,
+    'b8-public-home-empty-feature-',
+    seedRepresentativePublicContentWithEmptyFeatureImage,
+  );
+  const { app: noImagesApp } = withPublicApp(
+    t,
+    'b8-public-home-no-images-',
+    seedRepresentativePublicContentWithNoHomeImages,
+  );
+  const { app: missingHeroCtaHrefApp } = withPublicApp(
+    t,
+    'b8-public-home-missing-hero-cta-',
+    seedRepresentativePublicContentWithMissingHeroCtaHref,
+  );
+
+  const homeResponse = await request(app)
+    .get('/')
+    .set('host', 'dma.b8water.com');
+  assert.equal(homeResponse.status, 200);
+  const homeHtml = homeResponse.text;
+  assert.match(homeHtml, /home-media-band/);
+  assert.match(homeHtml, /home-case-list/);
+  assert.match(homeHtml, /\/media\/dma-home-primary\.png/);
+  assert.match(homeHtml, /\/media\/dma-home-secondary\.png/);
+  assert.match(homeHtml, /\/media\/dma-home-feature\.png/);
+  assert.match(homeHtml, /DMA 首页全宽图 1/);
+  assert.match(homeHtml, /DMA 首页全宽图 2/);
+  assert.match(homeHtml, /DMA 首页解决方案主图/);
+  assert.match(homeHtml, /home-feature-media/);
+  assert.match(homeHtml, /hero-panel hero-panel--text-only/);
+  assert.match(homeHtml, /预约演示/);
+  assert.match(homeHtml, /href="\/contact"/);
+  assert.doesNotMatch(homeHtml, /<p class="eyebrow">产品矩阵<\/p>/);
+  assert.doesNotMatch(homeHtml, /card__eyebrow/);
+  assert.doesNotMatch(homeHtml, /footer-cta/);
+
+  const singleImageHome = await request(singleImageApp)
+    .get('/')
+    .set('host', 'dma.b8water.com');
+  assert.equal(singleImageHome.status, 200);
+  const singleImageHomeHtml = singleImageHome.text;
+  assert.match(singleImageHomeHtml, /\/media\/dma-home-primary\.png/);
+  assert.doesNotMatch(singleImageHomeHtml, /dma-home-secondary\.png/);
+
+  const emptyFeatureHome = await request(emptyFeatureApp)
+    .get('/')
+    .set('host', 'dma.b8water.com');
+  assert.equal(emptyFeatureHome.status, 200);
+  const emptyFeatureHomeHtml = emptyFeatureHome.text;
+  assert.match(emptyFeatureHomeHtml, /home-feature-media--empty/);
+  assert.doesNotMatch(emptyFeatureHomeHtml, /dma-home-feature\.png/);
+
+  const noImagesHome = await request(noImagesApp)
+    .get('/')
+    .set('host', 'dma.b8water.com');
+  assert.equal(noImagesHome.status, 200);
+  assert.doesNotMatch(noImagesHome.text, /home-media-band/);
+
+  const missingHeroCtaHrefHome = await request(missingHeroCtaHrefApp)
+    .get('/')
+    .set('host', 'dma.b8water.com');
+  assert.equal(missingHeroCtaHrefHome.status, 200);
+  assert.match(missingHeroCtaHrefHome.text, /预约演示/);
+  assert.match(missingHeroCtaHrefHome.text, /href="\/contact"/);
 });
 
 test('generic public pages support hierarchical paths, stay behind specific routes, and hide drafts', async (t) => {

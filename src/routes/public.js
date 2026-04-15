@@ -192,21 +192,31 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
     });
   }
 
+  function buildHomeHeroActions(page) {
+    const configuredLabel = page.heroSection?.config?.ctaLabel;
+    const configuredHref = page.heroSection?.config?.ctaHref;
+
+    return [{
+      href: configuredHref || '/contact',
+      label: configuredLabel || '联系我们',
+      variant: 'primary',
+    }];
+  }
+
   router.get('/', (req, res) => {
     const page = publicSiteService.getHomePage(req.site);
     return renderPage(req, res, 'public/home', {
-      pageTitle: req.site.seoTitle || req.site.brandName,
-      pageDescription: req.site.seoDescription || '',
+      site: page.site,
+      pageTitle: page.site.seoTitle || page.site.brandName,
+      pageDescription: page.site.seoDescription || '',
       hero: {
-        eyebrow: req.siteTheme.accent,
-        title: page.heroSection?.heading || req.site.brandName,
-        summary: page.heroSection?.subheading || page.heroSection?.body || req.site.seoDescription || '',
+        eyebrow: null,
+        title: page.heroSection?.heading || page.site.brandName,
+        summary: page.heroSection?.subheading || page.heroSection?.body || page.site.seoDescription || '',
         body: page.heroSection?.body || '',
-        actions: page.heroSection?.config?.ctaHref ? [{
-          href: page.heroSection.config.ctaHref,
-          label: page.heroSection.config.ctaLabel || '了解更多',
-          variant: 'primary',
-        }] : [],
+        actions: buildHomeHeroActions(page),
+        backgroundSlides: [],
+        textOnly: true,
       },
       featuredProducts: page.featuredProducts,
       featuredSolutions: page.featuredSolutions,

@@ -259,6 +259,83 @@ function seedRepresentativePublicContent({ catalogRepository, mediaRepository, r
   });
 }
 
+function seedRepresentativePublicContentWithSingleHomeImage(repositories) {
+  seedRepresentativePublicContent(repositories);
+  const currentDmaSettings = repositories.siteRepository.getSiteSettings('dma');
+
+  repositories.siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: currentDmaSettings.brandName,
+    domain: currentDmaSettings.domain,
+    seoTitle: currentDmaSettings.seoTitle,
+    seoDescription: currentDmaSettings.seoDescription,
+    contactEmail: currentDmaSettings.contactEmail,
+    contactPhone: currentDmaSettings.contactPhone,
+    contactAddress: currentDmaSettings.contactAddress,
+    homeBannerMediaId: currentDmaSettings.homeBannerMediaId,
+    homeBannerSecondaryMediaId: null,
+    homeFeatureMediaId: currentDmaSettings.homeFeatureMediaId,
+  });
+}
+
+function seedRepresentativePublicContentWithEmptyFeatureImage(repositories) {
+  seedRepresentativePublicContent(repositories);
+  const currentDmaSettings = repositories.siteRepository.getSiteSettings('dma');
+
+  repositories.siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: currentDmaSettings.brandName,
+    domain: currentDmaSettings.domain,
+    seoTitle: currentDmaSettings.seoTitle,
+    seoDescription: currentDmaSettings.seoDescription,
+    contactEmail: currentDmaSettings.contactEmail,
+    contactPhone: currentDmaSettings.contactPhone,
+    contactAddress: currentDmaSettings.contactAddress,
+    homeBannerMediaId: currentDmaSettings.homeBannerMediaId,
+    homeBannerSecondaryMediaId: currentDmaSettings.homeBannerSecondaryMediaId,
+    homeFeatureMediaId: null,
+  });
+}
+
+function seedRepresentativePublicContentWithNoHomeImages(repositories) {
+  seedRepresentativePublicContent(repositories);
+  const currentDmaSettings = repositories.siteRepository.getSiteSettings('dma');
+
+  repositories.siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: currentDmaSettings.brandName,
+    domain: currentDmaSettings.domain,
+    seoTitle: currentDmaSettings.seoTitle,
+    seoDescription: currentDmaSettings.seoDescription,
+    contactEmail: currentDmaSettings.contactEmail,
+    contactPhone: currentDmaSettings.contactPhone,
+    contactAddress: currentDmaSettings.contactAddress,
+    homeBannerMediaId: null,
+    homeBannerSecondaryMediaId: null,
+    homeFeatureMediaId: currentDmaSettings.homeFeatureMediaId,
+  });
+}
+
+function seedRepresentativePublicContentWithMissingHeroCtaHref(repositories) {
+  seedRepresentativePublicContent(repositories);
+  const currentHeroSection = repositories.siteRepository.getSection('dma', 'hero');
+
+  repositories.siteRepository.saveSection({
+    siteKey: 'dma',
+    sectionKey: 'hero',
+    heading: currentHeroSection.heading,
+    subheading: currentHeroSection.subheading,
+    body: currentHeroSection.body,
+    mediaAssetId: currentHeroSection.mediaAssetId,
+    config: {
+      ctaLabel: currentHeroSection.config?.ctaLabel || '预约演示',
+    },
+    isPublished: currentHeroSection.isPublished,
+    publishedAt: currentHeroSection.publishedAt,
+    sortOrder: currentHeroSection.sortOrder,
+  });
+}
+
 function withPublicApp(t, prefix = 'b8-public-', seed = seedRepresentativePublicContent) {
   const paths = createSeededAppPaths(prefix);
   t.after(() => {
@@ -292,6 +369,10 @@ function withPublicApp(t, prefix = 'b8-public-', seed = seedRepresentativePublic
 
 module.exports = {
   seedRepresentativePublicContent,
+  seedRepresentativePublicContentWithEmptyFeatureImage,
+  seedRepresentativePublicContentWithMissingHeroCtaHref,
+  seedRepresentativePublicContentWithNoHomeImages,
+  seedRepresentativePublicContentWithSingleHomeImage,
   writeUpload,
   withPublicApp,
 };

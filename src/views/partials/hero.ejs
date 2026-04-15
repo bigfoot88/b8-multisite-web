@@ -1,4 +1,4 @@
-<section class="hero-panel">
+<section class="hero-panel<%= hero?.textOnly ? ' hero-panel--text-only' : '' %>">
   <div class="hero-panel__bg"></div>
   <div class="container hero-panel__inner">
     <div class="hero-copy reveal">
@@ -14,16 +14,18 @@
         </div>
       <% } %>
     </div>
-    <div class="hero-visual">
-      <div class="hero-stat-card">
-        <div class="hero-stat-card__inner">
-          <% if (site) { %>
-          <div class="hero-stat-item"><span class="hero-stat-number">10+</span><span class="hero-stat-label">年行业经验</span></div>
-          <div class="hero-stat-item"><span class="hero-stat-number">500+</span><span class="hero-stat-label">服务客户</span></div>
-          <div class="hero-stat-item"><span class="hero-stat-number">99%</span><span class="hero-stat-label">客户满意度</span></div>
-          <% } %>
+    <% if (!hero?.textOnly) { %>
+      <div class="hero-visual">
+        <div class="hero-stat-card">
+          <div class="hero-stat-card__inner">
+            <% if (site) { %>
+            <div class="hero-stat-item"><span class="hero-stat-number">10+</span><span class="hero-stat-label">年行业经验</span></div>
+            <div class="hero-stat-item"><span class="hero-stat-number">500+</span><span class="hero-stat-label">服务客户</span></div>
+            <div class="hero-stat-item"><span class="hero-stat-number">99%</span><span class="hero-stat-label">客户满意度</span></div>
+            <% } %>
+          </div>
         </div>
       </div>
-    </div>
+    <% } %>
   </div>
 </section>
