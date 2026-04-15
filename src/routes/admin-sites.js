@@ -70,6 +70,25 @@ function decorateSiteSettingsForAdmin(settings, mediaRepository) {
   };
 }
 
+function buildRecoverableSiteSettingsForRender(body, nextSettings, existingSettings) {
+  if (!existingSettings) {
+    return nextSettings;
+  }
+
+  return {
+    ...nextSettings,
+    homeBannerMediaId: Array.isArray(body.homeBannerMediaId)
+      ? existingSettings.homeBannerMediaId
+      : nextSettings.homeBannerMediaId,
+    homeBannerSecondaryMediaId: Array.isArray(body.homeBannerSecondaryMediaId)
+      ? existingSettings.homeBannerSecondaryMediaId
+      : nextSettings.homeBannerSecondaryMediaId,
+    homeFeatureMediaId: Array.isArray(body.homeFeatureMediaId)
+      ? existingSettings.homeFeatureMediaId
+      : nextSettings.homeFeatureMediaId,
+  };
+}
+
 function renderSiteSettingsPage(req, res, { siteKey, settings, errorMessage = null }) {
   return renderAdmin(req, res, {
     title: '站点设置 · 中文后台',
@@ -119,7 +138,11 @@ function createAdminSitesRouter() {
         res.status(error.statusCode);
         return renderSiteSettingsPage(req, res, {
           siteKey,
-          settings: nextSettings,
+          settings: buildRecoverableSiteSettingsForRender(
+            req.body,
+            nextSettings,
+            req.app.locals.siteRepository.getSiteSettings(siteKey)
+          ),
           errorMessage: error.message,
         });
       }

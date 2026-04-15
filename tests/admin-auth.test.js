@@ -250,6 +250,8 @@ test('admin site settings form rejects repeated homepage media ids instead of cl
 
   assert.equal(response.status, 400);
   assert.match(response.text, /首页全宽图（第一张）必须是有效的媒体资源编号，请重新选择。/);
+  assert.match(response.text, new RegExp(`value="${originalBanner.id}"`));
+  assert.match(response.text, /dma-home-original-banner\.png/);
 
   const row = app.locals.db.prepare(`
     SELECT home_banner_media_id
