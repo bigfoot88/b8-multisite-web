@@ -73,6 +73,61 @@ test('public home render locals use the hydrated site returned by the public sit
   assert.deepEqual(response.body.locals.site.homeFeatureAsset, hydratedSite.homeFeatureAsset);
 });
 
+test('site-scoped not-found renders use the hydrated site returned by the public site service', async () => {
+  const rawSite = {
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.local',
+    seoTitle: 'DMA',
+    seoDescription: 'DMA homepage',
+  };
+  const hydratedSite = {
+    ...rawSite,
+    homeHeroSlides: [{ id: 101, filename: 'dma-home-primary.png' }],
+    homeFeatureAsset: { id: 202, filename: 'dma-home-feature.png' },
+  };
+  const siteRepository = {
+    getSiteSettingsByDomain(domain) {
+      return domain === 'dma.local' ? rawSite : null;
+    },
+    listSiteSettings() {
+      return [rawSite];
+    },
+  };
+  const publicSiteService = {
+    findRedirect() {
+      return null;
+    },
+    getSiteFrame() {
+      return {
+        site: hydratedSite,
+        navigation: [],
+        heroSection: null,
+        publishedSections: [],
+      };
+    },
+    getGenericPage() {
+      return null;
+    },
+  };
+  const app = express();
+
+  app.use((req, res, next) => {
+    res.render = (view, locals) => res.status(res.statusCode || 200).json({ view, locals });
+    next();
+  });
+  app.use('/', createPublicRouter({ siteRepository, publicSiteService }));
+
+  const response = await request(app)
+    .get('/missing-page')
+    .set('host', 'dma.local');
+
+  assert.equal(response.status, 404);
+  assert.equal(response.body.view, 'public/not-found');
+  assert.deepEqual(response.body.locals.site.homeHeroSlides, hydratedSite.homeHeroSlides);
+  assert.deepEqual(response.body.locals.site.homeFeatureAsset, hydratedSite.homeFeatureAsset);
+});
+
 test('public routes render host-specific site pages and collection detail pages', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-routes-');
 

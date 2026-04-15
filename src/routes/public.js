@@ -157,17 +157,19 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
   });
 
   function renderNotFound(req, res) {
+    const site = res.locals.site || req.site;
+
     return res.status(404).render('public/not-found', {
-      pageTitle: buildPageTitle('未找到相关页面', req.site),
-      pageDescription: req.site.seoDescription || '',
+      pageTitle: buildPageTitle('未找到相关页面', site),
+      pageDescription: site.seoDescription || '',
       currentPath: req.path,
-      site: req.site,
+      site,
       theme: req.siteTheme,
       siteTheme: req.siteTheme,
       navigation: res.locals.navigation,
       sitePath: req.sitePath || createSiteLink(req.siteBasePath || ''),
       hero: {
-        eyebrow: req.site.brandName,
+        eyebrow: site.brandName,
         title: '未找到相关页面',
         summary: '请返回首页或通过导航继续浏览公开内容。',
       },
