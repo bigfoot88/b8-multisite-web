@@ -319,6 +319,18 @@ test('public shared stylesheet keeps homepage tweaks without widening header bre
   const stylesheet = fs.readFileSync(cssPath, 'utf8');
 
   assert.match(stylesheet, /\.split-grid--home\s*\{\s*grid-template-columns:\s*0\.8fr 1\.2fr;/);
+  assert.match(
+    stylesheet,
+    /\.home-media-band\s*\{[\s\S]*?gap:\s*0;[\s\S]*?width:\s*100vw;[\s\S]*?margin-left:\s*calc\(50%\s*-\s*50vw\);/,
+  );
+  assert.match(
+    stylesheet,
+    /\.home-media-band__item\s*\{[\s\S]*?border-radius:\s*0;[\s\S]*?\}/,
+  );
+  assert.match(
+    stylesheet,
+    /\.home-media-band__item img\s*\{[\s\S]*?width:\s*100%;[\s\S]*?min-height:\s*clamp\(320px,\s*45vw,\s*640px\);[\s\S]*?object-fit:\s*cover;/,
+  );
   assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-nav ul\s*\{\s*display: flex;\s*gap: 5em;/);
   assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-footer__grid\s*\{\s*grid-template-columns:\s*1\.5fr 1\.5fr 1fr;/);
   assert.doesNotMatch(stylesheet, /\.rich-text img\s*\{/);
