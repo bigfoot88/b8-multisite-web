@@ -160,6 +160,54 @@ test('site repository persists homepage media settings and media rebinding prote
   );
 });
 
+test('site repository rejects malformed non-empty homepage media ids', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const siteRepository = createSiteRepository(db);
+
+  assert.throws(
+    () => siteRepository.upsertSiteSettings({
+      siteKey: 'dma',
+      brandName: 'DMA',
+      domain: 'dma.b8water.com',
+      homeFeatureMediaId: 'not-an-id',
+    }),
+    /首页解决方案主图.*有效的媒体资源编号/,
+  );
+
+  assert.equal(siteRepository.getSiteSettings('dma'), null);
+});
+
+test('site repository still clears homepage media ids when submitted blank', () => {
+  const db = createTestDb();
+  runMigrations(db);
+  const siteRepository = createSiteRepository(db);
+  const mediaRepository = createMediaRepository(db);
+  const featureAsset = mediaRepository.createAsset({
+    assetKey: 'dma-home-feature-clearable',
+    siteKey: 'dma',
+    filename: 'dma-home-feature-clearable.png',
+    mimeType: 'image/png',
+    storagePath: '/uploads/dma-home-feature-clearable.png',
+  });
+
+  siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.b8water.com',
+    homeFeatureMediaId: featureAsset.id,
+  });
+
+  const cleared = siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.b8water.com',
+    homeFeatureMediaId: '   ',
+  });
+
+  assert.equal(cleared.homeFeatureMediaId, null);
+});
+
 test('media and redirect repositories support site-scoped queries with global fallbacks', () => {
   const db = createTestDb();
   runMigrations(db);

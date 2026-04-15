@@ -164,3 +164,39 @@ test('admin site settings form accepts homepage media ids', async (t) => {
   assert.match(page.text, /name="homeFeatureMediaId"/);
   assert.match(page.text, /dma-home-feature\.png/);
 });
+
+test('admin site settings form rejects malformed non-empty homepage media ids', async (t) => {
+  const { tempDir, testDbPath } = createSeededAdminDb();
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: testDbPath });
+  const agent = request.agent(app);
+
+  const loginResponse = await agent
+    .post('/admin/login')
+    .type('form')
+    .send({ username: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+
+  const response = await agent
+    .post('/admin/dma/settings')
+    .type('form')
+    .send({
+      brandName: 'DMA',
+      domain: 'dma.b8water.com',
+      homeBannerMediaId: 'not-a-number',
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /首页全宽图（第一张）必须是有效的媒体资源编号，请重新选择。/);
+
+  const row = app.locals.db.prepare(`
+    SELECT home_banner_media_id
+    FROM site_settings
+    WHERE site_key = ?
+  `).get('dma');
+  assert.equal(row, undefined);
+});

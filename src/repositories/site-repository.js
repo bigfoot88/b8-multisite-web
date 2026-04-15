@@ -69,12 +69,39 @@ function mapNavigation(row) {
 }
 
 function normalizeInteger(value, fallback = null) {
-  if (value === undefined || value === null || value === '') {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+
+  if (typeof value === 'string' && value.trim() === '') {
     return fallback;
   }
 
   const parsed = Number.parseInt(value, 10);
   return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function normalizeSiteSettingsMediaId(value, label) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      return null;
+    }
+    if (!/^\d+$/.test(trimmed)) {
+      throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
+    }
+    return Number.parseInt(trimmed, 10);
+  }
+
+  if (!Number.isInteger(value)) {
+    throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
+  }
+
+  return value;
 }
 
 function normalizeConfig(config) {
@@ -286,9 +313,9 @@ function createSiteRepository(db) {
       homeFeatureMediaId = null,
     }) {
       assertValidSiteKey(siteKey);
-      const normalizedHomeBannerMediaId = normalizeInteger(homeBannerMediaId);
-      const normalizedHomeBannerSecondaryMediaId = normalizeInteger(homeBannerSecondaryMediaId);
-      const normalizedHomeFeatureMediaId = normalizeInteger(homeFeatureMediaId);
+      const normalizedHomeBannerMediaId = normalizeSiteSettingsMediaId(homeBannerMediaId, '首页全宽图（第一张）');
+      const normalizedHomeBannerSecondaryMediaId = normalizeSiteSettingsMediaId(homeBannerSecondaryMediaId, '首页全宽图（第二张）');
+      const normalizedHomeFeatureMediaId = normalizeSiteSettingsMediaId(homeFeatureMediaId, '首页解决方案主图');
 
       validateSiteSettingsMediaReference(siteKey, normalizedHomeBannerMediaId, '首页全宽图（第一张）');
       validateSiteSettingsMediaReference(siteKey, normalizedHomeBannerSecondaryMediaId, '首页全宽图（第二张）');
