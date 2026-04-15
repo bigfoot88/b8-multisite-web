@@ -121,17 +121,8 @@ function createAdminSitesRouter() {
 
   router.post('/:siteKey/settings', requireKnownSite, (req, res, next) => {
     const siteKey = req.params.siteKey;
+    const existingSettings = req.app.locals.siteRepository.getSiteSettings(siteKey);
     const nextSettings = buildSiteSettingsInput(siteKey, req.body);
-    const existingSite = req.app.locals.siteRepository.getSiteSettingsByDomain(nextSettings.domain);
-
-    if (existingSite && existingSite.siteKey !== siteKey) {
-      res.status(400);
-      return renderSiteSettingsPage(req, res, {
-        siteKey,
-        settings: nextSettings,
-        errorMessage: '域名已被其他站点使用，请更换后重试。',
-      });
-    }
 
     try {
       assertScalarHomepageMediaId(req.body.homeBannerMediaId, '首页全宽图（第一张）');
@@ -143,11 +134,7 @@ function createAdminSitesRouter() {
         res.status(error.statusCode);
         return renderSiteSettingsPage(req, res, {
           siteKey,
-          settings: buildRecoverableSiteSettingsForRender(
-            req.body,
-            nextSettings,
-            req.app.locals.siteRepository.getSiteSettings(siteKey)
-          ),
+          settings: buildRecoverableSiteSettingsForRender(req.body, nextSettings, existingSettings),
           errorMessage: error.message,
         });
       }
