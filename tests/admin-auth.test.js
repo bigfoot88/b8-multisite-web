@@ -260,3 +260,52 @@ test('admin site settings form rejects repeated homepage media ids instead of cl
   `).get('dma');
   assert.equal(row.home_banner_media_id, originalBanner.id);
 });
+
+test('admin site settings rerender does not leak cross-site homepage media previews', async (t) => {
+  const { tempDir, testDbPath } = createSeededAdminDb();
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: testDbPath });
+  const agent = request.agent(app);
+
+  const forbiddenBanner = app.locals.mediaRepository.createAsset({
+    assetKey: 'bigfoot-home-banner',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot-home-banner.png',
+    mimeType: 'image/png',
+    storagePath: path.join(app.locals.uploadRoot, 'bigfoot-home-banner.png'),
+    altText: 'Bigfoot secret banner',
+  });
+
+  const loginResponse = await agent
+    .post('/admin/login')
+    .type('form')
+    .send({ username: 'admin', password: 'ChangeMe123!' });
+
+  assert.equal(loginResponse.status, 302);
+
+  const response = await agent
+    .post('/admin/dma/settings')
+    .type('form')
+    .send({
+      brandName: 'DMA',
+      domain: 'dma.b8water.com',
+      homeBannerMediaId: String(forbiddenBanner.id),
+    });
+
+  assert.equal(response.status, 400);
+  assert.match(response.text, /首页全宽图（第一张）必须属于当前站点或全局素材，请重新选择。/);
+  assert.match(response.text, new RegExp(`name="homeBannerMediaId" value="${forbiddenBanner.id}"`));
+  assert.equal(response.text.includes(forbiddenBanner.filename), false);
+  assert.equal(response.text.includes(forbiddenBanner.altText), false);
+  assert.equal(response.text.includes(forbiddenBanner.publicUrl), false);
+
+  const row = app.locals.db.prepare(`
+    SELECT home_banner_media_id
+    FROM site_settings
+    WHERE site_key = ?
+  `).get('dma');
+  assert.equal(row, undefined);
+});

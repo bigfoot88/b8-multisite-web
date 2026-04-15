@@ -60,7 +60,12 @@ function decorateSiteSettingsForAdmin(settings, mediaRepository) {
     settings.homeBannerSecondaryMediaId,
     settings.homeFeatureMediaId,
   ].filter(Boolean);
-  const assets = new Map(mediaRepository.findByIds(ids).map((asset) => [asset.id, asset]));
+  const assets = new Map(
+    mediaRepository
+      .findByIds(ids)
+      .filter((asset) => asset.siteKey === null || asset.siteKey === settings.siteKey)
+      .map((asset) => [asset.id, asset])
+  );
 
   return {
     ...settings,
