@@ -303,6 +303,39 @@ h4 { font-size: 1.25rem; }
 }
 
 /* ==========================================================================
+   Prose detail layouts
+   ========================================================================== */
+.detail-layout,
+.prose-shell {
+  display: grid;
+  gap: 2rem;
+}
+
+.detail-layout--fullwidth,
+.prose-shell--fullwidth {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.prose-card {
+  width: 100%;
+  padding: clamp(2rem, 4vw, 3rem);
+  background: white;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.prose-card--fullwidth {
+  width: 100%;
+}
+
+.detail-aside {
+  display: none;
+}
+
+/* ==========================================================================
    Header
    ========================================================================== */
 .header-topbar {

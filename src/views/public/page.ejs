@@ -2,18 +2,10 @@
 <%- include('../partials/hero', { hero, site }) %>
 
 <section class="section">
-  <div class="container detail-layout">
-    <article class="prose-card">
+  <div class="container detail-layout detail-layout--fullwidth">
+    <article class="prose-card prose-card--fullwidth">
       <div class="rich-text"><%- page.bodyHtml || '' %></div>
     </article>
-    <aside class="detail-aside">
-      <% if (page.attachmentAsset) { %>
-        <div class="panel">
-          <h2>延伸资料</h2>
-          <a href="<%= page.attachmentAsset.publicUrl %>" class="button button--primary">下载相关资料</a>
-        </div>
-      <% } %>
-    </aside>
   </div>
 </section>
 

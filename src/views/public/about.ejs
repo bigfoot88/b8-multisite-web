@@ -2,8 +2,8 @@
 <%- include('../partials/hero', { hero, site }) %>
 
 <section class="section">
-  <div class="container prose-shell">
-    <article class="prose-card">
+  <div class="container prose-shell prose-shell--fullwidth">
+    <article class="prose-card prose-card--fullwidth">
       <% if (page.summary) { %><p class="lead lead--compact"><%= page.summary %></p><% } %>
       <div class="rich-text"><%- page.bodyHtml || '' %></div>
     </article>

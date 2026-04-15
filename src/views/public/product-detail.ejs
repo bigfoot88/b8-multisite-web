@@ -2,23 +2,10 @@
 <%- include('../partials/hero', { hero, site }) %>
 
 <section class="section">
-  <div class="container detail-layout">
-    <article class="prose-card">
+  <div class="container detail-layout detail-layout--fullwidth">
+    <article class="prose-card prose-card--fullwidth">
       <div class="rich-text"><%- product.bodyHtml || '' %></div>
     </article>
-    <aside class="detail-aside">
-      <div class="panel">
-        <h2>资料下载</h2>
-        <div class="button-stack">
-          <% if (product.brochureAsset) { %>
-            <a href="<%= product.brochureAsset.publicUrl %>" class="button button--primary">下载宣传册</a>
-          <% } %>
-          <% if (product.attachmentAsset) { %>
-            <a href="<%= product.attachmentAsset.publicUrl %>" class="button button--secondary">下载产品资料</a>
-          <% } %>
-        </div>
-      </div>
-    </aside>
   </div>
 </section>
 

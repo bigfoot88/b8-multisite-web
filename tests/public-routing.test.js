@@ -159,7 +159,10 @@ test('public routes render host-specific site pages and collection detail pages'
     .get('/products/dma-lite')
     .set('host', 'dma.b8water.com');
   assert.equal(productDetail.status, 200);
-  assert.match(productDetail.text, /帮助水司快速定位漏损风险并形成闭环治理/);
+  const productDetailHtml = productDetail.text;
+  assert.match(productDetailHtml, /帮助水司快速定位漏损风险并形成闭环治理/);
+  assert.doesNotMatch(productDetailHtml, /detail-aside/);
+  assert.match(productDetailHtml, /detail-layout--fullwidth/);
 
   const solutions = await request(app)
     .get('/solutions')
@@ -171,7 +174,10 @@ test('public routes render host-specific site pages and collection detail pages'
     .get('/solutions/district-metering')
     .set('host', 'dma.b8water.com');
   assert.equal(solutionDetail.status, 200);
-  assert.match(solutionDetail.text, /完整流程/);
+  const solutionDetailHtml = solutionDetail.text;
+  assert.match(solutionDetailHtml, /完整流程/);
+  assert.doesNotMatch(solutionDetailHtml, /detail-aside/);
+  assert.match(solutionDetailHtml, /detail-layout--fullwidth/);
 
   const newsIndex = await request(app)
     .get('/news')
@@ -195,13 +201,18 @@ test('public routes render host-specific site pages and collection detail pages'
     .get('/cases/shenzhen-utility')
     .set('host', 'dma.b8water.com');
   assert.equal(caseDetail.status, 200);
-  assert.match(caseDetail.text, /六个月内完成多轮夜间最小流量分析与整改/);
+  const caseDetailHtml = caseDetail.text;
+  assert.match(caseDetailHtml, /六个月内完成多轮夜间最小流量分析与整改/);
+  assert.doesNotMatch(caseDetailHtml, /detail-aside/);
+  assert.match(caseDetailHtml, /detail-layout--fullwidth/);
 
   const aboutPage = await request(app)
     .get('/about')
     .set('host', 'dma.b8water.com');
   assert.equal(aboutPage.status, 200);
-  assert.match(aboutPage.text, /关于智灵科技/);
+  const aboutHtml = aboutPage.text;
+  assert.match(aboutHtml, /关于智灵科技/);
+  assert.match(aboutHtml, /prose-shell prose-shell--fullwidth/);
 
   const contactPage = await request(app)
     .get('/contact')
@@ -348,6 +359,18 @@ test('public shared stylesheet keeps homepage tweaks without widening header bre
   assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-footer__grid\s*\{\s*grid-template-columns:\s*1\.5fr 1\.5fr 1fr;/);
   assert.doesNotMatch(stylesheet, /\.rich-text img\s*\{/);
   assert.match(stylesheet, /\.home-feature-media__placeholder\s*\{/);
+  assert.match(
+    stylesheet,
+    /\.detail-layout--fullwidth,\s*\.prose-shell--fullwidth\s*\{[\s\S]*?max-width:\s*100%;[\s\S]*?padding-left:\s*0;[\s\S]*?padding-right:\s*0;/,
+  );
+  assert.match(
+    stylesheet,
+    /\.prose-card--fullwidth\s*\{[\s\S]*?width:\s*100%;/,
+  );
+  assert.match(
+    stylesheet,
+    /\.detail-aside\s*\{[\s\S]*?display:\s*none;/,
+  );
   assert.doesNotMatch(stylesheet, /(^|\n)\.panel\s*\{/);
   assert.doesNotMatch(stylesheet, /@media \(min-width: 1100px\)/);
   assert.match(
@@ -439,27 +462,30 @@ test('public routes do not expose unrequested /case-studies aliases', async (t) 
   assert.match(casesAliasDetail.text, /未找到相关页面/);
 });
 
-test('public pages render brochure and download links from managed local uploads', async (t) => {
+test('public detail pages remove sidebar download links while still rendering body content', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-downloads-');
 
   const productDetail = await request(app)
     .get('/products/dma-lite')
     .set('host', 'dma.b8water.com');
   assert.equal(productDetail.status, 200);
-  assert.match(productDetail.text, /href="\/media\/dma-lite-brochure\.pdf"/);
-  assert.match(productDetail.text, /href="\/media\/dma-lite-specs\.pdf"/);
+  assert.match(productDetail.text, /帮助水司快速定位漏损风险并形成闭环治理/);
+  assert.doesNotMatch(productDetail.text, /href="\/media\/dma-lite-brochure\.pdf"/);
+  assert.doesNotMatch(productDetail.text, /href="\/media\/dma-lite-specs\.pdf"/);
 
   const pageDetail = await request(app)
     .get('/about/history')
     .set('host', 'dma.b8water.com');
   assert.equal(pageDetail.status, 200);
-  assert.match(pageDetail.text, /href="\/media\/dma-history-pack\.pdf"/);
+  assert.match(pageDetail.text, /逐步扩展到全域漏损治理/);
+  assert.doesNotMatch(pageDetail.text, /href="\/media\/dma-history-pack\.pdf"/);
 
   const solutionDetail = await request(app)
     .get('/solutions/district-metering')
     .set('host', 'dma.b8water.com');
   assert.equal(solutionDetail.status, 200);
-  assert.match(solutionDetail.text, /href="\/media\/dma-solution-pack\.pdf"/);
+  assert.match(solutionDetail.text, /完整流程/);
+  assert.doesNotMatch(solutionDetail.text, /href="\/media\/dma-solution-pack\.pdf"/);
 });
 
 test('public pages sanitize stored rich html before rendering', async (t) => {
@@ -506,10 +532,13 @@ test('public pages sanitize stored rich html before rendering', async (t) => {
     .get('/about/security')
     .set('host', 'dma.b8water.com');
   assert.equal(genericPage.status, 200);
-  assert.match(genericPage.text, /<p>安全说明<\/p>/);
-  assert.doesNotMatch(genericPage.text, /<div class="rich-text">[\s\S]*<script/i);
-  assert.doesNotMatch(genericPage.text, /onmouseover=/i);
-  assert.doesNotMatch(genericPage.text, /javascript:/i);
+  const genericPageHtml = genericPage.text;
+  assert.match(genericPageHtml, /<p>安全说明<\/p>/);
+  assert.doesNotMatch(genericPageHtml, /detail-aside/);
+  assert.match(genericPageHtml, /detail-layout--fullwidth/);
+  assert.doesNotMatch(genericPageHtml, /<div class="rich-text">[\s\S]*<script/i);
+  assert.doesNotMatch(genericPageHtml, /onmouseover=/i);
+  assert.doesNotMatch(genericPageHtml, /javascript:/i);
 });
 
 test('public pages preserve editor images and paragraph classes after sanitization', async (t) => {
@@ -588,7 +617,7 @@ test('public asset downloads stay site-scoped, require published references, and
     .get('/downloads/nested-guide')
     .set('host', 'dma.b8water.com');
   assert.equal(nestedPage.status, 200);
-  assert.match(nestedPage.text, /href="\/media\/nested\/guides\/dma-guide\.pdf"/);
+  assert.doesNotMatch(nestedPage.text, /href="\/media\/nested\/guides\/dma-guide\.pdf"/);
 
   const nestedDownload = await request(app)
     .get('/media/nested/guides/dma-guide.pdf')
