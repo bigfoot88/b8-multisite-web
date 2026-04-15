@@ -76,9 +76,7 @@ function createApp({ databasePath, sessionSecret, uploadRoot: explicitUploadRoot
   const adminJsRouter = createAdminJsRouter({
     adminRepository: app.locals.adminRepository,
     databasePath,
-    mediaRepository: app.locals.mediaRepository,
     sessionSecret: cookieSecret,
-    uploadRoot,
   });
   app.locals.adminJs = adminJsRouter.adminJs;
   app.use(ADMINJS_ROOT_PATH, adminJsRouter);

@@ -200,7 +200,6 @@ function registerInlineUploadRoute(router, { mediaRepository, uploadRoot }) {
     let uploadedFile = null;
 
     try {
-      const requestedAltText = req.fields?.altText?.trim?.() || req.body?.altText?.trim?.() || null;
       uploadedFile = normalizeInlineUploadFile(uploadRoot, rawFile);
 
       const asset = mediaRepository.createAsset({
@@ -210,18 +209,16 @@ function registerInlineUploadRoute(router, { mediaRepository, uploadRoot }) {
         filename: uploadedFile.originalname,
         mimeType: uploadedFile.mimetype,
         storagePath: uploadedFile.path,
-        altText: requestedAltText || path.basename(uploadedFile.originalname, path.extname(uploadedFile.originalname)) || null,
+        altText: path.basename(uploadedFile.originalname, path.extname(uploadedFile.originalname)) || null,
         metadata: {
           size: uploadedFile.size,
         },
       });
 
       return res.status(201).json({
-        id: asset.id,
         assetKey: asset.assetKey,
         altText: asset.altText,
         filename: asset.filename,
-        mimeType: asset.mimeType,
         url: asset.sourceUrl,
       });
     } catch (error) {
