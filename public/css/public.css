@@ -786,11 +786,11 @@ h4 { font-size: 1.25rem; }
   max-width: 800px;
 }
 
-.panel__intro {
+.split-grid--home .panel__intro {
   margin-bottom: 2rem;
 }
 
-.panel {
+.split-grid--home > .panel {
   background: white;
   border: 1px solid var(--theme-border);
   border-radius: var(--radius-lg);
@@ -798,13 +798,13 @@ h4 { font-size: 1.25rem; }
   overflow: hidden;
 }
 
-.panel--stack {
+.split-grid--home > .panel--stack {
   display: grid;
   gap: 2rem;
   padding: 2rem;
 }
 
-.panel__block + .panel__block {
+.split-grid--home .panel__block + .panel__block {
   padding-top: 2rem;
   border-top: 1px solid var(--theme-border);
 }
