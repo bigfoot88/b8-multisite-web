@@ -331,14 +331,26 @@ test('public shared stylesheet keeps homepage tweaks without widening header bre
     stylesheet,
     /\.home-media-band__item img\s*\{[\s\S]*?width:\s*100%;[\s\S]*?min-height:\s*clamp\(320px,\s*45vw,\s*640px\);[\s\S]*?object-fit:\s*cover;/,
   );
-  assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-nav ul\s*\{\s*display: flex;\s*gap: 5em;/);
+  assert.match(
+    stylesheet,
+    /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-nav ul\s*\{[\s\S]*?display: flex;[\s\S]*?flex-wrap:\s*wrap;[\s\S]*?gap: 5em;/,
+  );
   assert.match(stylesheet, /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-footer__grid\s*\{\s*grid-template-columns:\s*1\.5fr 1\.5fr 1fr;/);
   assert.doesNotMatch(stylesheet, /\.rich-text img\s*\{/);
   assert.match(stylesheet, /\.home-feature-media__placeholder\s*\{/);
   assert.doesNotMatch(stylesheet, /@media \(min-width: 1100px\)/);
-  assert.doesNotMatch(stylesheet, /\.site-header__inner\s*\{\s*flex-wrap:\s*wrap;/);
-  assert.doesNotMatch(stylesheet, /\.site-nav\s*\{\s*flex-basis:\s*100%;/);
-  assert.doesNotMatch(stylesheet, /\.site-header__actions\s*\{[\s\S]*?margin-left:\s*auto;/);
+  assert.match(
+    stylesheet,
+    /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-header__inner\s*\{[\s\S]*?flex-wrap:\s*wrap;/,
+  );
+  assert.match(
+    stylesheet,
+    /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-nav\s*\{[\s\S]*?flex-basis:\s*100%;/,
+  );
+  assert.match(
+    stylesheet,
+    /@media \(min-width: 900px\)\s*\{[\s\S]*?\.site-header__actions\s*\{[\s\S]*?margin-left:\s*auto;/,
+  );
 });
 
 test('generic public pages support hierarchical paths, stay behind specific routes, and hide drafts', async (t) => {

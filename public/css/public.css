@@ -377,8 +377,18 @@ h4 { font-size: 1.25rem; }
 }
 
 @media (min-width: 900px) {
+  .site-header__inner {
+    flex-wrap: wrap;
+  }
+
+  .site-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+
   .site-nav ul {
     display: flex;
+    flex-wrap: wrap;
     gap: 5em;
   }
   
@@ -419,6 +429,7 @@ h4 { font-size: 1.25rem; }
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    margin-left: auto;
   }
   
   .site-quick-contact {
