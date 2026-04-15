@@ -270,11 +270,15 @@ test('public homepage renders the redesigned media composition and configured ho
   assert.match(homeHtml, /<div class="hero-actions">/);
   assert.match(homeHtml, /预约演示/);
   assert.match(homeHtml, /class="button button--hero-primary">预约演示<\/a>/);
+  assert.match(homeHtml, /section--cta/);
+  assert.match(homeHtml, /准备好开始数字化转型了吗？/);
+  assert.match(homeHtml, /预约方案咨询/);
+  assert.match(homeHtml, /浏览产品矩阵/);
   assert.doesNotMatch(homeHtml, /场景化解决方案/);
   assert.doesNotMatch(homeHtml, /分区计量解决方案/);
   assert.doesNotMatch(homeHtml, /<p class="eyebrow">产品矩阵<\/p>/);
+  assert.doesNotMatch(homeHtml, /<p class="eyebrow">立即行动<\/p>/);
   assert.doesNotMatch(homeHtml, /card__eyebrow/);
-  assert.doesNotMatch(homeHtml, /footer-cta/);
 
   const singleImageHome = await request(singleImageApp)
     .get('/')
@@ -303,8 +307,10 @@ test('public homepage renders the redesigned media composition and configured ho
     .set('host', 'dma.b8water.com');
   assert.equal(missingHeroCtaHrefHome.status, 200);
   assert.doesNotMatch(missingHeroCtaHrefHome.text, /<div class="hero-actions">/);
-  assert.doesNotMatch(missingHeroCtaHrefHome.text, /预约演示/);
   assert.doesNotMatch(missingHeroCtaHrefHome.text, /button--hero-primary/);
+  assert.match(missingHeroCtaHrefHome.text, /准备好开始数字化转型了吗？/);
+  assert.match(missingHeroCtaHrefHome.text, /预约方案咨询/);
+  assert.match(missingHeroCtaHrefHome.text, /浏览产品矩阵/);
 
   const missingHeroCtaLabelHome = await request(missingHeroCtaLabelApp)
     .get('/')
@@ -312,6 +318,9 @@ test('public homepage renders the redesigned media composition and configured ho
   assert.equal(missingHeroCtaLabelHome.status, 200);
   assert.doesNotMatch(missingHeroCtaLabelHome.text, /<div class="hero-actions">/);
   assert.doesNotMatch(missingHeroCtaLabelHome.text, /button--hero-primary/);
+  assert.match(missingHeroCtaLabelHome.text, /准备好开始数字化转型了吗？/);
+  assert.match(missingHeroCtaLabelHome.text, /预约方案咨询/);
+  assert.match(missingHeroCtaLabelHome.text, /浏览产品矩阵/);
 });
 
 test('public shared stylesheet keeps homepage tweaks without widening header breakpoint scope', () => {
