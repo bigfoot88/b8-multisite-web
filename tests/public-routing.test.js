@@ -2,12 +2,76 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { promisify } = require('node:util');
+const express = require('express');
 const request = require('supertest');
 const ejs = require('ejs');
 
+const { createPublicRouter } = require('../src/routes/public');
 const { seedRepresentativePublicContent, withPublicApp, writeUpload } = require('./helpers/public-fixtures');
 
 const renderFile = promisify(ejs.renderFile);
+
+test('public home render locals use the hydrated site returned by the public site service', async () => {
+  const rawSite = {
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.local',
+    seoTitle: 'DMA',
+    seoDescription: 'DMA homepage',
+  };
+  const hydratedSite = {
+    ...rawSite,
+    homeHeroSlides: [{ id: 101, filename: 'dma-home-primary.png' }],
+    homeFeatureAsset: { id: 202, filename: 'dma-home-feature.png' },
+  };
+  const siteRepository = {
+    getSiteSettingsByDomain(domain) {
+      return domain === 'dma.local' ? rawSite : null;
+    },
+    listSiteSettings() {
+      return [rawSite];
+    },
+  };
+  const publicSiteService = {
+    findRedirect() {
+      return null;
+    },
+    getSiteFrame() {
+      return {
+        site: hydratedSite,
+        navigation: [],
+        heroSection: null,
+        publishedSections: [],
+      };
+    },
+    getHomePage() {
+      return {
+        site: hydratedSite,
+        heroSection: null,
+        featuredProducts: [],
+        featuredSolutions: [],
+        latestNews: [],
+        featuredCases: [],
+      };
+    },
+  };
+  const app = express();
+
+  app.use((req, res, next) => {
+    res.render = (view, locals) => res.status(200).json({ view, locals });
+    next();
+  });
+  app.use('/', createPublicRouter({ siteRepository, publicSiteService }));
+
+  const response = await request(app)
+    .get('/')
+    .set('host', 'dma.local');
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.view, 'public/home');
+  assert.deepEqual(response.body.locals.site.homeHeroSlides, hydratedSite.homeHeroSlides);
+  assert.deepEqual(response.body.locals.site.homeFeatureAsset, hydratedSite.homeFeatureAsset);
+});
 
 test('public routes render host-specific site pages and collection detail pages', async (t) => {
   const { app } = withPublicApp(t, 'b8-public-routes-');

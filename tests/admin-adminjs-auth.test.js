@@ -4,9 +4,12 @@ const path = require('node:path');
 const test = require('node:test');
 const bcrypt = require('bcryptjs');
 const request = require('supertest');
+const { DataTypes, Sequelize } = require('sequelize');
 
 const { createApp } = require('../src/app');
 const { authenticate, createAdminJsSessionCookieOptions } = require('../src/admin/adminjs/auth');
+const { createMediaAssetsResource } = require('../src/admin/adminjs/resources/media-assets');
+const { createSiteSettingsResource } = require('../src/admin/adminjs/resources/site-settings');
 const { createDatabase } = require('../src/lib/db');
 const { runMigrations } = require('../src/lib/migrations');
 const { createAdminRepository } = require('../src/repositories/admin-repository');
@@ -351,4 +354,72 @@ test('createApp exposes AdminJS cleanup for in-memory session artifacts', async 
   await app.close();
 
   assert.equal(fs.existsSync(sessionDirectory), false);
+});
+
+test('AdminJS site settings resource rejects cross-site homepage media ids for all homepage media fields', async (t) => {
+  const paths = createTestPaths();
+  const app = createApp({ databasePath: paths.databasePath });
+  const crossSiteAssetPath = path.join(paths.tempDir, 'bigfoot-home.png');
+
+  t.after(async () => {
+    await closeApp(app);
+    fs.rmSync(paths.tempDir, { recursive: true, force: true });
+  });
+
+  fs.writeFileSync(crossSiteAssetPath, 'bigfoot image');
+  app.locals.siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.local',
+  });
+  app.locals.siteRepository.upsertSiteSettings({
+    siteKey: 'bigfoot',
+    brandName: 'Bigfoot',
+    domain: 'bigfoot.local',
+  });
+  const crossSiteAsset = app.locals.mediaRepository.createAsset({
+    assetKey: 'bigfoot-home-only',
+    siteKey: 'bigfoot',
+    filename: 'bigfoot-home.png',
+    mimeType: 'image/png',
+    storagePath: crossSiteAssetPath,
+  });
+
+  const sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: paths.databasePath,
+    logging: false,
+  });
+
+  t.after(async () => {
+    await sequelize.close();
+  });
+
+  createMediaAssetsResource(sequelize, DataTypes);
+  const { options } = createSiteSettingsResource(sequelize, DataTypes);
+  const homepageMediaFields = [
+    ['home_banner_media_id', '首页全宽图（第一张）'],
+    ['home_banner_secondary_media_id', '首页全宽图（第二张）'],
+    ['home_feature_media_id', '首页解决方案主图'],
+  ];
+  const before = options.actions.edit.before;
+
+  assert.equal(typeof before, 'function');
+
+  for (const [field, label] of homepageMediaFields) {
+    await assert.rejects(
+      before({
+        method: 'post',
+        payload: {
+          site_key: 'dma',
+          [field]: crossSiteAsset.id,
+        },
+      }, {
+        currentAdmin: {
+          siteKey: 'dma',
+        },
+      }),
+      new RegExp(`${label}必须属于当前站点或全局素材，请重新选择。`),
+    );
+  }
 });

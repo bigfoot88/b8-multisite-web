@@ -1,3 +1,4 @@
+const { QueryTypes } = require('sequelize');
 const {
   buildMediaPickerProperty,
   buildSiteKeyProperty,
@@ -6,7 +7,87 @@ const {
   createTimestampAttribute,
   mergeActionOptions,
 } = require('./shared');
-const { buildSiteScopedActions } = require('../site-context');
+const { createAdminValidationError } = require('../../../lib/admin-errors');
+const { buildSiteScopedActions, getCurrentAdminSiteKey } = require('../site-context');
+
+const HOMEPAGE_MEDIA_FIELDS = [
+  ['home_banner_media_id', '首页全宽图（第一张）'],
+  ['home_banner_secondary_media_id', '首页全宽图（第二张）'],
+  ['home_feature_media_id', '首页解决方案主图'],
+];
+
+function normalizeSiteSettingsMediaId(value, label) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      return null;
+    }
+    if (!/^\d+$/.test(trimmed)) {
+      throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
+    }
+    return Number.parseInt(trimmed, 10);
+  }
+
+  if (!Number.isInteger(value)) {
+    throw createAdminValidationError(`${label}必须是有效的媒体资源编号，请重新选择。`, 'invalid-site-settings-media-asset');
+  }
+
+  return value;
+}
+
+function buildHomepageMediaValidationBeforeHook(sequelize) {
+  return async (request, context) => {
+    if ((request.method || 'get').toLowerCase() !== 'post') {
+      return request;
+    }
+
+    const payload = { ...(request.payload || {}) };
+    const siteKey = getCurrentAdminSiteKey(context.currentAdmin);
+
+    for (const [field, label] of HOMEPAGE_MEDIA_FIELDS) {
+      if (!Object.prototype.hasOwnProperty.call(payload, field)) {
+        continue;
+      }
+
+      const mediaId = normalizeSiteSettingsMediaId(payload[field], label);
+      if (mediaId === null) {
+        payload[field] = null;
+        continue;
+      }
+
+      const media = await sequelize.query(
+        'SELECT id, site_key FROM media_assets WHERE id = ? LIMIT 1',
+        {
+          replacements: [mediaId],
+          plain: true,
+          type: QueryTypes.SELECT,
+        },
+      );
+
+      if (!media) {
+        throw createAdminValidationError(`${label}不存在，请重新选择。`, 'missing-site-settings-media-asset');
+      }
+      if (media.site_key !== null && media.site_key !== siteKey) {
+        throw createAdminValidationError(`${label}必须属于当前站点或全局素材，请重新选择。`, 'cross-site-site-settings-media-asset');
+      }
+
+      payload[field] = mediaId;
+    }
+
+    return {
+      ...request,
+      payload,
+    };
+  };
+}
 
 function createSiteSettingsModel(sequelize, DataTypes) {
   return createModel(sequelize, 'AdminJsSiteSetting', {
@@ -107,6 +188,7 @@ function createSiteSettingsModel(sequelize, DataTypes) {
 
 function createSiteSettingsResource(sequelize, DataTypes) {
   const SiteSetting = createSiteSettingsModel(sequelize, DataTypes);
+  const validateHomepageMediaOwnership = buildHomepageMediaValidationBeforeHook(sequelize);
 
   return {
     resource: SiteSetting,
@@ -122,6 +204,7 @@ function createSiteSettingsResource(sequelize, DataTypes) {
           new: { isAccessible: false, isVisible: false },
           delete: { isAccessible: false, isVisible: false },
           bulkDelete: { isAccessible: false, isVisible: false },
+          edit: { before: validateHomepageMediaOwnership },
         },
       ),
       properties: {

@@ -94,11 +94,11 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
     if (req.site) {
       req.siteBasePath = '';
       req.sitePath = createSiteLink('');
-      res.locals.site = req.site;
       res.locals.siteTheme = req.siteTheme;
       res.locals.siteBasePath = req.siteBasePath;
       res.locals.sitePath = req.sitePath;
       const frame = publicSiteService.getSiteFrame(req.site);
+      res.locals.site = frame.site;
       res.locals.navigation = frame.navigation;
       res.locals.heroSection = frame.heroSection;
       res.locals.publishedSections = frame.publishedSections;
@@ -120,12 +120,12 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
       req.siteBasePath = `/${prefixedSiteKey}`;
       req.sitePath = createSiteLink(req.siteBasePath);
       req.url = `${strippedPath}${search}`;
-      res.locals.site = site;
       res.locals.siteTheme = req.siteTheme;
       res.locals.siteBasePath = req.siteBasePath;
       res.locals.sitePath = req.sitePath;
 
       const frame = publicSiteService.getSiteFrame(req.site);
+      res.locals.site = frame.site;
       res.locals.navigation = frame.navigation;
       res.locals.heroSection = frame.heroSection;
       res.locals.publishedSections = frame.publishedSections;
@@ -175,15 +175,17 @@ function createPublicRouter({ siteRepository, publicSiteService }) {
   }
 
   function renderPage(req, res, view, payload) {
+    const site = payload.site || res.locals.site || req.site;
+
     return res.render(view, {
-      site: req.site,
+      site,
       theme: req.siteTheme,
       siteBasePath: req.siteBasePath || '',
       sitePath: req.sitePath || createSiteLink(req.siteBasePath || ''),
       navigation: res.locals.navigation,
       publishedSections: res.locals.publishedSections,
       heroSection: res.locals.heroSection,
-      currentPath: req.siteBasePath ? stripSitePrefix(req.path, req.site.siteKey) : req.path,
+      currentPath: req.siteBasePath ? stripSitePrefix(req.path, site.siteKey) : req.path,
       ...payload,
     });
   }
