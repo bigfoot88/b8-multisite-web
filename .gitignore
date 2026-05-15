@@ -1,6 +1,60 @@
 .worktrees/
+
+# Dependencies
 node_modules/
-.env
-.DS_Store
+
+# Build outputs and caches
+dist/
+build/
 coverage/
+.cache/
+.parcel-cache/
+.turbo/
+
+# Runtime data
 data/*.db*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# Playwright/browser artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+tests/.scratch/
+
+# Local debug captures in repo root
+*-network.txt
+network-*.txt
+network-components.txt
+network-site-settings*.txt
+browser-console-*.txt
+console-*.txt
+image-states*.json
+picker-before-upload-submit.png
+site-settings-*.md
+site-settings-*.png
+
+# Local-only infrastructure notes
+远程服务器参数.md
+
+# Ignore workspace-specific AI instruction overlays
+.github/instructions/codacy.instructions.md
