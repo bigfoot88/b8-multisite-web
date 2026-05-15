@@ -6,9 +6,11 @@ const SESSION_MODULE_PATH = require.resolve('../src/lib/session');
 
 test('admin cookie options are secure in production', () => {
   const originalNodeEnv = process.env.NODE_ENV;
+  const originalAdminCookieSecure = process.env.ADMIN_COOKIE_SECURE;
 
   delete require.cache[SESSION_MODULE_PATH];
   process.env.NODE_ENV = 'production';
+  delete process.env.ADMIN_COOKIE_SECURE;
 
   try {
     const { createAdminCookieOptions } = require('../src/lib/session');
@@ -20,6 +22,40 @@ test('admin cookie options are secure in production', () => {
       delete process.env.NODE_ENV;
     } else {
       process.env.NODE_ENV = originalNodeEnv;
+    }
+
+    if (originalAdminCookieSecure === undefined) {
+      delete process.env.ADMIN_COOKIE_SECURE;
+    } else {
+      process.env.ADMIN_COOKIE_SECURE = originalAdminCookieSecure;
+    }
+  }
+});
+
+test('admin cookie options allow explicit insecure override in production', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalAdminCookieSecure = process.env.ADMIN_COOKIE_SECURE;
+
+  delete require.cache[SESSION_MODULE_PATH];
+  process.env.NODE_ENV = 'production';
+  process.env.ADMIN_COOKIE_SECURE = 'false';
+
+  try {
+    const { createAdminCookieOptions } = require('../src/lib/session');
+    assert.equal(createAdminCookieOptions().secure, false);
+  } finally {
+    delete require.cache[SESSION_MODULE_PATH];
+
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+
+    if (originalAdminCookieSecure === undefined) {
+      delete process.env.ADMIN_COOKIE_SECURE;
+    } else {
+      process.env.ADMIN_COOKIE_SECURE = originalAdminCookieSecure;
     }
   }
 });

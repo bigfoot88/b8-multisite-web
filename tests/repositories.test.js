@@ -338,6 +338,56 @@ test('public site service ignores cross-site homepage media from corrupted site 
   assert.equal(frame.site.homeFeatureAsset?.assetKey, 'global-home-feature');
 });
 
+test('public site service ignores homepage media whose files are no longer readable', (t) => {
+  const db = createTestDb();
+  runMigrations(db);
+  const uploadRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'b8-homepage-media-'));
+  t.after(() => {
+    fs.rmSync(uploadRoot, { recursive: true, force: true });
+  });
+
+  const siteRepository = createSiteRepository(db);
+  const mediaRepository = createMediaRepository(db, { uploadRoot });
+  const publicSiteService = createPublicSiteService({
+    siteRepository,
+    mediaRepository,
+    catalogRepository: {},
+    redirectRepository: {},
+  });
+
+  const readableBannerPath = path.join(uploadRoot, 'dma-home-primary.png');
+  fs.writeFileSync(readableBannerPath, 'png');
+  const readableBanner = mediaRepository.createAsset({
+    assetKey: 'dma-home-primary',
+    siteKey: 'dma',
+    filename: 'dma-home-primary.png',
+    mimeType: 'image/png',
+    storagePath: readableBannerPath,
+  });
+  const missingBanner = mediaRepository.createAsset({
+    assetKey: 'dma-home-missing',
+    siteKey: 'dma',
+    filename: 'dma-home-missing.png',
+    mimeType: 'image/png',
+    storagePath: path.join(uploadRoot, 'missing.png'),
+  });
+
+  siteRepository.upsertSiteSettings({
+    siteKey: 'dma',
+    brandName: 'DMA',
+    domain: 'dma.b8water.com',
+    homeBannerMediaId: readableBanner.id,
+    homeBannerSecondaryMediaId: missingBanner.id,
+  });
+
+  const frame = publicSiteService.getSiteFrame(siteRepository.getSiteSettings('dma'));
+
+  assert.deepEqual(
+    frame.site.homeHeroSlides.map((asset) => asset.assetKey),
+    ['dma-home-primary'],
+  );
+});
+
 test('media repository preserves nested upload paths in public urls', (t) => {
   const db = createTestDb();
   runMigrations(db);

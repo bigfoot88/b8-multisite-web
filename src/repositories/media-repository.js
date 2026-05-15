@@ -1,3 +1,6 @@
+const fs = require('node:fs');
+const path = require('node:path');
+
 const { createAdminValidationError } = require('../lib/admin-errors');
 const {
   buildPublicMediaPath,
@@ -23,6 +26,8 @@ function mapAsset(row, uploadRoot = null) {
       uploadRoot,
     })
     : null);
+  const readableStoragePath = resolveReadableStoragePath(row.storage_path, relativePath, uploadRoot);
+  const isReadable = relativePath ? (readableStoragePath ? true : (uploadRoot ? false : null)) : true;
 
   return {
     id: row.id,
@@ -31,14 +36,32 @@ function mapAsset(row, uploadRoot = null) {
     sourceUrl: row.source_url,
     filename: row.filename,
     mimeType: row.mime_type,
-    storagePath: row.storage_path,
+    storagePath: readableStoragePath || row.storage_path,
     altText: row.alt_text,
     metadata: parseMetadata(row.metadata_json),
     publicUrl: relativePath ? buildPublicMediaPath(relativePath) : (row.source_url || null),
+    isReadable,
     relativePath,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function resolveReadableStoragePath(storagePath, relativePath, uploadRoot = null) {
+  if (storagePath && fs.existsSync(storagePath)) {
+    return storagePath;
+  }
+
+  if (!uploadRoot || !relativePath) {
+    return null;
+  }
+
+  const fallbackPath = path.join(uploadRoot, ...relativePath.split('/'));
+  if (fs.existsSync(fallbackPath)) {
+    return fallbackPath;
+  }
+
+  return null;
 }
 
 function createMediaRepository(db, { uploadRoot = null } = {}) {

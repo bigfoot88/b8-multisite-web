@@ -111,15 +111,15 @@ function createPublicSiteService({
         .map((asset) => [asset.id, asset]),
     );
 
-    return {
-      ...site,
-      homeHeroSlides: [site.homeBannerMediaId, site.homeBannerSecondaryMediaId]
-        .filter(Boolean)
-        .map((mediaId) => assetMap.get(mediaId) || null)
-        .filter(Boolean),
-      homeFeatureAsset: site.homeFeatureMediaId ? assetMap.get(site.homeFeatureMediaId) || null : null,
-    };
-  }
+      return {
+        ...site,
+        homeHeroSlides: [site.homeBannerMediaId, site.homeBannerSecondaryMediaId]
+          .filter(Boolean)
+          .map((mediaId) => assetMap.get(mediaId) || null)
+          .filter((asset) => Boolean(asset?.publicUrl) && asset?.isReadable !== false),
+        homeFeatureAsset: site.homeFeatureMediaId ? assetMap.get(site.homeFeatureMediaId) || null : null,
+      };
+    }
 
   function listVisibleNavigation(siteKey) {
     return siteRepository

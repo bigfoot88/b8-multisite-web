@@ -2,13 +2,31 @@ const crypto = require('node:crypto');
 
 const ADMIN_COOKIE_NAME = 'b8_admin';
 
+function resolveSecureCookieFlag() {
+  const configuredValue = process.env.ADMIN_COOKIE_SECURE?.trim().toLowerCase();
+
+  if (!configuredValue) {
+    return process.env.NODE_ENV === 'production';
+  }
+
+  if (configuredValue === 'true' || configuredValue === '1' || configuredValue === 'yes') {
+    return true;
+  }
+
+  if (configuredValue === 'false' || configuredValue === '0' || configuredValue === 'no') {
+    return false;
+  }
+
+  throw new Error('ADMIN_COOKIE_SECURE must be set to true or false when provided');
+}
+
 function createAdminCookieOptions() {
   return {
     httpOnly: true,
     sameSite: 'lax',
     signed: true,
     path: '/',
-    secure: process.env.NODE_ENV === 'production',
+    secure: resolveSecureCookieFlag(),
   };
 }
 
@@ -82,6 +100,7 @@ module.exports = {
   clearAdminSession,
   readAdminSession,
   requireAdmin,
+  resolveSecureCookieFlag,
   resolveSessionSecret,
   writeAdminSession,
 };

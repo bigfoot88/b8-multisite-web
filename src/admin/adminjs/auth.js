@@ -1,5 +1,5 @@
 const { verifyPassword } = require('../../lib/passwords');
-const { resolveSessionSecret } = require('../../lib/session');
+const { resolveSecureCookieFlag, resolveSessionSecret } = require('../../lib/session');
 
 const ADMINJS_COOKIE_NAME = 'b8_adminjs';
 
@@ -8,7 +8,7 @@ function createAdminJsSessionCookieOptions() {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    secure: process.env.NODE_ENV === 'production',
+    secure: resolveSecureCookieFlag(),
   };
 }
 

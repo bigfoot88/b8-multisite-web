@@ -45,6 +45,31 @@ test('successful admin login redirects to the Chinese dashboard', async (t) => {
   assert.match(response.headers['set-cookie'][0], /b8_admin=/);
 });
 
+test('legacy admin uses self-hosted TinyMCE assets with the GPL license key', async (t) => {
+  const { tempDir, testDbPath } = createSeededAdminDb();
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const app = createApp({ databasePath: testDbPath });
+  const [layoutResponse, adminScriptResponse, languageResponse] = await Promise.all([
+    request(app).get('/admin/login'),
+    request(app).get('/js/admin.js'),
+    request(app).get('/tinymce/langs/zh_CN.js'),
+  ]);
+
+  assert.equal(layoutResponse.status, 200);
+  assert.match(layoutResponse.text, /https:\/\/cdn\.jsdelivr\.net\/npm\/tinymce@7\.6\.0\/tinymce\.min\.js/);
+
+  assert.equal(adminScriptResponse.status, 200);
+  assert.match(adminScriptResponse.text, /language_url:\s*'\/tinymce\/langs\/zh_CN\.js'/);
+  assert.match(adminScriptResponse.text, /license_key:\s*'gpl'/);
+
+  assert.equal(languageResponse.status, 200);
+  assert.match(languageResponse.headers['content-type'], /javascript/);
+  assert.match(languageResponse.text, /tinymce\.addI18n/);
+});
+
 test('disabled admin sessions are rejected on protected routes', async (t) => {
   const { tempDir, testDbPath } = createSeededAdminDb();
   t.after(() => {

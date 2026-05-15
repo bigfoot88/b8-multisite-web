@@ -58,3 +58,4 @@ site-settings-*.png
 
 # Ignore workspace-specific AI instruction overlays
 .github/instructions/codacy.instructions.md
+.gstack/

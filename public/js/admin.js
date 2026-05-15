@@ -5,7 +5,8 @@ function getTinyMceConfig(textarea) {
   return {
     target: textarea,
     language: 'zh_CN',
-    language_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.6.0/langs/zh_CN.js',
+    language_url: '/tinymce/langs/zh_CN.js',
+    license_key: 'gpl',
     menubar: false,
     branding: false,
     promotion: false,

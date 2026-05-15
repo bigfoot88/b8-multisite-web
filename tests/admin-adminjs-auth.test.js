@@ -121,8 +121,10 @@ test('authenticate rejects inactive admins even with valid credentials', async (
 
 test('AdminJS session cookie options are secure in production', () => {
   const originalNodeEnv = process.env.NODE_ENV;
+  const originalAdminCookieSecure = process.env.ADMIN_COOKIE_SECURE;
 
   process.env.NODE_ENV = 'production';
+  delete process.env.ADMIN_COOKIE_SECURE;
 
   try {
     assert.equal(createAdminJsSessionCookieOptions().secure, true);
@@ -131,6 +133,36 @@ test('AdminJS session cookie options are secure in production', () => {
       delete process.env.NODE_ENV;
     } else {
       process.env.NODE_ENV = originalNodeEnv;
+    }
+
+    if (originalAdminCookieSecure === undefined) {
+      delete process.env.ADMIN_COOKIE_SECURE;
+    } else {
+      process.env.ADMIN_COOKIE_SECURE = originalAdminCookieSecure;
+    }
+  }
+});
+
+test('AdminJS session cookie options allow explicit insecure override in production', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalAdminCookieSecure = process.env.ADMIN_COOKIE_SECURE;
+
+  process.env.NODE_ENV = 'production';
+  process.env.ADMIN_COOKIE_SECURE = 'false';
+
+  try {
+    assert.equal(createAdminJsSessionCookieOptions().secure, false);
+  } finally {
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+
+    if (originalAdminCookieSecure === undefined) {
+      delete process.env.ADMIN_COOKIE_SECURE;
+    } else {
+      process.env.ADMIN_COOKIE_SECURE = originalAdminCookieSecure;
     }
   }
 });
