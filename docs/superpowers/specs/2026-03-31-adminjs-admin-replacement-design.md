@@ -31,7 +31,7 @@
 ├── 公开路由 (src/routes/public.js 等)     ← 不变
 ├── 媒体路由 (src/routes/media.js)          ← 不变
 ├── better-sqlite3 repositories            ← 不变（供公开路由使用）
-└── /admin/*  → AdminJS (最终切换)
+└── /admin/*  → AdminJS (最终切换，实施期可暂挂 /admin-next)
     ├── 认证: admins 表 + bcryptjs
     ├── 内容: Sequelize 映射 9 张现有表
     ├── 文件上传: 本地磁盘 uploads/
