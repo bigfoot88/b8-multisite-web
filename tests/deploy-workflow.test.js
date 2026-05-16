@@ -37,6 +37,7 @@ const WORKFLOW_REQUIRED_PATTERNS = [
   /npm test/,
   /ssh-agent/,
   /ssh-add/,
+  /-i ~\/\.ssh\/deploy_key/,
   /scripts\/deploy-test-server\.sh/,
   /bash -s/,
   /secrets\.DEPLOY_HOST/,
