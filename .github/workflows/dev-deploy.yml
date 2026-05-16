@@ -35,4 +35,4 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
         run: |
-          ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" 'DEPLOY_PATH="$DEPLOY_PATH" DEPLOY_SERVICE="$DEPLOY_SERVICE" DEPLOY_PORT=3008 bash -s' < scripts/deploy-test-server.sh
+          ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "DEPLOY_PATH=\"$DEPLOY_PATH\" DEPLOY_SERVICE=\"$DEPLOY_SERVICE\" DEPLOY_PORT=3008 bash -s" < scripts/deploy-test-server.sh
