@@ -9,7 +9,7 @@ cd "$DEPLOY_PATH"
 git fetch origin dev
 git reset --hard origin/dev
 npm ci --omit=dev
-systemctl restart "$DEPLOY_SERVICE"
+sudo -n /usr/bin/systemctl restart "${DEPLOY_SERVICE}.service"
 curl -fsS "http://127.0.0.1:${DEPLOY_PORT}/"
 
 echo "Deploy complete for ${DEPLOY_SERVICE} at ${DEPLOY_PATH} (port ${DEPLOY_PORT})."
