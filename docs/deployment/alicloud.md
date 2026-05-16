@@ -186,7 +186,40 @@ curl -I -H 'Host: dma.b8water.com' 'http://127.0.0.1:3000/nd.jsp?id=111'
 - `/admin/login` 可访问
 - 使用初始化管理员账号可登录后台
 
-## 10. 更新发布建议
+## 10. dev 分支自动部署
+
+dev 分支 push 即触发 GitHub Actions 自动部署流程：
+
+1. CI 检查（与主分支一致的安装与测试流程）
+2. 通过 SSH 连接测试服务器
+3. 在 `/opt/b8-multisite-web` 执行部署脚本并重启 `b8-multisite`
+4. 使用 `3008` 端口进行健康检查
+
+所需 GitHub Secrets：
+
+- `DEPLOY_HOST`
+- `DEPLOY_PORT`
+- `DEPLOY_USER`
+- `DEPLOY_SSH_KEY`
+- `DEPLOY_KNOWN_HOSTS`
+- `DEPLOY_PATH`（`/opt/b8-multisite-web`）
+- `DEPLOY_SERVICE`（`b8-multisite`）
+
+回滚方式：
+
+1. 在 GitHub Actions 部署记录中找到「最近一次成功部署」的 commit SHA
+2. 登录服务器并回退代码，然后重启服务
+
+```bash
+cd /opt/b8-multisite-web
+git fetch --all
+git checkout <last-successful-sha>
+npm ci --omit=dev
+sudo systemctl restart b8-multisite
+curl http://127.0.0.1:3008/
+```
+
+## 11. 更新发布建议
 
 建议发布流程：
 
@@ -206,7 +239,7 @@ npm ci --omit=dev
 sudo systemctl restart b8-multisite
 ```
 
-## 11. 备份建议
+## 12. 备份建议
 
 最重要的持久化数据有两类：
 
@@ -219,7 +252,7 @@ sudo systemctl restart b8-multisite
 - 上传目录定期归档
 - 发布前手动快照
 
-## 12. 回滚建议
+## 13. 回滚建议
 
 如果新版本异常：
 
