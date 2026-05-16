@@ -18,7 +18,8 @@ const REQUIRED_LINES = [
   'git reset --hard origin/dev',
   'npm ci --omit=dev',
   'sudo -n /usr/bin/systemctl restart "${DEPLOY_SERVICE}.service"',
-  'curl -fsS "http://127.0.0.1:${DEPLOY_PORT}/"',
+  'until curl -fsS "http://127.0.0.1:${DEPLOY_PORT}/" >/dev/null; do',
+  'Health check failed on port ${DEPLOY_PORT}',
 ];
 
 test('deploy script contains required commands', () => {
