@@ -188,6 +188,13 @@ curl -I -H 'Host: dma.b8water.com' 'http://127.0.0.1:3000/nd.jsp?id=111'
 
 ## 10. dev 分支自动部署
 
+以下小节仅适用于 **测试服务器** 自动部署，不影响上面的正式部署配置。
+
+测试服务器的运行目录和端口与正式环境不同，需配置为：
+
+- 代码目录：`/opt/b8-multisite-web`
+- 应用端口：`3008`
+
 dev 分支 push 即触发 GitHub Actions 自动部署流程：
 
 1. CI 检查（与主分支一致的安装与测试流程）
@@ -197,8 +204,8 @@ dev 分支 push 即触发 GitHub Actions 自动部署流程：
 
 所需 GitHub Secrets：
 
-- `DEPLOY_HOST`
-- `DEPLOY_PORT`
+- `DEPLOY_HOST`（测试服务器 IP）
+- `DEPLOY_PORT`（SSH 端口，填写 `22`）
 - `DEPLOY_USER`
 - `DEPLOY_SSH_KEY`
 - `DEPLOY_KNOWN_HOSTS`

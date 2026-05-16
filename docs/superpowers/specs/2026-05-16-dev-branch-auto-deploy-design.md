@@ -75,7 +75,7 @@ The workflow must not hard-code credentials. It should fail clearly if any requi
    - `npm ci --omit=dev`
    - `sudo systemctl restart b8-multisite`
 5. The script performs a lightweight verification:
-   - `curl -fsS http://127.0.0.1:3000/`
+   - `curl -fsS http://127.0.0.1:3008/`
 6. The workflow exits non-zero if any step fails.
 
 ## Error Handling
@@ -108,5 +108,5 @@ Because the server keeps ignored runtime data outside version control, a rollbac
 - A push to `dev` triggers the workflow automatically.
 - The workflow updates `/opt/b8-multisite-web/` on the test server.
 - The `b8-multisite` service restarts successfully.
-- The site responds on `http://8.142.93.198:3000/`.
+- The site responds on `http://8.142.93.198:3008/`.
 - Failed tests or failed server commands block deployment.
